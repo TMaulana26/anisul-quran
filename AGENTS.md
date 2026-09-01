@@ -198,10 +198,12 @@ This project has domain-specific skills available in `.agents/skills/`. You MUST
 
 ## Running Tests
 
-- Run the narrowest set of tests that covers the change. Pass a file path or `--filter=testName` to `php artisan test --compact`.
-- Rerun a test after each change to it.
-- Run `vendor/bin/pest` to call the test runner directly. It accepts the same file path and `--filter=testName` arguments.
-- After the feature tests pass, ask the user to run the complete suite with `php artisan test --compact`.
+- **NEVER run the entire test suite unconditionally (e.g. bare `php artisan test` or `vendor/bin/pest` without filters/paths).** As the application grows and becomes complex, running all tests causes unnecessary latency and resource usage.
+- Always run targeted tests with the narrowest scope possible:
+  - Pass a specific test file path: `php artisan test tests/Feature/SpecificTest.php --compact` or `vendor/bin/pest tests/Feature/SpecificTest.php`
+  - Or use a specific filter: `php artisan test --filter=test_name --compact` or `vendor/bin/pest --filter=test_name`
+- Rerun only the affected test after each change to it.
+- Never execute a full test suite run yourself. If a full suite run is ever needed, ask the user to execute it.
 
 === inertia-vue/core rules ===
 
