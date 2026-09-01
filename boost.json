@@ -12,6 +12,7 @@
         "laravel-best-practices",
         "testing-best-practices",
         "inertia-vue-development",
-        "tailwindcss-development"
+        "tailwindcss-development",
+        "quran-foundation"
     ]
 }

@@ -15,13 +15,36 @@ Before relying on a package's API, confirm its installed version:
 
 ## Skills Activation
 
-This project has domain-specific skills available in `**/skills/**`. You MUST activate the relevant skill whenever you work in that domain—don't wait until you're stuck.
+This project has domain-specific skills available in `.agents/skills/`. You MUST activate the relevant skill whenever you work in that domain—don't wait until you're stuck:
+
+- **Quran Foundation Integration**: [`.agents/skills/quran-foundation/SKILL.md`](.agents/skills/quran-foundation/SKILL.md)
+  - Activate when working with Quran Foundation Content APIs (Chapters, Verses, Tafsir, Audio), Search API, Mushaf font rendering (QCF, IndoPak, Uthmani, Tajweed), and OAuth2/OIDC User APIs (reading sync, bookmarks, notes).
+- **Frontend Design & Craft (Impeccable)**: [`.agents/skills/impeccable/SKILL.md`](.agents/skills/impeccable/SKILL.md)
+  - Activate when designing, shaping, polishing, auditing, or refining UI/UX, typography, contrast, layout rhythm, and running anti-pattern detection.
+- **UI Components (shadcn-vue)**: [`.agents/skills/shadcn/SKILL.md`](.agents/skills/shadcn/SKILL.md)
+  - Activate when creating, modifying, or styling UI components with shadcn-vue.
+- **Client-Side Framework (Inertia + Vue 3)**: [`.agents/skills/inertia-vue-development/SKILL.md`](.agents/skills/inertia-vue-development/SKILL.md)
+  - Activate when writing Vue 3 pages, forms, `<Link>`, `useForm`, layout props, or handling client-side navigation.
+- **Backend Architecture (Laravel Best Practices)**: [`.agents/skills/laravel-best-practices/SKILL.md`](.agents/skills/laravel-best-practices/SKILL.md)
+  - Activate when writing controllers, services, queries, migrations, caching, or middleware.
+- **Styling (Tailwind CSS v4)**: [`.agents/skills/tailwindcss-development/SKILL.md`](.agents/skills/tailwindcss-development/SKILL.md)
+  - Activate when composing responsive Tailwind utility classes, dark mode variants, and theme styling.
+- **Testing (Pest)**: [`.agents/skills/testing-best-practices/SKILL.md`](.agents/skills/testing-best-practices/SKILL.md)
+  - Activate when designing or reviewing unit and feature tests with Pest.
+- **Project Conventions**: [`.agents/skills/infer-conventions/SKILL.md`](.agents/skills/infer-conventions/SKILL.md)
+  - Activate when analyzing, establishing, or standardizing project conventions.
 
 ## Conventions
 
 - You must follow all existing code conventions used in this application. When creating or editing a file, check sibling files for the correct structure, approach, and naming.
 - Use descriptive names for variables and methods. For example, `isRegisteredForDiscounts`, not `discount()`.
 - Check for existing components to reuse before writing a new one.
+
+## Git Workflow & Commit Guidelines
+
+- **NEVER push directly to `origin/main` or any remote repository.** Leave pushing to the user unless explicitly instructed.
+- You are encouraged to commit changes locally when a task or coherent milestone is completed.
+- Always write clear, descriptive, and detailed commit messages following the Conventional Commits format (e.g. `feat:`, `fix:`, `chore:`, `refactor:`, `docs:`) with an informative bulleted body describing all notable changes.
 
 ## Verification Scripts
 
@@ -186,5 +209,23 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 
 Vue components must have a single root element.
 - IMPORTANT: Activate `inertia-vue-development` when working with Inertia Vue client-side patterns.
+
+=== quran-foundation rules ===
+
+# Quran Foundation Guidelines
+
+- Safe SDK Boundary: Use `@quranjs/api/public` only for browser-safe PKCE initiation; use Laravel backend for token exchange, refresh, Content APIs, Search APIs, and signed-in User APIs.
+- Never expose `CLIENT_SECRET`, `SESSION_SECRET`, user access tokens, or refresh tokens to browser code, HTML views, or client logs.
+- Keep app-level Content/Search credentials separate from signed-in user session tokens.
+- Follow Quran Foundation font rendering standards (QCF v1/v2, IndoPak, Uthmani, Tajweed glyphs).
+- Verify integration compliance with `npx @quranjs/create-app doctor`.
+
+=== impeccable rules ===
+
+# Impeccable UI/UX Guidelines
+
+- Production-grade craft: Maintain intentional visual hierarchy, accessible contrast, harmonious typography, and responsive spacing.
+- Avoid generic AI design tropes (overused purple gradients, excessive card nesting, floating icons).
+- Use `npx impeccable detect resources/js/` for anti-pattern detection and design auditing.
 
 </laravel-boost-guidelines>
