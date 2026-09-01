@@ -29,8 +29,10 @@ This project has domain-specific skills available in `.agents/skills/`. You MUST
   - Activate when writing controllers, services, queries, migrations, caching, or middleware.
 - **Styling (Tailwind CSS v4)**: [`.agents/skills/tailwindcss-development/SKILL.md`](.agents/skills/tailwindcss-development/SKILL.md)
   - Activate when composing responsive Tailwind utility classes, dark mode variants, and theme styling.
-- **Testing (Pest)**: [`.agents/skills/testing-best-practices/SKILL.md`](.agents/skills/testing-best-practices/SKILL.md)
-  - Activate when designing or reviewing unit and feature tests with Pest.
+- **Backend Testing (Pest)**: [`.agents/skills/testing-best-practices/SKILL.md`](.agents/skills/testing-best-practices/SKILL.md)
+  - Activate when designing or reviewing backend unit and feature tests with Pest.
+- **Frontend Testing (Vitest + Vue Test Utils)**: [`.agents/skills/vue-testing-best-practices/SKILL.md`](.agents/skills/vue-testing-best-practices/SKILL.md)
+  - Activate when designing, writing, or reviewing Vue 3 component tests, composable tests, or Vitest unit tests.
 - **Project Conventions**: [`.agents/skills/infer-conventions/SKILL.md`](.agents/skills/infer-conventions/SKILL.md)
   - Activate when analyzing, establishing, or standardizing project conventions.
 
@@ -229,5 +231,14 @@ Vue components must have a single root element.
 - Production-grade craft: Maintain intentional visual hierarchy, accessible contrast, harmonious typography, and responsive spacing.
 - Avoid generic AI design tropes (overused purple gradients, excessive card nesting, floating icons).
 - Use `npx impeccable detect resources/js/` for anti-pattern detection and design auditing.
+
+=== vitest/frontend-testing rules ===
+
+# Frontend Testing (Vitest + Vue Test Utils)
+
+- Use Vitest and `@vue/test-utils` for unit and component testing in `resources/js/`.
+- Test files must end in `.test.js`, `.spec.js`, `.test.ts`, or `.spec.ts`.
+- Mock or stub Inertia components (`<Link>`, `useForm`, `usePage`, `router`) to isolate frontend tests.
+- Always run targeted tests using file path (e.g. `npx vitest run resources/js/lib/utils.test.js`) or specific filter (`-t "test_name"`). Never run open-ended watch processes unattended.
 
 </laravel-boost-guidelines>

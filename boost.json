@@ -13,6 +13,7 @@
         "testing-best-practices",
         "inertia-vue-development",
         "tailwindcss-development",
-        "quran-foundation"
+        "quran-foundation",
+        "vue-testing-best-practices"
     ]
 }
