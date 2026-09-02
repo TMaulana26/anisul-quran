@@ -110,6 +110,28 @@
   }
 }
 
+/* Fraunces Variable Typography Variations (Optical Size 144, Softness 0, Wonky 0.5) */
+.font-heading {
+  font-family: var(--font-heading);
+  font-variation-settings: 'opsz' 144, 'wght' 700, 'SOFT' 0, 'WONK' 0.5;
+}
+
+.font-heading.font-semibold {
+  font-variation-settings: 'opsz' 144, 'wght' 600, 'SOFT' 0, 'WONK' 0.5;
+}
+
+.font-heading.font-bold {
+  font-variation-settings: 'opsz' 144, 'wght' 700, 'SOFT' 0, 'WONK' 0.5;
+}
+
+.font-heading.font-extrabold {
+  font-variation-settings: 'opsz' 144, 'wght' 800, 'SOFT' 0, 'WONK' 0.5;
+}
+
+.font-heading.font-black {
+  font-variation-settings: 'opsz' 144, 'wght' 900, 'SOFT' 0, 'WONK' 0.5;
+}
+
 @keyframes fadeIn {
   from {
     opacity: 0;
