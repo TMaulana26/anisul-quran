@@ -89,4 +89,22 @@ class SurahController extends Controller
             'chapter_id' => $id,
         ]);
     }
+
+    /**
+     * Fetch footnote explanation by ID.
+     */
+    public function footnote(int $id): JsonResponse
+    {
+        $footnote = $this->quran->getFootnote($id);
+
+        if (! $footnote) {
+            return response()->json([
+                'message' => 'Catatan kaki tidak ditemukan.',
+            ], 404);
+        }
+
+        return response()->json([
+            'footnote' => $footnote,
+        ]);
+    }
 }

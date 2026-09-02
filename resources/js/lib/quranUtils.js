@@ -71,3 +71,57 @@ export function cleanTranslationText(text) {
         .replace(/\s+([,.:;!?])/g, '$1')
         .trim();
 }
+
+/**
+ * Parse raw translation text into structured tokens of plain text and interactive footnotes.
+ *
+ * @param {string} rawText
+ * @returns {Array<{ type: 'text'|'footnote', content?: string, id?: number, number?: string }>}
+ */
+export function parseTranslationTokens(rawText) {
+    if (!rawText || typeof rawText !== 'string') return [];
+
+    const tokens = [];
+    const footnoteRegex = /<sup\s+foot_note=["']?(\d+)["']?>([\s\S]*?)<\/sup>/gi;
+
+    let lastIndex = 0;
+    let match;
+
+    while ((match = footnoteRegex.exec(rawText)) !== null) {
+        // Text preceding the footnote
+        if (match.index > lastIndex) {
+            const textChunk = rawText.slice(lastIndex, match.index)
+                .replace(/<[^>]*>/g, '');
+            if (textChunk) {
+                tokens.push({ type: 'text', content: textChunk });
+            }
+        }
+
+        const footnoteId = parseInt(match[1], 10);
+        const footnoteNumber = match[2].trim() || '1';
+
+        tokens.push({
+            type: 'footnote',
+            id: footnoteId,
+            number: footnoteNumber,
+        });
+
+        lastIndex = footnoteRegex.lastIndex;
+    }
+
+    // Remaining text after last footnote
+    if (lastIndex < rawText.length) {
+        const textChunk = rawText.slice(lastIndex)
+            .replace(/<[^>]*>/g, '');
+        if (textChunk) {
+            tokens.push({ type: 'text', content: textChunk });
+        }
+    }
+
+    // If no footnotes were found, return the cleaned whole text
+    if (tokens.length === 0) {
+        tokens.push({ type: 'text', content: cleanTranslationText(rawText) });
+    }
+
+    return tokens;
+}

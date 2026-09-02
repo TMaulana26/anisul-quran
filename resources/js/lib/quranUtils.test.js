@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { cleanArabicText, getFormattedArabicText, cleanTranslationText } from './quranUtils';
+import { cleanArabicText, getFormattedArabicText, cleanTranslationText, parseTranslationTokens } from './quranUtils';
 
 describe('quranUtils', () => {
     it('cleans PUA waqf marks and maps them to standard Unicode marks', () => {
@@ -42,5 +42,15 @@ describe('quranUtils', () => {
         const cleaned = cleanTranslationText(midSentence);
 
         expect(cleaned).toBe('saling meminta, dan (peliharalah)');
+    });
+
+    it('parses translation into structured tokens with interactive footnotes', () => {
+        const raw = 'saling meminta,<sup foot_note=135123>1</sup> dan (peliharalah)';
+        const tokens = parseTranslationTokens(raw);
+
+        expect(tokens).toHaveLength(3);
+        expect(tokens[0]).toEqual({ type: 'text', content: 'saling meminta,' });
+        expect(tokens[1]).toEqual({ type: 'footnote', id: 135123, number: '1' });
+        expect(tokens[2]).toEqual({ type: 'text', content: ' dan (peliharalah)' });
     });
 });

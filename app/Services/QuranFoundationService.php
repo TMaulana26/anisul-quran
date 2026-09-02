@@ -264,4 +264,32 @@ class QuranFoundationService
             return [];
         }
     }
+
+    /**
+     * Retrieve footnote explanation text by ID.
+     *
+     * @return array<string, mixed>|null
+     */
+    public function getFootnote(int $id): ?array
+    {
+        $cacheKey = "quran:footnote:{$id}";
+
+        return Cache::remember($cacheKey, now()->addDays(7), function () use ($id) {
+            try {
+                $response = $this->client()->get("/foot_notes/{$id}");
+
+                if ($response->successful()) {
+                    return $response->json('foot_note');
+                }
+
+                return null;
+            } catch (Throwable $e) {
+                Log::error("Exception fetching footnote {$id} from Quran Foundation API", [
+                    'message' => $e->getMessage(),
+                ]);
+
+                return null;
+            }
+        });
+    }
 }

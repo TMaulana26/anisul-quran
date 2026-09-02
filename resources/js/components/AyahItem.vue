@@ -1,7 +1,8 @@
 <script setup>
-import { computed } from 'vue';
+import { ref, computed } from 'vue';
 import { Play, Volume2, Bookmark, Share2 } from '@lucide/vue';
-import { getFormattedArabicText, cleanTranslationText } from '@/lib/quranUtils';
+import { getFormattedArabicText, parseTranslationTokens } from '@/lib/quranUtils';
+import FootnoteDialog from '@/components/FootnoteDialog.vue';
 
 const props = defineProps({
     verse: {
@@ -32,11 +33,22 @@ const props = defineProps({
 
 const emit = defineEmits(['play']);
 
-// Extract Indonesian translation (Kemenag)
-const translationText = computed(() => {
-    if (!props.verse.translations || props.verse.translations.length === 0) return '';
+// Footnote Dialog State
+const showFootnoteDialog = ref(false);
+const selectedFootnoteId = ref(null);
+const selectedFootnoteNumber = ref('1');
+
+const openFootnote = (id, number) => {
+    selectedFootnoteId.value = id;
+    selectedFootnoteNumber.value = number;
+    showFootnoteDialog.value = true;
+};
+
+// Extract structured translation tokens (plain text & interactive footnote badges)
+const translationTokens = computed(() => {
+    if (!props.verse.translations || props.verse.translations.length === 0) return [];
     
-    return cleanTranslationText(props.verse.translations[0].text || '');
+    return parseTranslationTokens(props.verse.translations[0].text || '');
 });
 
 // Extract transliteration from words if available
@@ -127,16 +139,35 @@ const arabicText = computed(() => {
                 {{ transliterationText }}
             </p>
 
-            <!-- Translation (Kemenag RI) -->
+            <!-- Translation (Kemenag RI) with Interactive Footnotes -->
             <p 
-                v-if="showTranslation && translationText" 
+                v-if="showTranslation && translationTokens.length > 0" 
                 :class="[
                     'text-sm sm:text-base leading-relaxed text-foreground/90 text-left transition-colors',
                     isActive ? 'font-medium text-foreground' : ''
                 ]"
             >
-                {{ translationText }}
+                <template v-for="(token, idx) in translationTokens" :key="idx">
+                    <span v-if="token.type === 'text'">{{ token.content }}</span>
+                    <button 
+                        v-else-if="token.type === 'footnote'"
+                        @click.stop="openFootnote(token.id, token.number)"
+                        type="button"
+                        class="inline-flex items-center justify-center px-1.5 py-0.5 mx-0.5 rounded-md text-[11px] font-bold bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground transition-colors cursor-pointer align-baseline select-none"
+                        :title="`Klik untuk melihat Catatan Kaki [${token.number}]`"
+                    >
+                        [{{ token.number }}]
+                    </button>
+                </template>
             </p>
         </div>
+
+        <!-- Footnote Popover / Dialog Modal -->
+        <FootnoteDialog 
+            v-model="showFootnoteDialog"
+            :footnote-id="selectedFootnoteId"
+            :footnote-number="selectedFootnoteNumber"
+            :verse-key="verse.verse_key"
+        />
     </div>
 </template>

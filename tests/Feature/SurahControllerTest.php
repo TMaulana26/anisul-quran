@@ -49,6 +49,13 @@ beforeEach(function () {
                 ],
             ],
         ], 200),
+        'api.quran.com/api/v4/foot_notes/135060*' => Http::response([
+            'foot_note' => [
+                'id' => 135060,
+                'text' => 'Allah mengatur langit dan bumi serta isinya.',
+                'language_name' => 'indonesian',
+            ],
+        ], 200),
     ]);
 });
 
@@ -91,5 +98,17 @@ it('returns recitation json for dynamic qari switching', function () {
             'recitation' => ['audio_url', 'verse_timings'],
             'reciter_id',
             'chapter_id',
+        ]);
+});
+
+it('returns footnote json for interactive footnote popover', function () {
+    $response = $this->getJson('/api/footnote/135060');
+
+    $response->assertStatus(200)
+        ->assertJson([
+            'footnote' => [
+                'id' => 135060,
+                'text' => 'Allah mengatur langit dan bumi serta isinya.',
+            ],
         ]);
 });
