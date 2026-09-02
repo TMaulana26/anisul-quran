@@ -52,9 +52,13 @@ const props = defineProps({
         type: Number,
         default: 7,
     },
-    allChapters: {
-        type: Array,
-        default: () => [],
+    prevChapter: {
+        type: Object,
+        default: null,
+    },
+    nextChapter: {
+        type: Object,
+        default: null,
     },
 });
 
@@ -77,21 +81,6 @@ const currentReciter = computed(() => {
     const savedId = typeof window !== 'undefined' ? parseInt(localStorage.getItem('anisul_selected_reciter'), 10) : null;
     const targetId = savedId || props.selectedReciterId || 7;
     return props.reciters.find(r => r.id === targetId) || props.reciters[0] || { id: 7, name: 'Mishary Rashid Alafasy' };
-});
-
-// Previous and Next Surah Navigation
-const prevChapter = computed(() => {
-    if (props.chapter.id > 1) {
-        return props.allChapters.find(c => c.id === props.chapter.id - 1);
-    }
-    return null;
-});
-
-const nextChapter = computed(() => {
-    if (props.chapter.id < 114) {
-        return props.allChapters.find(c => c.id === props.chapter.id + 1);
-    }
-    return null;
 });
 
 // Initialize & Load Surah into Audio Engine

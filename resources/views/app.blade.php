@@ -6,9 +6,6 @@
         <title inertia>{{ config('app.name', "Anisul Qur'an") }}</title>
         <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 
-        <!-- Local Display Font: Fraunces Variable -->
-        <link rel="preload" href="/fonts/Fraunces.woff2" as="font" type="font/woff2" crossorigin>
-
         <!-- Google Fonts: Fraunces, Nunito Sans & Arabic Fonts (Amiri, Scheherazade New, Noto Naskh Arabic, Gulzar) -->
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

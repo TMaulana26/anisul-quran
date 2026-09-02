@@ -143,6 +143,7 @@ class QuranFoundationService
         $defaultParams = [
             'language' => 'id',
             'words' => true,
+            'word_fields' => 'text_uthmani,text_indopak',
             'translations' => '33', // 33: Indonesian Ministry of Religious Affairs (Kemenag RI)
             'fields' => 'text_uthmani,text_indopak,chapter_id,verse_key,verse_number,page_number,juz_number',
             'per_page' => 300, // Fetch all verses of the chapter in one request where possible
@@ -156,7 +157,53 @@ class QuranFoundationService
                 $response = $this->client()->get("/verses/by_chapter/{$chapterId}", $queryParams);
 
                 if ($response->successful()) {
-                    return $response->json();
+                    $data = $response->json();
+                    $verses = $data['verses'] ?? [];
+
+                    $cleanVerses = array_map(function (array $verse): array {
+                        $cleanWords = [];
+                        if (! empty($verse['words'])) {
+                            foreach ($verse['words'] as $w) {
+                                $cleanWords[] = [
+                                    'id' => $w['id'] ?? null,
+                                    'position' => $w['position'] ?? null,
+                                    'char_type_name' => $w['char_type_name'] ?? 'word',
+                                    'text_uthmani' => $w['text_uthmani'] ?? $w['text'] ?? '',
+                                    'text_indopak' => $w['text_indopak'] ?? $w['text'] ?? '',
+                                    'transliteration' => isset($w['transliteration']['text']) ? ['text' => $w['transliteration']['text']] : null,
+                                    'translation' => isset($w['translation']['text']) ? ['text' => $w['translation']['text']] : null,
+                                ];
+                            }
+                        }
+
+                        $cleanTranslations = [];
+                        if (! empty($verse['translations'])) {
+                            foreach ($verse['translations'] as $t) {
+                                $cleanTranslations[] = [
+                                    'id' => $t['id'] ?? null,
+                                    'resource_id' => $t['resource_id'] ?? 33,
+                                    'text' => $t['text'] ?? '',
+                                ];
+                            }
+                        }
+
+                        return [
+                            'id' => $verse['id'],
+                            'verse_number' => $verse['verse_number'],
+                            'verse_key' => $verse['verse_key'],
+                            'juz_number' => $verse['juz_number'] ?? 1,
+                            'page_number' => $verse['page_number'] ?? 1,
+                            'text_uthmani' => $verse['text_uthmani'] ?? '',
+                            'text_indopak' => $verse['text_indopak'] ?? '',
+                            'translations' => $cleanTranslations,
+                            'words' => $cleanWords,
+                        ];
+                    }, $verses);
+
+                    return [
+                        'verses' => $cleanVerses,
+                        'pagination' => $data['pagination'] ?? null,
+                    ];
                 }
 
                 Log::warning("Failed to fetch verses for chapter {$chapterId}", [

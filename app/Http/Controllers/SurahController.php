@@ -55,7 +55,9 @@ class SurahController extends Controller
         $chapterInfo = $this->quran->getChapterInfo($id, $language);
         $reciters = $this->quran->getReciters($language);
         $recitation = $this->quran->getChapterRecitation($reciterId, $id);
-        $allChapters = $this->quran->getChapters($language);
+
+        $prevChapter = $id > 1 ? $this->quran->getChapter($id - 1, $language) : null;
+        $nextChapter = $id < 114 ? $this->quran->getChapter($id + 1, $language) : null;
 
         return Inertia::render('Surah/Show', [
             'chapter' => $chapter,
@@ -65,7 +67,16 @@ class SurahController extends Controller
             'recitation' => $recitation,
             'reciters' => $reciters,
             'selectedReciterId' => $reciterId,
-            'allChapters' => $allChapters,
+            'prevChapter' => $prevChapter ? [
+                'id' => $prevChapter['id'],
+                'name_simple' => $prevChapter['name_simple'],
+                'name_arabic' => $prevChapter['name_arabic'],
+            ] : null,
+            'nextChapter' => $nextChapter ? [
+                'id' => $nextChapter['id'],
+                'name_simple' => $nextChapter['name_simple'],
+                'name_arabic' => $nextChapter['name_arabic'],
+            ] : null,
         ]);
     }
 
