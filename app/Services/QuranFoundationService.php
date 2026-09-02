@@ -266,7 +266,7 @@ class QuranFoundationService
     }
 
     /**
-     * Retrieve footnote explanation text by ID.
+     * Retrieve footnote explanation text by ID with smart fallback for merged footnotes.
      *
      * @return array<string, mixed>|null
      */
@@ -278,17 +278,33 @@ class QuranFoundationService
             try {
                 $response = $this->client()->get("/foot_notes/{$id}");
 
-                if ($response->successful()) {
+                if ($response->successful() && $response->json('foot_note')) {
                     return $response->json('foot_note');
                 }
 
-                return null;
+                // Smart fallback: When adjacent footnotes in Kemenag data are merged into preceding record (id - 1)
+                if ($response->status() === 404 && $id > 1) {
+                    $fallbackResponse = $this->client()->get('/foot_notes/'.($id - 1));
+                    if ($fallbackResponse->successful() && $fallbackResponse->json('foot_note')) {
+                        return $fallbackResponse->json('foot_note');
+                    }
+                }
+
+                return [
+                    'id' => $id,
+                    'text' => 'Penjelasan catatan kaki ini digabungkan pada catatan sebelumnya atau belum tersedia dari sumber data Kemenag.',
+                    'language_name' => 'indonesian',
+                ];
             } catch (Throwable $e) {
                 Log::error("Exception fetching footnote {$id} from Quran Foundation API", [
                     'message' => $e->getMessage(),
                 ]);
 
-                return null;
+                return [
+                    'id' => $id,
+                    'text' => 'Penjelasan catatan kaki tidak dapat dimuat saat ini. Silakan coba sesaat lagi.',
+                    'language_name' => 'indonesian',
+                ];
             }
         });
     }

@@ -97,12 +97,6 @@ class SurahController extends Controller
     {
         $footnote = $this->quran->getFootnote($id);
 
-        if (! $footnote) {
-            return response()->json([
-                'message' => 'Catatan kaki tidak ditemukan.',
-            ], 404);
-        }
-
         return response()->json([
             'footnote' => $footnote,
         ]);

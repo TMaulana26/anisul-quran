@@ -44,10 +44,10 @@ const fetchFootnote = async (id) => {
 
     try {
         const response = await fetch(`/api/footnote/${id}`);
-        if (!response.ok) throw new Error('Gagal memuat penjelasan catatan kaki.');
         const data = await response.json();
         
-        const text = data.footnote?.text || 'Penjelasan tidak tersedia.';
+        const rawText = data.footnote?.text || 'Penjelasan tidak tersedia.';
+        const text = rawText.replace(/<[^>]*>/g, '').trim();
         cache.set(id, text);
         footnoteText.value = text;
     } catch (e) {
