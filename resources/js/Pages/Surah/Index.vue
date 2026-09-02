@@ -52,18 +52,22 @@ const clearSearch = () => {
     <AppLayout title="Daftar 114 Surah">
         <div class="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 space-y-8 animate-fade-in">
             <!-- Hero Banner & Intro -->
-            <section class="relative overflow-hidden rounded-2xl border border-border/80 bg-gradient-to-b from-card via-card to-muted/30 p-6 sm:p-10 shadow-sm animate-scale-in">
-                <div class="max-w-3xl space-y-4">
-                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold">
+            <section class="relative overflow-hidden rounded-3xl border border-border/80 bg-gradient-to-br from-card via-card to-muted/40 p-6 sm:p-10 lg:p-12 shadow-sm animate-scale-in">
+                <!-- Subtle ambient glow background -->
+                <div class="pointer-events-none absolute -right-16 -top-16 h-72 w-72 rounded-full bg-primary/10 blur-3xl" />
+                <div class="pointer-events-none absolute -left-16 -bottom-16 h-72 w-72 rounded-full bg-primary/5 blur-3xl" />
+
+                <div class="relative z-10 max-w-3xl space-y-4">
+                    <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-semibold shadow-2xs">
                         <Sparkles class="h-3.5 w-3.5" />
                         <span>Interactive Quran Player & Karaoke Sync</span>
                     </div>
 
-                    <h1 class="font-heading font-extrabold text-3xl sm:text-4xl lg:text-5xl text-foreground tracking-tight">
-                        Dengarkan & Hayati Lantunan Suci <span class="text-primary">Al-Qur'an</span>
+                    <h1 class="font-heading font-extrabold text-3xl sm:text-4xl lg:text-5xl text-foreground leading-[1.2] sm:leading-[1.25] text-balance">
+                        Dengarkan & Hayati Lantunan Suci <span class="text-primary whitespace-nowrap">Al-Qur'an</span>
                     </h1>
 
-                    <p class="text-muted-foreground text-sm sm:text-base leading-relaxed">
+                    <p class="text-muted-foreground text-sm sm:text-base leading-relaxed max-w-2xl text-pretty">
                         Pilih surah untuk membaca teks ayat, transliterasi Latin, dan terjemahan resmi Kemenag RI yang bergerak selaras dengan lantunan qari favorit Anda.
                     </p>
                 </div>
