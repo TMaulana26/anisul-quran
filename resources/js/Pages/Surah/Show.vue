@@ -85,6 +85,12 @@ onMounted(() => {
 
     const savedFontSize = localStorage.getItem('anisul_font_size');
     if (savedFontSize) arabicFontSize.value = parseInt(savedFontSize, 10);
+
+    const savedShowTranslation = localStorage.getItem('anisul_show_translation');
+    if (savedShowTranslation !== null) showTranslation.value = savedShowTranslation === 'true';
+
+    const savedShowTransliteration = localStorage.getItem('anisul_show_transliteration');
+    if (savedShowTransliteration !== null) showTransliteration.value = savedShowTransliteration === 'true';
 });
 
 const setReadingMode = (mode) => {
@@ -95,6 +101,16 @@ const setReadingMode = (mode) => {
 const setMushafType = (type) => {
     mushafType.value = type;
     localStorage.setItem('anisul_mushaf', type);
+};
+
+const toggleTranslation = () => {
+    showTranslation.value = !showTranslation.value;
+    localStorage.setItem('anisul_show_translation', showTranslation.value);
+};
+
+const toggleTransliteration = () => {
+    showTransliteration.value = !showTransliteration.value;
+    localStorage.setItem('anisul_show_transliteration', showTransliteration.value);
 };
 
 const increaseFontSize = () => {
@@ -269,16 +285,30 @@ const handlePlayVerse = (verse) => {
                         </button>
                     </div>
 
-                    <!-- Toggle Terjemahan (Only relevant in Ayat mode) -->
+                    <!-- Toggle Transliterasi (Latin) -->
                     <button 
                         v-if="readingMode === 'ayah'"
-                        @click="showTranslation = !showTranslation"
+                        @click="toggleTransliteration"
                         type="button"
                         :class="[
                             'px-2.5 py-1.5 rounded-lg border text-xs font-medium transition-colors',
-                            showTranslation ? 'bg-primary/10 border-primary/40 text-primary' : 'bg-card border-border text-muted-foreground'
+                            showTransliteration ? 'bg-primary/10 border-primary/40 text-primary' : 'bg-card border-border text-muted-foreground hover:text-foreground'
                         ]"
-                        title="Tampilkan / Sembunyikan Terjemahan"
+                        title="Tampilkan / Sembunyikan Bacaan Latin Transliterasi"
+                    >
+                        Latin
+                    </button>
+
+                    <!-- Toggle Terjemahan (Bahasa Indonesia) -->
+                    <button 
+                        v-if="readingMode === 'ayah'"
+                        @click="toggleTranslation"
+                        type="button"
+                        :class="[
+                            'px-2.5 py-1.5 rounded-lg border text-xs font-medium transition-colors',
+                            showTranslation ? 'bg-primary/10 border-primary/40 text-primary' : 'bg-card border-border text-muted-foreground hover:text-foreground'
+                        ]"
+                        title="Tampilkan / Sembunyikan Terjemahan Kemenag RI"
                     >
                         Terjemahan
                     </button>
