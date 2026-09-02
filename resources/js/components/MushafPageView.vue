@@ -1,6 +1,7 @@
 <script setup>
 import { computed } from 'vue';
 import { Volume2, Play } from '@lucide/vue';
+import { getFormattedArabicText } from '@/lib/quranUtils';
 
 const props = defineProps({
     verses: {
@@ -47,10 +48,7 @@ const pages = computed(() => {
 });
 
 const getArabicText = (verse) => {
-    if (props.mushafType === 'indopak' && verse.text_indopak) {
-        return verse.text_indopak;
-    }
-    return verse.text_uthmani || verse.text_imlaei || '';
+    return getFormattedArabicText(verse, props.mushafType);
 };
 </script>
 
@@ -77,7 +75,10 @@ const getArabicText = (verse) => {
 
             <!-- Continuous Flowing Arabic Text Block -->
             <div 
-                class="py-4 text-justify font-arabic leading-[2.6] select-text" 
+                :class="[
+                    'py-4 text-justify leading-[2.6] select-text',
+                    mushafType === 'indopak' ? 'font-indopak' : 'font-arabic'
+                ]" 
                 dir="rtl"
                 :style="{ fontSize: `${arabicFontSize}px` }"
             >

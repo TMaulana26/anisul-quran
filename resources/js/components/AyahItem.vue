@@ -1,6 +1,7 @@
 <script setup>
 import { computed } from 'vue';
 import { Play, Volume2, Bookmark, Share2 } from '@lucide/vue';
+import { getFormattedArabicText } from '@/lib/quranUtils';
 
 const props = defineProps({
     verse: {
@@ -51,12 +52,9 @@ const transliterationText = computed(() => {
     return '';
 });
 
-// Arabic text based on selected rasm mushaf
+// Arabic text cleaned and normalized for the selected rasm mushaf
 const arabicText = computed(() => {
-    if (props.mushafType === 'indopak' && props.verse.text_indopak) {
-        return props.verse.text_indopak;
-    }
-    return props.verse.text_uthmani || props.verse.text_imlaei || '';
+    return getFormattedArabicText(props.verse, props.mushafType);
 });
 </script>
 
@@ -107,14 +105,15 @@ const arabicText = computed(() => {
         <div class="py-6 flex justify-end" dir="rtl">
             <p 
                 :class="[
-                    'font-arabic text-right leading-[2.4] select-text transition-colors duration-200',
+                    'text-right leading-[2.5] select-text transition-colors duration-200',
+                    mushafType === 'indopak' ? 'font-indopak' : 'font-arabic',
                     isActive ? 'text-foreground font-semibold' : 'text-foreground'
                 ]"
                 :style="{ fontSize: `${arabicFontSize}px` }"
             >
                 {{ arabicText }}
                 <!-- Ayah End Ornament Symbol -->
-                <span class="inline-flex items-center justify-center mx-2 text-primary font-sans text-xs px-2 py-0.5 rounded-full border border-primary/30 bg-primary/5">
+                <span class="inline-flex items-center justify-center mx-2 text-primary font-sans text-xs px-2 py-0.5 rounded-full border border-primary/30 bg-primary/5 select-none">
                     {{ verse.verse_number }}
                 </span>
             </p>
