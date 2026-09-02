@@ -262,13 +262,19 @@ class QuranFoundationService
 
         return Cache::remember($cacheKey, now()->addDays(3), function () use ($reciterId, $chapterId) {
             try {
-                // Endpoint returns audio_file with audio_url and timestamps (verse_timings)
-                $response = $this->client()->get("/recitations/{$reciterId}/by_chapter/{$chapterId}", [
+                // Endpoint returns audio_file with audio_url and timestamps / segments
+                $response = $this->client()->get("/chapter_recitations/{$reciterId}/{$chapterId}", [
                     'segments' => true,
                 ]);
 
                 if ($response->successful()) {
-                    return $response->json('audio_file');
+                    $audioFile = $response->json('audio_file');
+                    if ($audioFile) {
+                        // Standardize verse_timings property (API uses 'timestamps')
+                        $audioFile['verse_timings'] = $audioFile['timestamps'] ?? $audioFile['verse_timings'] ?? [];
+
+                        return $audioFile;
+                    }
                 }
 
                 return null;

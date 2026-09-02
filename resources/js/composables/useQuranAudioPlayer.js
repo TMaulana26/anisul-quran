@@ -193,7 +193,12 @@ export function useQuranAudioPlayer() {
         currentChapter.value = chapter;
         currentSurahId.value = chapter.id;
         currentSurahName.value = chapter.name_simple || chapter.name_arabic || `Surah ${chapter.id}`;
-        currentRecitation.value = recitationData;
+        
+        // Standardize verse_timings property from either verse_timings or timestamps
+        currentRecitation.value = {
+            ...recitationData,
+            verse_timings: recitationData.verse_timings || recitationData.timestamps || [],
+        };
         
         if (reciter) {
             activeReciter.value = reciter;
@@ -224,6 +229,17 @@ export function useQuranAudioPlayer() {
      */
     const play = async () => {
         if (!audioInstance) return;
+        
+        // If src is not loaded yet but recitation data exists
+        if (!audioInstance.src && currentRecitation.value?.audio_url) {
+            const rawUrl = currentRecitation.value.audio_url;
+            audioInstance.src = rawUrl.startsWith('//') ? `https:${rawUrl}` : rawUrl;
+        }
+
+        if (currentAyahNumber.value === null) {
+            currentAyahNumber.value = 1;
+        }
+
         try {
             isLoading.value = true;
             await audioInstance.play();
