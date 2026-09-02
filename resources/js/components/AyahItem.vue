@@ -101,11 +101,11 @@ const arabicText = computed(() => {
             </div>
         </div>
 
-        <!-- Arabic Verse Text Display -->
-        <div class="py-6 flex justify-end" dir="rtl">
+        <!-- Arabic Verse Text Display (Right Aligned) -->
+        <div class="py-6 text-right" dir="rtl">
             <p 
                 :class="[
-                    'text-right leading-[2.5] select-text transition-colors duration-200',
+                    'text-right leading-[2.6] select-text transition-colors duration-200',
                     mushafType === 'indopak' ? 'font-indopak' : 'font-arabic',
                     isActive ? 'text-foreground font-semibold' : 'text-foreground'
                 ]"
@@ -113,18 +113,18 @@ const arabicText = computed(() => {
             >
                 {{ arabicText }}
                 <!-- Ayah End Ornament Symbol -->
-                <span class="inline-flex items-center justify-center mx-2 text-primary font-sans text-xs px-2 py-0.5 rounded-full border border-primary/30 bg-primary/5 select-none">
+                <span class="inline-flex items-center justify-center mx-2 text-primary font-sans text-xs px-2 py-0.5 rounded-full border border-primary/30 bg-primary/5 select-none align-middle">
                     {{ verse.verse_number }}
                 </span>
             </p>
         </div>
 
-        <!-- Transliteration & Indonesian Translation -->
-        <div v-if="showTransliteration || showTranslation" class="space-y-2.5 pt-2 border-t border-border/40">
+        <!-- Transliteration & Indonesian Translation (Left Aligned) -->
+        <div v-if="showTransliteration || showTranslation" class="space-y-2.5 pt-4 border-t border-border/40 text-left" dir="ltr">
             <!-- Latin Transliteration -->
             <p 
                 v-if="showTransliteration && transliterationText" 
-                class="text-xs sm:text-sm italic text-muted-foreground/90 leading-relaxed font-serif"
+                class="text-xs sm:text-sm italic text-muted-foreground/90 leading-relaxed font-serif text-left"
             >
                 {{ transliterationText }}
             </p>
@@ -133,7 +133,7 @@ const arabicText = computed(() => {
             <p 
                 v-if="showTranslation && translationText" 
                 :class="[
-                    'text-sm sm:text-base leading-relaxed text-foreground/90 transition-colors',
+                    'text-sm sm:text-base leading-relaxed text-foreground/90 text-left transition-colors',
                     isActive ? 'font-medium text-foreground' : ''
                 ]"
             >
