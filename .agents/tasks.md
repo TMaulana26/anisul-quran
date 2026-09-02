@@ -10,7 +10,7 @@
 | Fase | Deskripsi | Status | Progress |
 |:---|:---|:---:|:---:|
 | **Fase 1** | Fondasi Backend Quran Service, Caching & Halaman Surah | `[x]` | 4 / 4 |
-| **Fase 2** | Karaoke Audio Player Engine & Visual Highlighting | `[ ]` | 0 / 5 |
+| **Fase 2** | Karaoke Audio Player Engine & Visual Highlighting | `[x]` | 5 / 5 |
 | **Fase 3** | Fitur Unggulan "Listen Together" (Realtime Multi-Device Sync) | `[ ]` | 0 / 5 |
 | **Fase 4** | Internationalization (i18n), UI Polish (Impeccable) & Full Testing | `[ ]` | 0 / 4 |
 
@@ -59,48 +59,48 @@
 
 ## 🎵 Fase 2: Karaoke Audio Player & Visual Highlighting
 
-- [ ] **Task 2.1: Composable Audio Engine (`useQuranAudioPlayer.js`)**
+- [x] **Task 2.1: Composable Audio Engine (`useQuranAudioPlayer.js`)**
   - **Goal**: State management audio terpusat untuk memutar murottal, melacak posisi millisecond, dan mencocokkan stempel waktu ayat.
   - **Subtasks**:
-    - [ ] Buat composable `resources/js/composables/useQuranAudioPlayer.js`.
-    - [ ] Dukungan state: `isPlaying`, `currentTime`, `duration`, `currentSurahId`, `currentAyahNumber`, `activeReciter`, `playbackRate`.
-    - [ ] Event timeupdate presisi tinggi untuk mendeteksi ayat dan kata yang sedang dibacakan.
-    - [ ] Dukungan preloading audio ayat berikutnya agar perpindahan ayat *gapless*.
+    - [x] Buat composable `resources/js/composables/useQuranAudioPlayer.js`.
+    - [x] Dukungan state: `isPlaying`, `currentTime`, `duration`, `currentSurahId`, `currentAyahNumber`, `activeReciter`, `playbackRate`.
+    - [x] Event timeupdate presisi tinggi untuk mendeteksi ayat dan kata yang sedang dibacakan.
+    - [x] Dukungan preloading audio ayat berikutnya agar perpindahan ayat *gapless*.
   - **File Target**: `resources/js/composables/useQuranAudioPlayer.js`, `resources/js/composables/useQuranAudioPlayer.test.js`
 
-- [ ] **Task 2.2: Floating Audio Player Bar (`AudioPlayerBar.vue`)**
+- [x] **Task 2.2: Floating Audio Player Bar (`AudioPlayerBar.vue`)**
   - **Goal**: Player bar responsif yang melayang di bagian bawah layar.
   - **Subtasks**:
-    - [ ] Tombol Play, Pause, Next Ayah, Prev Ayah, Seekbar slider interaktif.
-    - [ ] Pengatur kecepatan pemutaran (0.75x, 1x, 1.25x, 1.5x).
-    - [ ] Mode repeat (Ulangi Ayat saat ini / Lanjutkan Surah).
-    - [ ] Tombol pintas untuk membuka modal Qari dan tombol *"Listen Together"*.
+    - [x] Tombol Play, Pause, Next Ayah, Prev Ayah, Seekbar slider interaktif.
+    - [x] Pengatur kecepatan pemutaran (0.75x, 1x, 1.25x, 1.5x, 2x).
+    - [x] Mode repeat (Ulangi Ayat saat ini / Lanjutkan Surah).
+    - [x] Tombol pintas untuk membuka modal Qari dan tombol *"Listen Together"*.
   - **File Target**: `resources/js/components/player/AudioPlayerBar.vue`
 
-- [ ] **Task 2.3: Visual Karaoke Highlighting & Smooth Auto-Scroll**
+- [x] **Task 2.3: Visual Karaoke Highlighting & Smooth Auto-Scroll**
   - **Goal**: Ayat dan terjemahan otomatis bersinar (*glow / highlight*) dan viewport ter-scroll secara halus mengikuti bacaan.
   - **Subtasks**:
-    - [ ] Styling visual aktif pada `AyahItem.vue` saat nomor ayat cocok dengan `currentAyahNumber`.
-    - [ ] Auto-scroll otomatis ke ayat aktif dengan opsi disable jika user sedang manual scrolling.
-    - [ ] Tombol "Play Ayat Ini" langsung pada setiap kartu ayat.
+    - [x] Styling visual aktif pada `AyahItem.vue` saat nomor ayat cocok dengan `currentAyahNumber`.
+    - [x] Auto-scroll otomatis ke ayat aktif dengan opsi disable jika user sedang manual scrolling.
+    - [x] Tombol "Play Ayat Ini" langsung pada setiap kartu ayat.
   - **File Target**: `resources/js/components/AyahItem.vue`, `resources/js/Pages/Surah/Show.vue`
 
-- [ ] **Task 2.4: Modal Pemilih Qari (`ReciterSelectorModal.vue`)**
+- [x] **Task 2.4: Modal Pemilih Qari (`ReciterSelectorModal.vue`)**
   - **Goal**: Memungkinkan pengguna memilih qari favorit dengan mudah.
   - **Subtasks**:
-    - [ ] Modal dialog berbasis shadcn-vue dengan daftar qari populer (Mishary Alafasy, Al-Husary, AbdulBaset, Sudais, Ghamdi, dll.).
-    - [ ] Filter pencarian nama Qari.
-    - [ ] Simpan preferensi Qari terakhir di `localStorage`.
+    - [x] Modal dialog berbasis shadcn-vue dengan daftar qari populer (Mishary Alafasy, Al-Husary, AbdulBaset, Sudais, Ghamdi, dll.).
+    - [x] Filter pencarian nama Qari.
+    - [x] Simpan preferensi Qari terakhir di `localStorage`.
   - **File Target**: `resources/js/components/player/ReciterSelectorModal.vue`
 
-- [ ] **Task 2.5: Switcher Mushaf & Tampilan (`SettingsDrawer.vue`)**
+- [x] **Task 2.5: Switcher Mushaf & Tampilan (`SettingsDrawer.vue`)**
   - **Goal**: Pengaturan ukuran teks, jenis rasm font Arab, dan toggle transliterasi/terjemahan.
   - **Subtasks**:
-    - [ ] Switch Rasm: Uthmani Hafs vs IndoPak.
-    - [ ] Slider ukuran font teks Arab (18px - 40px) dan terjemahan.
-    - [ ] Toggle sembunyikan/tampilkan terjemahan dan transliterasi Latin.
-    - [ ] Simpan preferensi tampilan di `localStorage`.
-  - **File Target**: `resources/js/components/settings/SettingsDrawer.vue`
+    - [x] Switch Rasm: Uthmani Hafs vs IndoPak.
+    - [x] Slider ukuran font teks Arab (18px - 40px) dan terjemahan.
+    - [x] Toggle sembunyikan/tampilkan terjemahan dan transliterasi Latin.
+    - [x] Simpan preferensi tampilan di `localStorage`.
+  - **File Target**: `resources/js/components/player/SettingsDrawer.vue`
 
 ---
 

@@ -13,6 +13,14 @@ const props = defineProps({
         type: Boolean,
         default: false,
     },
+    isPlaying: {
+        type: Boolean,
+        default: false,
+    },
+    activeWordIndex: {
+        type: Number,
+        default: null,
+    },
     mushafType: {
         type: String,
         default: 'uthmani', // 'uthmani' or 'indopak'
@@ -66,6 +74,11 @@ const transliterationText = computed(() => {
 const arabicText = computed(() => {
     return getFormattedArabicText(props.verse, props.mushafType);
 });
+
+// Check if verse has rich Arabic word tokens available
+const hasArabicWords = computed(() => {
+    return Array.isArray(props.verse.words) && props.verse.words.some(w => Boolean(w.text_uthmani || w.text_indopak || w.text));
+});
 </script>
 
 <template>
@@ -74,7 +87,7 @@ const arabicText = computed(() => {
         :class="[
             'group relative p-5 sm:p-6 rounded-2xl border transition-all duration-300',
             isActive 
-                ? 'bg-primary/10 border-primary/60 shadow-xs ring-1 ring-primary/20' 
+                ? 'bg-primary/10 border-primary/60 shadow-md ring-2 ring-primary/30' 
                 : 'bg-card border-border/80 hover:border-border hover:bg-muted/20'
         ]"
     >
@@ -90,16 +103,16 @@ const arabicText = computed(() => {
                     @click="emit('play', verse)"
                     type="button"
                     :class="[
-                        'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg font-medium transition-colors',
+                        'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg font-medium transition-colors cursor-pointer',
                         isActive 
                             ? 'bg-primary text-primary-foreground shadow-xs' 
                             : 'bg-muted hover:bg-primary/10 hover:text-primary text-foreground'
                     ]"
                     :title="`Putar Ayat ${verse.verse_number}`"
                 >
-                    <Volume2 v-if="isActive" class="h-3.5 w-3.5 animate-pulse" />
+                    <Volume2 v-if="isActive && isPlaying" class="h-3.5 w-3.5 animate-pulse" />
                     <Play v-else class="h-3.5 w-3.5" />
-                    <span>{{ isActive ? 'Sedang Diputar' : 'Putar' }}</span>
+                    <span>{{ isActive ? (isPlaying ? 'Sedang Diputar' : 'Jeda') : 'Putar' }}</span>
                 </button>
             </div>
 
@@ -117,15 +130,32 @@ const arabicText = computed(() => {
                 :class="[
                     'text-right leading-[2.6] select-text transition-colors duration-200',
                     mushafType === 'indopak' ? 'font-indopak' : 'font-arabic',
-                    isActive ? 'text-foreground font-semibold' : 'text-foreground'
+                    isActive ? 'text-foreground' : 'text-foreground'
                 ]"
                 :style="{ fontSize: `${arabicFontSize}px` }"
             >
-                {{ arabicText }}
-                <!-- Ayah End Ornament Symbol -->
-                <span class="inline-flex items-center justify-center mx-2 text-primary font-sans text-xs px-2 py-0.5 rounded-full border border-primary/30 bg-primary/5 select-none align-middle">
-                    {{ verse.verse_number }}
-                </span>
+                <!-- Word by Word rendering with active highlight -->
+                <template v-if="hasArabicWords">
+                    <span
+                        v-for="word in verse.words"
+                        :key="word.id || word.position"
+                        :class="[
+                            'inline-block transition-all duration-150 mx-0.5 px-1 py-0.5 rounded-lg',
+                            isActive && isPlaying && activeWordIndex === word.position
+                                ? 'bg-primary/20 text-primary font-bold scale-105'
+                                : ''
+                        ]"
+                    >
+                        {{ word.char_type_name === 'end' ? (word.text_uthmani || verse.verse_number) : (mushafType === 'indopak' ? (word.text_indopak || word.text) : (word.text_uthmani || word.text)) }}
+                    </span>
+                </template>
+                <template v-else>
+                    {{ arabicText }}
+                    <!-- Ayah End Ornament Symbol -->
+                    <span class="inline-flex items-center justify-center mx-2 text-primary font-sans text-xs px-2 py-0.5 rounded-full border border-primary/30 bg-primary/5 select-none align-middle">
+                        {{ verse.verse_number }}
+                    </span>
+                </template>
             </p>
         </div>
 

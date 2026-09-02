@@ -1,9 +1,13 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue';
-import { Link } from '@inertiajs/vue3';
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
+import { Link, router } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import AyahItem from '@/components/AyahItem.vue';
 import MushafPageView from '@/components/MushafPageView.vue';
+import AudioPlayerBar from '@/components/player/AudioPlayerBar.vue';
+import ReciterSelectorModal from '@/components/player/ReciterSelectorModal.vue';
+import SettingsDrawer from '@/components/player/SettingsDrawer.vue';
+import { useQuranAudioPlayer } from '@/composables/useQuranAudioPlayer';
 import { 
     ChevronLeft, 
     ChevronRight, 
@@ -14,7 +18,9 @@ import {
     Sparkles, 
     BookOpen,
     List,
-    SlidersHorizontal
+    SlidersHorizontal,
+    User,
+    Sliders
 } from '@lucide/vue';
 
 const props = defineProps({
@@ -52,13 +58,26 @@ const props = defineProps({
     },
 });
 
+// Audio Engine Composable
+const audioPlayer = useQuranAudioPlayer();
+
 // View & Customization States
 const readingMode = ref('ayah'); // 'ayah' (per ayat) | 'mushaf' (per lembar)
 const mushafType = ref('uthmani'); // 'uthmani' or 'indopak'
-const arabicFontSize = ref(28); // 20 - 40px
+const arabicFontSize = ref(28); // 20 - 44px
 const showTranslation = ref(true);
 const showTransliteration = ref(true);
-const activeAyahNumber = ref(null);
+
+// Modals State
+const showReciterModal = ref(false);
+const showSettingsDrawer = ref(false);
+
+// Active Reciter computed based on localStorage or prop
+const currentReciter = computed(() => {
+    const savedId = typeof window !== 'undefined' ? parseInt(localStorage.getItem('anisul_selected_reciter'), 10) : null;
+    const targetId = savedId || props.selectedReciterId || 7;
+    return props.reciters.find(r => r.id === targetId) || props.reciters[0] || { id: 7, name: 'Mishary Rashid Alafasy' };
+});
 
 // Previous and Next Surah Navigation
 const prevChapter = computed(() => {
@@ -75,7 +94,7 @@ const nextChapter = computed(() => {
     return null;
 });
 
-// Load preferences from localStorage
+// Initialize & Load Surah into Audio Engine
 onMounted(() => {
     const savedReadingMode = localStorage.getItem('anisul_reading_mode');
     if (savedReadingMode) readingMode.value = savedReadingMode;
@@ -91,6 +110,29 @@ onMounted(() => {
 
     const savedShowTransliteration = localStorage.getItem('anisul_show_transliteration');
     if (savedShowTransliteration !== null) showTransliteration.value = savedShowTransliteration === 'true';
+
+    // Load current surah audio into engine if not already loaded
+    if (props.chapter && props.recitation) {
+        audioPlayer.loadSurah(props.chapter, props.recitation, currentReciter.value, 1, false);
+    }
+});
+
+// Watch chapter change to update audio player
+watch(() => props.chapter?.id, (newId) => {
+    if (newId && props.chapter && props.recitation) {
+        audioPlayer.loadSurah(props.chapter, props.recitation, currentReciter.value, 1, false);
+    }
+});
+
+// Smooth Auto-Scroll to Active Ayah
+watch(() => audioPlayer.currentAyahNumber.value, (ayahNum) => {
+    if (!ayahNum || !audioPlayer.autoScrollEnabled.value) return;
+
+    const elId = readingMode.value === 'mushaf' ? `mushaf-ayah-${ayahNum}` : `ayah-${ayahNum}`;
+    const el = document.getElementById(elId);
+    if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
 });
 
 const setReadingMode = (mode) => {
@@ -114,7 +156,7 @@ const toggleTransliteration = () => {
 };
 
 const increaseFontSize = () => {
-    if (arabicFontSize.value < 42) {
+    if (arabicFontSize.value < 44) {
         arabicFontSize.value += 2;
         localStorage.setItem('anisul_font_size', arabicFontSize.value);
     }
@@ -127,15 +169,42 @@ const decreaseFontSize = () => {
     }
 };
 
-// Play individual verse
+// Play or toggle individual verse directly from Ayah Card
 const handlePlayVerse = (verse) => {
-    activeAyahNumber.value = verse.verse_number;
+    if (audioPlayer.currentAyahNumber.value === verse.verse_number && audioPlayer.isPlaying.value) {
+        audioPlayer.pause();
+    } else {
+        audioPlayer.seekToAyah(verse.verse_number, true);
+    }
+};
+
+// Dynamic Reciter Switch
+const handleSelectReciter = async (reciter) => {
+    localStorage.setItem('anisul_selected_reciter', reciter.id);
+    try {
+        const res = await fetch(`/api/recitation/${props.chapter.id}?reciter=${reciter.id}`);
+        if (res.ok) {
+            const data = await res.json();
+            if (data.recitation) {
+                const wasPlaying = audioPlayer.isPlaying.value;
+                const currentAyah = audioPlayer.currentAyahNumber.value || 1;
+                audioPlayer.loadSurah(props.chapter, data.recitation, reciter, currentAyah, wasPlaying);
+            }
+        }
+    } catch (err) {
+        console.error('Failed to switch reciter audio:', err);
+    }
+};
+
+const handleListenTogether = () => {
+    // Phase 3 trigger
+    alert('Fitur "Listen Together" (Sinkronisasi Realtime Antar-Perangkat) akan hadir di Fase 3! Nantikan peluncurannya segera.');
 };
 </script>
 
 <template>
     <AppLayout :title="`Surah ${chapter.name_simple} (${chapter.name_arabic})`">
-        <div class="container mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-6 space-y-8 animate-fade-in">
+        <div class="container mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-6 space-y-8 animate-fade-in pb-28">
             <!-- Top Breadcrumb & Navigation -->
             <div class="flex items-center justify-between gap-4">
                 <Link 
@@ -171,7 +240,7 @@ const handlePlayVerse = (verse) => {
             </div>
 
             <!-- Surah Hero Header Card -->
-            <header class="relative overflow-hidden rounded-2xl border border-border/80 bg-gradient-to-b from-card via-card to-muted/30 p-6 sm:p-10 shadow-sm text-center space-y-4">
+            <header class="relative overflow-hidden rounded-3xl border border-border/80 bg-gradient-to-b from-card via-card to-muted/30 p-6 sm:p-10 shadow-sm text-center space-y-4">
                 <div class="flex flex-col items-center justify-center space-y-2">
                     <div class="inline-flex items-center justify-center px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold">
                         <span>Surah Ke-{{ chapter.id }} • {{ chapter.revelation_place === 'makkah' ? 'Makkiyah' : 'Madaniyah' }}</span>
@@ -204,15 +273,15 @@ const handlePlayVerse = (verse) => {
                 </div>
             </header>
 
-            <!-- Reader Controls Bar (Reading Mode, Rasm & Font Sizing) -->
-            <section class="sticky top-18 z-30 flex flex-wrap items-center justify-between gap-3 p-3 rounded-xl border border-border bg-background/90 backdrop-blur-md shadow-xs transition-all">
+            <!-- Reader Controls Bar (Reading Mode, Rasm, Font Sizing & Settings Trigger) -->
+            <section class="sticky top-18 z-30 flex flex-wrap items-center justify-between gap-3 p-3 rounded-2xl border border-border bg-background/90 backdrop-blur-md shadow-xs transition-all">
                 <!-- Reading Mode Switcher: Per Ayat vs Mushaf Fisik -->
-                <div class="flex items-center gap-1 bg-muted p-1 rounded-lg text-xs">
+                <div class="flex items-center gap-1 bg-muted/70 p-1 rounded-xl text-xs">
                     <button 
                         @click="setReadingMode('ayah')"
                         type="button"
                         :class="[
-                            'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md font-medium transition-colors',
+                            'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium transition-colors cursor-pointer',
                             readingMode === 'ayah' 
                                 ? 'bg-card text-foreground shadow-xs' 
                                 : 'text-muted-foreground hover:text-foreground'
@@ -226,7 +295,7 @@ const handlePlayVerse = (verse) => {
                         @click="setReadingMode('mushaf')"
                         type="button"
                         :class="[
-                            'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md font-medium transition-colors',
+                            'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium transition-colors cursor-pointer',
                             readingMode === 'mushaf' 
                                 ? 'bg-card text-foreground shadow-xs' 
                                 : 'text-muted-foreground hover:text-foreground'
@@ -238,15 +307,15 @@ const handlePlayVerse = (verse) => {
                     </button>
                 </div>
 
-                <!-- Right Controls: Rasm, Font Size & Toggle Translation -->
+                <!-- Right Controls: Rasm, Font Size, Qari & Settings Button -->
                 <div class="flex flex-wrap items-center gap-2 sm:gap-3">
                     <!-- Rasm Mushaf Switcher -->
-                    <div class="flex items-center gap-1 bg-muted p-1 rounded-lg text-xs">
+                    <div class="flex items-center gap-1 bg-muted/70 p-1 rounded-xl text-xs">
                         <button 
                             @click="setMushafType('uthmani')"
                             type="button"
                             :class="[
-                                'px-2.5 py-1 rounded-md font-medium transition-colors',
+                                'px-2.5 py-1 rounded-lg font-medium transition-colors cursor-pointer',
                                 mushafType === 'uthmani' ? 'bg-card text-foreground shadow-xs' : 'text-muted-foreground hover:text-foreground'
                             ]"
                         >
@@ -256,7 +325,7 @@ const handlePlayVerse = (verse) => {
                             @click="setMushafType('indopak')"
                             type="button"
                             :class="[
-                                'px-2.5 py-1 rounded-md font-medium transition-colors',
+                                'px-2.5 py-1 rounded-lg font-medium transition-colors cursor-pointer',
                                 mushafType === 'indopak' ? 'bg-card text-foreground shadow-xs' : 'text-muted-foreground hover:text-foreground'
                             ]"
                         >
@@ -265,11 +334,11 @@ const handlePlayVerse = (verse) => {
                     </div>
 
                     <!-- Font Size Buttons -->
-                    <div class="flex items-center gap-1 bg-muted p-1 rounded-lg text-xs">
+                    <div class="flex items-center gap-1 bg-muted/70 p-1 rounded-xl text-xs">
                         <button 
                             @click="decreaseFontSize" 
                             type="button" 
-                            class="px-2 py-1 rounded-md font-bold text-muted-foreground hover:text-foreground hover:bg-card transition-colors"
+                            class="px-2 py-1 rounded-lg font-bold text-muted-foreground hover:text-foreground hover:bg-card transition-colors cursor-pointer"
                             title="Perkecil Ukuran Huruf Arab"
                         >
                             A-
@@ -278,39 +347,21 @@ const handlePlayVerse = (verse) => {
                         <button 
                             @click="increaseFontSize" 
                             type="button" 
-                            class="px-2 py-1 rounded-md font-bold text-muted-foreground hover:text-foreground hover:bg-card transition-colors"
+                            class="px-2 py-1 rounded-lg font-bold text-muted-foreground hover:text-foreground hover:bg-card transition-colors cursor-pointer"
                             title="Perbesar Ukuran Huruf Arab"
                         >
                             A+
                         </button>
                     </div>
 
-                    <!-- Toggle Transliterasi (Latin) -->
-                    <button 
-                        v-if="readingMode === 'ayah'"
-                        @click="toggleTransliteration"
+                    <!-- Settings Drawer Trigger Button -->
+                    <button
                         type="button"
-                        :class="[
-                            'px-2.5 py-1.5 rounded-lg border text-xs font-medium transition-colors',
-                            showTransliteration ? 'bg-primary/10 border-primary/40 text-primary' : 'bg-card border-border text-muted-foreground hover:text-foreground'
-                        ]"
-                        title="Tampilkan / Sembunyikan Bacaan Latin Transliterasi"
+                        @click="showSettingsDrawer = true"
+                        class="p-2 rounded-xl border border-border bg-card hover:bg-muted text-foreground transition-colors cursor-pointer"
+                        title="Buka Pengaturan Tampilan Lengkap"
                     >
-                        Latin
-                    </button>
-
-                    <!-- Toggle Terjemahan (Bahasa Indonesia) -->
-                    <button 
-                        v-if="readingMode === 'ayah'"
-                        @click="toggleTranslation"
-                        type="button"
-                        :class="[
-                            'px-2.5 py-1.5 rounded-lg border text-xs font-medium transition-colors',
-                            showTranslation ? 'bg-primary/10 border-primary/40 text-primary' : 'bg-card border-border text-muted-foreground hover:text-foreground'
-                        ]"
-                        title="Tampilkan / Sembunyikan Terjemahan Kemenag RI"
-                    >
-                        Terjemahan
+                        <SlidersHorizontal class="h-4 w-4 text-primary" />
                     </button>
                 </div>
             </section>
@@ -323,7 +374,9 @@ const handlePlayVerse = (verse) => {
                         v-for="verse in verses" 
                         :key="verse.id" 
                         :verse="verse"
-                        :is-active="activeAyahNumber === verse.verse_number"
+                        :is-active="audioPlayer.currentAyahNumber.value === verse.verse_number"
+                        :is-playing="audioPlayer.isPlaying.value"
+                        :active-word-index="audioPlayer.currentWordIndex.value"
                         :mushaf-type="mushafType"
                         :show-translation="showTranslation"
                         :show-transliteration="showTransliteration"
@@ -339,7 +392,7 @@ const handlePlayVerse = (verse) => {
                         :chapter="chapter"
                         :mushaf-type="mushafType"
                         :arabic-font-size="arabicFontSize"
-                        :active-ayah-number="activeAyahNumber"
+                        :active-ayah-number="audioPlayer.currentAyahNumber.value"
                         @play="handlePlayVerse"
                     />
                 </section>
@@ -367,5 +420,31 @@ const handlePlayVerse = (verse) => {
                 </Link>
             </div>
         </div>
+
+        <!-- Floating Audio Player Bar -->
+        <AudioPlayerBar 
+            @open-reciter-modal="showReciterModal = true"
+            @open-settings="showSettingsDrawer = true"
+            @open-listen-together="handleListenTogether"
+        />
+
+        <!-- Reciter Selector Modal Dialog -->
+        <ReciterSelectorModal 
+            v-model:open="showReciterModal"
+            :reciters="reciters"
+            :selected-reciter-id="currentReciter.id"
+            @select-reciter="handleSelectReciter"
+        />
+
+        <!-- Settings Drawer Dialog -->
+        <SettingsDrawer 
+            v-model:open="showSettingsDrawer"
+            v-model:readingMode="readingMode"
+            v-model:mushafType="mushafType"
+            v-model:arabicFontSize="arabicFontSize"
+            v-model:showTranslation="showTranslation"
+            v-model:showTransliteration="showTransliteration"
+            v-model:autoScrollEnabled="audioPlayer.autoScrollEnabled.value"
+        />
     </AppLayout>
 </template>

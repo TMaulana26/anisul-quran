@@ -70,6 +70,8 @@ describe('AyahItem Component', () => {
             props: {
                 verse: mockVerse,
                 isActive: true,
+                isPlaying: true,
+                activeWordIndex: 1,
             },
         });
 
