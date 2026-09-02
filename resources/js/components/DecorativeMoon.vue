@@ -9,19 +9,23 @@ defineProps({
 
 <template>
     <div 
-        class="decorative-moon-wrapper group relative inline-flex items-center justify-center cursor-pointer select-none transition-all duration-700 ease-out will-change-transform"
+        class="decorative-moon-container relative inline-flex items-center justify-center select-none"
         :class="className"
         role="img"
         aria-label="Ornamen Seni Kaligrafi Bulan Sabit Islami"
     >
-        <svg 
-            viewBox="0 0 25005 16671" 
-            xmlns="http://www.w3.org/2000/svg" 
-            xml:space="preserve" 
-            style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;"
-            class="w-full h-full text-current transition-all duration-500"
-        >
-            <g fill="currentColor" class="moon-main-body">
+        <!-- Outer Layer: Looping Celestial Float (Continuous & Uninterrupted) -->
+        <div class="decorative-moon-float w-full h-full inline-flex items-center justify-center will-change-transform">
+            <!-- Inner Layer: Interactive Micro-Interactions (Smooth Scale & Hover Interpolation) -->
+            <div class="decorative-moon-interactive group relative w-full h-full inline-flex items-center justify-center cursor-pointer">
+                <svg 
+                    viewBox="0 0 25005 16671" 
+                    xmlns="http://www.w3.org/2000/svg" 
+                    xml:space="preserve" 
+                    style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;"
+                    class="w-full h-full text-current"
+                >
+                    <g fill="currentColor" class="moon-main-body">
             <path d="M19602.5,12599.042c-1293.042,1150.667 -2913.959,1870.542 -4660.875,1908.833c-208.958,3.625 -418,-2.583 -626.375,-18.583c-103.499,-8.542 -207.333,-22.917 -309.125,-32.75c-37.125,68.333 -85.083,133.625 -114.708,208.417c641.708,78.125 1292.875,70 1935.917,-25.917c347.833,-49.292 704.125,-112.292 1034.375,-232.292c64.208,-23.333 128.708,-46.083 192.959,-69.292c371.828,-132.583 735.25,-287.792 1088.125,-464.708c105.042,-53.917 212.874,-120.042 317.959,-177.792c-103.375,98 -248.043,212 -361.501,302.25c-236.499,190.625 -479.875,372.625 -729.665,545.542c-1153.584,794.167 -2618.876,1236.333 -4010.792,1322.5c-1999.667,137.625 -3971.209,-531.083 -5474.542,-1856.792c-1450.875,-1282.833 -2341.167,-2881.375 -2543.125,-4823.042c-221.833,-2132.167 455.541,-4108.75 1870.792,-5704.121c1405.209,-1616.021 3406.375,-2592.188 5544.958,-2704.809c360.75,-23.845 757.333,4.984 1115.75,43.479c121.584,13.058 267.917,21.362 385.5,44.267c-1077.375,75.841 -2126.334,379.767 -3077.375,891.621c-287.833,157.737 -568.166,354.379 -828.875,553.038c-1230.167,922.841 -2127.042,2220.567 -2555.375,3697.525c-498.667,1703.624 -304.459,3584.833 576.875,5115.25c50.542,-89.25 108.042,-170.167 111,-269.083c-779.708,-1497 -941.167,-3240.542 -448.875,-4855.75c550.495,-1776.875 1777.292,-3266.254 3415.834,-4146.909c1103.292,-586.958 2421.333,-835.717 3663.5,-827.883c259.333,1.638 652.167,7.62 908.041,53.404c-123.625,-52.537 -414.375,-135.713 -544.667,-171.208c-655.5,-184.734 -1330.792,-290.163 -2011.417,-314.026c-166.416,-6.775 -354.292,-14.771 -520.5,-7.779c-1005.542,37.221 -1863,184.637 -2804.625,561.017c-1602,640.309 -2988.25,1828.192 -3910.084,3286.842c-791.916,1278.916 -1185.333,2764.542 -1130.167,4267.792c74.375,2017.958 951.542,3922.708 2436.583,5291.042c1516.125,1427.75 3544.333,2183.167 5625.041,2095.042c2265.708,-72.125 4405.125,-1060.542 5928.709,-2739.083c247.542,-267.917 631.5,-721.583 816.125,-1035.042c-99.084,103.375 -198.584,193.958 -305.375,289Z" />
             <path d="M17552.124,14201.417l-565.125,236.417c-112.999,47.375 -224.374,103.167 -339.749,144.125c-1487.458,528.167 -3193.501,746.083 -4747.542,416.583c-589.874,-128.917 -1159.958,-335.792 -1695.208,-615.208c-2043.417,-1073.125 -3467.833,-3100.833 -3754.584,-5396.792c-159.708,-1390 106.25,-2795.75 762.709,-4031.333c661.625,-1252.642 1834.333,-2359.566 3074.083,-3036.075c439.208,-239.655 1031,-480.216 1508.083,-626.688c476,-150.054 961.333,-268.946 1452.833,-355.92c112.333,-19 276.5,-50.138 388.458,-58.709c-14.667,-9.017 -26.249,-12.305 -42.291,-18.421c-82.875,5.142 -168.167,15.096 -250.167,28.222c-818.75,131.071 -1659.874,342.524 -2423.833,663.216c-1070.708,455 -2027.584,1141.046 -2802.208,2009.021c-1254.083,1395.688 -1888.375,3240.396 -1757.833,5112.146c112.792,1802.167 1027.042,3541.5 2345.121,4746.458c2184.588,1997.125 5197.879,2207.792 7891.255,1228.792c169.708,-61.667 337.208,-153.042 506.916,-216.958c287.5,-117.625 621.918,-247 884.292,-405.208c-136.332,39.875 -301.75,119.75 -435.209,176.333Z" />
             <path d="M6063,10446.542c-138.167,-41 -297.042,-91.083 -432.333,-142.125c142.375,590.5 358.542,1089.333 639.25,1623.792c21,-78.917 42.75,-169.042 69.333,-245.292c211.375,-557.958 554.167,-990 -276.25,-1236.375Z" />
@@ -169,26 +173,33 @@ defineProps({
                 <path d="M14220.416,11673.042c-18.541,8.125 -31.25,25.708 -33,45.917c-1.791,20.167 7.625,39.708 24.501,50.917c16.916,11.208 38.583,12.291 56.499,2.833c26.292,-13.917 36.875,-46.125 23.958,-72.917c-12.916,-26.791 -44.667,-38.583 -71.958,-26.75Z" />
                 <path d="M14972.209,12509.583c-12.126,18.125 -9.625,24.333 -12.417,47.834c12.999,20.667 16.583,23.292 24.5,46.5c-2.5,-40.333 -3.542,-55.292 -12.083,-94.333Z" />
             </g>
-        </svg>
+                </svg>
+            </div>
+        </div>
     </div>
 </template>
 
 <style scoped>
-/* Looping Celestial Float */
-.decorative-moon-wrapper {
-    animation: celestialFloat 7.5s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+/* Outer Layer: Looping Celestial Float (Continuous & Isolated) */
+.decorative-moon-float {
+    animation: celestialFloat 8s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
     transform-origin: center center;
-    transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), filter 0.4s ease;
 }
 
-/* Micro-Interaction: Hover and Active tactile response */
-.decorative-moon-wrapper:hover {
-    transform: translateY(-6px) scale(1.05) rotate(1deg);
-    filter: brightness(1.12);
+/* Inner Layer: Micro-Interaction with smooth entry/exit interpolation */
+.decorative-moon-interactive {
+    transform: scale(1);
+    transform-origin: center center;
+    transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), filter 0.4s ease;
 }
 
-.decorative-moon-wrapper:active {
-    transform: translateY(-2px) scale(0.97) rotate(0deg);
+.decorative-moon-interactive:hover {
+    transform: scale(1.045);
+    filter: brightness(1.1);
+}
+
+.decorative-moon-interactive:active {
+    transform: scale(0.97);
     transition-duration: 0.12s;
 }
 
@@ -212,9 +223,9 @@ defineProps({
 }
 
 /* Accelerate star twinkle on hover for lively delight */
-.decorative-moon-wrapper:hover .star-group-1,
-.decorative-moon-wrapper:hover .star-group-2,
-.decorative-moon-wrapper:hover .star-group-3 {
+.decorative-moon-interactive:hover .star-group-1,
+.decorative-moon-interactive:hover .star-group-2,
+.decorative-moon-interactive:hover .star-group-3 {
     animation-duration: 1.6s;
     opacity: 1;
 }
@@ -224,10 +235,10 @@ defineProps({
         transform: translateY(0px) rotate(0deg);
     }
     35% {
-        transform: translateY(-7px) rotate(-1deg);
+        transform: translateY(-8px) rotate(-1deg);
     }
     70% {
-        transform: translateY(3px) rotate(0.8deg);
+        transform: translateY(4px) rotate(0.8deg);
     }
     100% {
         transform: translateY(0px) rotate(0deg);
@@ -247,9 +258,11 @@ defineProps({
 
 /* Accessibility: Reduce Motion */
 @media (prefers-reduced-motion: reduce) {
-    .decorative-moon-wrapper {
+    .decorative-moon-float {
         animation: none !important;
         transform: none !important;
+    }
+    .decorative-moon-interactive {
         transition: opacity 0.2s ease, filter 0.2s ease !important;
     }
     .star-group-1,
