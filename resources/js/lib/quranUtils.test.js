@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { cleanArabicText, getFormattedArabicText } from './quranUtils';
+import { cleanArabicText, getFormattedArabicText, cleanTranslationText } from './quranUtils';
 
 describe('quranUtils', () => {
     it('cleans PUA waqf marks and maps them to standard Unicode marks', () => {
@@ -26,5 +26,21 @@ describe('quranUtils', () => {
 
         expect(getFormattedArabicText(mockVerse, 'uthmani')).toBe('بِسْمِ ٱللَّهِ');
         expect(getFormattedArabicText(mockVerse, 'indopak')).toContain('بِسۡمِ اللّٰهِ ۚ');
+    });
+
+    it('strips footnote sup tags and footnote numbers from translation', () => {
+        const rawTranslation = 'Allah, tidak ada tuhan selain Dia. Yang Mahahidup, Yang terus menerus mengurus (makhluk-Nya).<sup foot_note=135060>1</sup>';
+        const cleaned = cleanTranslationText(rawTranslation);
+
+        expect(cleaned).toBe('Allah, tidak ada tuhan selain Dia. Yang Mahahidup, Yang terus menerus mengurus (makhluk-Nya).');
+        expect(cleaned).not.toContain('1</sup>');
+        expect(cleaned).not.toContain('135060');
+    });
+
+    it('cleans mid-sentence footnote sup tags cleanly', () => {
+        const midSentence = 'saling meminta,<sup foot_note=135123>1</sup> dan (peliharalah)';
+        const cleaned = cleanTranslationText(midSentence);
+
+        expect(cleaned).toBe('saling meminta, dan (peliharalah)');
     });
 });

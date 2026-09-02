@@ -1,7 +1,7 @@
 <script setup>
 import { computed } from 'vue';
 import { Play, Volume2, Bookmark, Share2 } from '@lucide/vue';
-import { getFormattedArabicText } from '@/lib/quranUtils';
+import { getFormattedArabicText, cleanTranslationText } from '@/lib/quranUtils';
 
 const props = defineProps({
     verse: {
@@ -36,9 +36,7 @@ const emit = defineEmits(['play']);
 const translationText = computed(() => {
     if (!props.verse.translations || props.verse.translations.length === 0) return '';
     
-    // Clean any HTML tags in translation (e.g. <sup> footnotes)
-    const rawText = props.verse.translations[0].text || '';
-    return rawText.replace(/<[^>]*>/g, '');
+    return cleanTranslationText(props.verse.translations[0].text || '');
 });
 
 // Extract transliteration from words if available

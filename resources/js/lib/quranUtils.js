@@ -51,3 +51,23 @@ export function getFormattedArabicText(verse, mushafType = 'uthmani') {
 
     return cleanArabicText(verse.text_uthmani || verse.text_imlaei || '');
 }
+
+/**
+ * Clean translation text by stripping HTML footnote tags (<sup foot_note=...>1</sup>),
+ * extra formatting tags, and fixing punctuation spacing.
+ *
+ * @param {string} text
+ * @returns {string}
+ */
+export function cleanTranslationText(text) {
+    if (!text || typeof text !== 'string') return '';
+
+    return text
+        // Remove <sup>...</sup> along with the inner footnote index numbers
+        .replace(/<sup[^>]*>[\s\S]*?<\/sup>/gi, '')
+        // Strip any other HTML tags
+        .replace(/<[^>]*>/g, '')
+        // Clean up any extra spacing before punctuation
+        .replace(/\s+([,.:;!?])/g, '$1')
+        .trim();
+}
