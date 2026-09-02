@@ -140,6 +140,8 @@ class QuranFoundationService
      */
     public function getVersesByChapter(int $chapterId, array $params = []): array
     {
+        ini_set('memory_limit', '512M');
+
         $defaultParams = [
             'language' => 'id',
             'words' => true,
