@@ -39,7 +39,7 @@ return [
         'base_url' => env('QURAN_FOUNDATION_BASE_URL', 'https://api.quran.com/api/v4'),
         'api_key' => env('QURAN_FOUNDATION_API_KEY'),
         'client_id' => env('QURAN_FOUNDATION_CLIENT_ID'),
-        'client_secret' => env('QURAN_FOUNDATION_CLIENT_SECRET'),
+        'client_secret' => env('QURAN_FOUNDATION_CLIENT_SECRET', env('QURAN_FOUNDATION_SECRET')),
         'redirect_uri' => env('QURAN_FOUNDATION_REDIRECT_URI'),
     ],
 

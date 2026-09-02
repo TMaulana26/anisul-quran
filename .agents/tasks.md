@@ -9,7 +9,7 @@
 
 | Fase | Deskripsi | Status | Progress |
 |:---|:---|:---:|:---:|
-| **Fase 1** | Fondasi Backend Quran Service, Caching & Halaman Surah | `[ ]` | 0 / 4 |
+| **Fase 1** | Fondasi Backend Quran Service, Caching & Halaman Surah | `[x]` | 4 / 4 |
 | **Fase 2** | Karaoke Audio Player Engine & Visual Highlighting | `[ ]` | 0 / 5 |
 | **Fase 3** | Fitur Unggulan "Listen Together" (Realtime Multi-Device Sync) | `[ ]` | 0 / 5 |
 | **Fase 4** | Internationalization (i18n), UI Polish (Impeccable) & Full Testing | `[ ]` | 0 / 4 |
@@ -18,41 +18,41 @@
 
 ## 🚀 Fase 1: Fondasi Backend Quran Service & Halaman Surah
 
-- [ ] **Task 1.1: Pembuatan `QuranFoundationService` & Smart Caching**
+- [x] **Task 1.1: Pembuatan `QuranFoundationService` & Smart Caching**
   - **Goal**: Menyediakan service backend Laravel yang mengambil data dari Quran Foundation API (`api.quran.com/api/v4`) dengan caching efisien.
   - **Subtasks**:
-    - [ ] Buat class `App\Services\QuranFoundationService.php`.
-    - [ ] Implementasi method `getChapters(string $language = 'id')` dengan caching 7 hari.
-    - [ ] Implementasi method `getChapter(int $id, string $language = 'id')`.
-    - [ ] Implementasi method `getVersesByChapter(int $chapterId, array $params = [])` (mendukung `words=true`, `translations=33` Kemenag RI, `fields=text_uthmani,text_indopak`).
-    - [ ] Implementasi method `getReciters(string $language = 'id')` dan `getChapterRecitation(int $reciterId, int $chapterId)`.
-    - [ ] Tambahkan unit/feature test backend dengan `Http::fake()`.
+    - [x] Buat class `App\Services\QuranFoundationService.php`.
+    - [x] Implementasi method `getChapters(string $language = 'id')` dengan caching 7 hari.
+    - [x] Implementasi method `getChapter(int $id, string $language = 'id')`.
+    - [x] Implementasi method `getVersesByChapter(int $chapterId, array $params = [])` (mendukung `words=true`, `translations=33` Kemenag RI, `fields=text_uthmani,text_indopak`).
+    - [x] Implementasi method `getReciters(string $language = 'id')` dan `getChapterRecitation(int $reciterId, int $chapterId)`.
+    - [x] Tambahkan unit/feature test backend dengan `Http::fake()`.
   - **File Target**: `app/Services/QuranFoundationService.php`, `tests/Feature/QuranFoundationServiceTest.php`
 
-- [ ] **Task 1.2: Pembuatan Controller & Routing Surah**
+- [x] **Task 1.2: Pembuatan Controller & Routing Surah**
   - **Goal**: Menyediakan endpoint Inertia untuk menampilkan daftar Surah dan halaman detail Surah.
   - **Subtasks**:
-    - [ ] Buat `App\Http\Controllers\SurahController.php`.
-    - [ ] Route `GET /` & `GET /surah` -> `SurahController@index` (render `Surah/Index.vue`).
-    - [ ] Route `GET /surah/{id}` -> `SurahController@show` (render `Surah/Show.vue`).
-    - [ ] Pastikan payload props Inertia ringan dan terstruktur.
+    - [x] Buat `App\Http\Controllers\SurahController.php`.
+    - [x] Route `GET /` & `GET /surah` -> `SurahController@index` (render `Surah/Index.vue`).
+    - [x] Route `GET /surah/{id}` -> `SurahController@show` (render `Surah/Show.vue`).
+    - [x] Pastikan payload props Inertia ringan dan terstruktur.
   - **File Target**: `app/Http/Controllers/SurahController.php`, `routes/web.php`, `tests/Feature/SurahControllerTest.php`
 
-- [ ] **Task 1.3: Halaman Daftar Surah (`Surah/Index.vue`) & Layout Utama**
+- [x] **Task 1.3: Halaman Daftar Surah (`Surah/Index.vue`) & Layout Utama**
   - **Goal**: Halaman katalog 114 Surah yang interaktif, cepat, dan mudah dicari.
   - **Subtasks**:
-    - [ ] Buat Main Layout `resources/js/Layouts/AppLayout.vue` (Header elegan, tema dark/light, navigasi cepat).
-    - [ ] Buat kartu Surah (`SurahCard.vue`) dengan nomor surah, nama Arab, nama Latin, terjemahan nama, tempat turun (Makkiyah/Madaniyah), dan total ayat.
-    - [ ] Fitur live search / filter instan berdasarkan nomor surah, nama Latin, atau arti nama.
-    - [ ] Integrasi komponen shadcn-vue (`Input`, `Badge`, `Card`, `Skeleton`).
+    - [x] Buat Main Layout `resources/js/Layouts/AppLayout.vue` (Header elegan, tema dark/light, navigasi cepat).
+    - [x] Buat kartu Surah (`SurahCard.vue`) dengan nomor surah, nama Arab, nama Latin, terjemahan nama, tempat turun (Makkiyah/Madaniyah), dan total ayat.
+    - [x] Fitur live search / filter instan berdasarkan nomor surah, nama Latin, atau arti nama.
+    - [x] Integrasi komponen shadcn-vue (`Input`, `Badge`, `Card`, `Skeleton`).
   - **File Target**: `resources/js/Layouts/AppLayout.vue`, `resources/js/Pages/Surah/Index.vue`, `resources/js/components/SurahCard.vue`
 
-- [ ] **Task 1.4: Halaman Bacaan Surah (`Surah/Show.vue`) & Item Ayat**
+- [x] **Task 1.4: Halaman Bacaan Surah (`Surah/Show.vue`) & Item Ayat**
   - **Goal**: Halaman pembaca ayat Al-Qur'an dengan tipografi Arab yang nyaman dibaca dan terjemahan Indonesia.
   - **Subtasks**:
-    - [ ] Buat komponen `AyahItem.vue` (nomor ayat berornamen, teks Arab rasm Uthmani/IndoPak, transliterasi Latin, terjemahan Kemenag).
-    - [ ] Header Surah dengan Bismillah dan informasi surah.
-    - [ ] Navigasi pindah ke Surah Sebelumnya & Surah Berikutnya.
+    - [x] Buat komponen `AyahItem.vue` (nomor ayat berornamen, teks Arab rasm Uthmani/IndoPak, transliterasi Latin, terjemahan Kemenag).
+    - [x] Header Surah dengan Bismillah dan informasi surah.
+    - [x] Navigasi pindah ke Surah Sebelumnya & Surah Berikutnya.
   - **File Target**: `resources/js/Pages/Surah/Show.vue`, `resources/js/components/AyahItem.vue`
 
 ---
