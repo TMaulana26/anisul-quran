@@ -1,7 +1,25 @@
-@import url('https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400;1,700&family=Nunito+Sans:ital,opsz,wght@0,6..12,300..900;1,6..12,300..900&family=Scheherazade+New:wght@400;500;600;700&display=swap');
-
 @import 'tailwindcss';
 @import "tw-animate-css";
+
+@font-face {
+  font-family: 'Fraunces';
+  src: url('/fonts/Fraunces.woff2') format('woff2 supports variations'),
+       url('/fonts/Fraunces.woff2') format('woff2-variations'),
+       url('/fonts/Fraunces.woff2') format('woff2');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Fraunces';
+  src: url('/fonts/Fraunces-Italic.woff2') format('woff2 supports variations'),
+       url('/fonts/Fraunces-Italic.woff2') format('woff2-variations'),
+       url('/fonts/Fraunces-Italic.woff2') format('woff2');
+  font-weight: 100 900;
+  font-style: italic;
+  font-display: swap;
+}
 
 @custom-variant dark (&:is(.dark *));
 
@@ -55,7 +73,7 @@
 
 @theme inline {
   --font-sans: 'Nunito Sans', ui-sans-serif, system-ui, sans-serif;
-  --font-heading: 'Sansita Swashed', 'Nunito Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-heading: 'Fraunces', 'Nunito Sans', ui-serif, Georgia, serif;
   --font-arabic: 'Amiri', 'Noto Naskh Arabic', 'Scheherazade New', serif;
   --font-indopak: 'Scheherazade New', 'Gulzar', 'Noto Naskh Arabic', 'Amiri', serif;
   --color-background: var(--background);
