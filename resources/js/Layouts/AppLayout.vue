@@ -1,6 +1,7 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { Link, Head } from '@inertiajs/vue3';
+import AppLogo from '@/components/AppLogo.vue';
 import { 
     BookOpen, 
     Moon, 
@@ -55,18 +56,8 @@ onMounted(() => {
         <header class="sticky top-0 z-40 w-full border-b border-border/80 bg-background/80 backdrop-blur-md transition-all">
             <div class="container mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
                 <!-- Logo & Brand -->
-                <Link href="/" class="flex items-center gap-3 group">
-                    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm group-hover:scale-105 transition-transform duration-200">
-                        <BookOpen class="h-5 w-5" />
-                    </div>
-                    <div class="flex flex-col">
-                        <span class="font-heading font-bold text-lg leading-tight tracking-tight text-foreground group-hover:text-primary transition-colors">
-                            Anisul Qur'an
-                        </span>
-                        <span class="text-xs text-muted-foreground font-medium">
-                            أنِيسُ القُرْآن • Teman Tilawah
-                        </span>
-                    </div>
+                <Link href="/" class="flex items-center group">
+                    <AppLogo size="38" show-text />
                 </Link>
 
                 <!-- Navigation Links & Action Controls -->

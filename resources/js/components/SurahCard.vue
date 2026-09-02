@@ -18,7 +18,7 @@ const formatRevelation = (place) => {
 <template>
     <Link 
         :href="`/surah/${chapter.id}`"
-        class="group relative flex items-center justify-between p-4 rounded-xl border border-border bg-card hover:bg-muted/40 hover:border-primary/50 hover:shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary/40"
+        class="group relative flex items-center justify-between p-4 rounded-xl border border-border bg-card hover:bg-muted/40 hover:border-primary/50 hover:shadow-sm hover:scale-[1.01] active:scale-[0.99] transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary/40"
     >
         <!-- Left Section: Number & Latin Details -->
         <div class="flex items-center gap-3.5 min-w-0">

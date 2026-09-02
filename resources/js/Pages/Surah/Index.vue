@@ -50,9 +50,9 @@ const clearSearch = () => {
 
 <template>
     <AppLayout title="Daftar 114 Surah">
-        <div class="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+        <div class="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 space-y-8 animate-fade-in">
             <!-- Hero Banner & Intro -->
-            <section class="relative overflow-hidden rounded-2xl border border-border/80 bg-gradient-to-b from-card via-card to-muted/30 p-6 sm:p-10 shadow-sm">
+            <section class="relative overflow-hidden rounded-2xl border border-border/80 bg-gradient-to-b from-card via-card to-muted/30 p-6 sm:p-10 shadow-sm animate-scale-in">
                 <div class="max-w-3xl space-y-4">
                     <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold">
                         <Sparkles class="h-3.5 w-3.5" />
