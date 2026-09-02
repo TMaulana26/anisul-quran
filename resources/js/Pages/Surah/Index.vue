@@ -54,8 +54,9 @@ const clearSearch = () => {
         <div class="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 space-y-8 animate-fade-in">
             <!-- Hero Banner & Intro -->
             <section class="relative overflow-hidden rounded-3xl border border-border/80 bg-gradient-to-br from-card via-card to-muted/40 p-6 sm:p-10 lg:p-12 shadow-sm animate-scale-in">
-                <!-- Subtle ambient glow background -->
-                <div class="pointer-events-none absolute -right-16 -top-16 h-72 w-72 rounded-full bg-primary/15 blur-3xl" />
+                <!-- Celestial ambient background glow & glare -->
+                <div class="pointer-events-none absolute -right-20 -top-20 h-96 w-96 rounded-full bg-primary/20 blur-3xl" />
+                <div class="pointer-events-none absolute right-12 top-12 h-64 w-64 rounded-full bg-primary/15 blur-2xl" />
                 <div class="pointer-events-none absolute -left-16 -bottom-16 h-72 w-72 rounded-full bg-primary/5 blur-3xl" />
 
                 <div class="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-8">
@@ -75,10 +76,15 @@ const clearSearch = () => {
                         </p>
                     </div>
 
-                    <!-- Right Decorative Crescent Moon (Islamic Art Ornament) -->
-                    <div class="hidden sm:flex items-center justify-center shrink-0 pr-2 lg:pr-6 select-none pointer-events-none">
-                        <div class="relative flex items-center justify-center">
-                            <DecorativeMoon class="w-44 h-44 md:w-52 md:h-52 lg:w-64 lg:h-64 text-primary opacity-90 drop-shadow-sm transform hover:scale-105 transition-transform duration-700" />
+                    <!-- Right Decorative Crescent Moon with Radiant Glare Effect -->
+                    <div class="hidden sm:flex items-center justify-center shrink-0 pr-0 lg:pr-2 select-none pointer-events-none relative">
+                        <!-- Radiant Glare Core -->
+                        <div class="absolute inset-0 m-auto w-56 h-56 lg:w-72 lg:h-72 rounded-full bg-primary/20 blur-2xl animate-pulse-glow" />
+                        <div class="absolute -top-4 right-12 w-24 h-24 rounded-full bg-primary/30 blur-xl" />
+
+                        <!-- Decorative Moon with Celestial Drop Shadows -->
+                        <div class="relative z-10 flex items-center justify-center">
+                            <DecorativeMoon class="w-56 h-56 sm:w-68 sm:h-68 md:w-80 md:h-80 lg:w-[350px] lg:h-[350px] text-primary opacity-95 drop-shadow-[0_0_25px_rgba(4,120,87,0.45)] dark:drop-shadow-[0_0_35px_rgba(52,211,153,0.6)] transform hover:scale-105 transition-all duration-700" />
                         </div>
                     </div>
                 </div>
