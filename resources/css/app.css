@@ -55,7 +55,7 @@
 
 @theme inline {
   --font-sans: 'Nunito Sans', ui-sans-serif, system-ui, sans-serif;
-  --font-heading: var(--font-sans);
+  --font-heading: 'Sansita Swashed', 'Nunito Sans', ui-sans-serif, system-ui, sans-serif;
   --font-arabic: 'Amiri', 'Noto Naskh Arabic', 'Scheherazade New', serif;
   --font-indopak: 'Scheherazade New', 'Gulzar', 'Noto Naskh Arabic', 'Amiri', serif;
   --color-background: var(--background);
