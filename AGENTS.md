@@ -57,6 +57,16 @@ This project has domain-specific skills available in `.agents/skills/`. You MUST
 
 - Do not create verification scripts or tinker when tests cover that functionality and prove they work. Unit and feature tests are more important.
 
+## Manual Verification Guide & User QA
+
+- **Post-Task Manual Testing Guide**: After completing any task, milestone, or implementation phase, you MUST always provide a clear, step-by-step manual testing guide for the user in your response.
+- The guide must clearly present:
+  1. **How to Run**: The exact terminal commands to launch the development server (e.g., `composer run dev`).
+  2. **URLs to Visit**: Local URL paths to open in the browser (e.g., `/`, `/surah/1`).
+  3. **Step-by-Step Test Scenarios**: Actionable instructions on what to interact with (search inputs, filter chips, theme toggles, audio playback, font scale buttons, rasm switcher).
+  4. **Expected Behaviors**: Clear criteria of what should happen visually and functionally for each test case.
+  5. **Edge Cases**: Specific corner cases to test (e.g., search with non-existent query, mobile viewport layout).
+
 ## Application Structure & Architecture
 
 - Stick to existing directory structure; don't create new base folders without approval.
