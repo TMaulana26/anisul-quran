@@ -17,6 +17,7 @@ Before relying on a package's API, confirm its installed version:
 
 - **Master Plan**: [`.agents/PLANNING.md`](.agents/PLANNING.md) — Master product vision, technical architecture, and 4-phase implementation roadmap for Anisul Qur'an (Karaoke Sync reader & Listen Together real-time multi-device sync).
 - **Task Tracker**: [`.agents/tasks.md`](.agents/tasks.md) — Granular task tracking checklist. You MUST consult `tasks.md` before executing features, update tasks in real time (`[ ]` -> `[/]` -> `[x]`), and maintain task alignment across all development phases.
+- **Enhancements & Bug Fixes Log**: [`.agents/enhancements.md`](.agents/enhancements.md) — Mandatory tracker for all user feedback, custom enhancements, edge-case modifications, and QA bug fixes outside the initial scope of `tasks.md`. You MUST log every bug fix or code modification that arises outside `tasks.md` into `enhancements.md` immediately with clear root causes, solutions, and verification status.
 
 ## Skills Activation
 

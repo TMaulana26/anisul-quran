@@ -25,6 +25,7 @@
 | **B-02** | **Tombol Toggle Transliterasi (Latin) Belum Tersedia** | Tombol toggle belum dipasang di kontrol bar dan status preferensi belum dipersistensikan. | Menambahkan tombol toggle `Latin` di kontrol bar `Surah/Show.vue` dan menyimpan preferensi di `localStorage` (`anisul_show_transliteration`). | `[x]` |
 | **B-03** | **Posisi Teks Arab Pendek Rata Kiri di Kartu Ayat** | Container teks Arab menggunakan `flex justify-end` di dalam container `dir="rtl"`, yang membalikkan posisi ke kiri. | Mengubah container teks Arab menjadi `text-right` tegas dan memastikan terjemahan/Latin tetap `text-left` (LTR). | `[x]` |
 | **B-04** | **Angka Catatan Kaki Menempel pada Teks Terjemahan** | Regex pembersih HTML sebelumnya hanya menghapus tag `<sup>`, meninggalkan angka indeks footnote (misal: `.1`). | Dibuat fungsi `cleanTranslationText()` yang menghapus seluruh blok `<sup foot_note=...>...</sup>` beserta angka footnote di dalamnya dan merapikan spasi tanda baca. | `[x]` |
+| **B-05** | **Error 404 pada Catatan Kaki yang Digabungkan (Merged Footnotes)** | Upstream Quran Foundation API menggabungkan penjelasan catatan berurutan pada record pertama (`id - 1`), sehingga ID kedua bernilai 404 (misal: 3:7 catatan no. 2). | Diterapkan *smart fallback lookup* otomatis ke `id - 1` pada `QuranFoundationService.php` dan sanitasi teks HTML di `FootnoteDialog.vue`. | `[x]` |
 
 ---
 
