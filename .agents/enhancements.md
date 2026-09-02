@@ -16,6 +16,7 @@
 | **E-05** | **Interactive Footnote Popover (Catatan Kaki Kemenag)** | Interactivity & Tafsir | `resources/js/components/AyahItem.vue`, `QuranFoundationService.php` | `[x]` |
 | **E-06** | **Penggunaan Font "Fraunces Variable" untuk Heading & Logo** | Typography & Identity | `public/fonts/Fraunces.woff2`, `resources/css/app.css` | `[x]` |
 | **E-07** | **Ornamen Seni Islami Bulan Sabit & Animasi Impeccable** | Visual Design & Motion | `resources/js/components/DecorativeMoon.vue`, `Surah/Index.vue` | `[x]` |
+| **E-08** | **Mode Fokus Zen (Distraction-Free Karaoke View)** | Player UX & Meditative Reading | `resources/js/components/player/ZenPlayerView.vue`, `Surah/Show.vue`, `AudioPlayerBar.vue` | `[x]` |
 
 ---
 
@@ -31,7 +32,7 @@
 | **B-06** | **Animasi Reset / Patah Saat Kursor Keluar dari Hover DecorativeMoon** | CSS rule `:hover` menimpa properti `transform` pada elemen yang sama dengan `animation: celestialFloat`, menyebabkan *reset snap* saat kursor keluar. | Memisahkan lapisan gerak menjadi 2 layer independen: outer layer untuk loop *celestial float* kontinu dan inner layer untuk mikro-interaksi *hover transition*. | `[x]` |
 | **B-07** | **Karakter Terbaca "أ ب ب ب" pada Teks Kata Per Kata (Word-by-word)** | Quran Foundation API secara default mengembalikan kode glif QCF (`code_v1`) pada `word.text` jika parameter `word_fields` tidak disertakan, yang dirender sebagai huruf acak pada font standar. | Menambahkan `word_fields=text_uthmani,text_indopak` pada API request dan memetakan kata ke `text_uthmani`/`text_indopak` standar Unicode. | `[x]` |
 | **B-08** | **Allowed Memory Size Exhausted (128MB) pada Surah Panjang (Surah 2 Al-Baqarah)** | Mengambil 286 ayat sekaligus dengan ribuan objek `words` yang tidak disanitasi serta mengoper seluruh 114 objek `allChapters` ke Inertia melebihi batas memori PHP 128M. | Memangkas (*sanitize*) payload `words` & `verses` hanya ke kolom esensial di backend, serta mengganti `allChapters` dengan `prevChapter` dan `nextChapter` ringan, menurunkan konsumsi memori dari >128MB ke <15MB. | `[x]` |
-| **B-09** | **Tombol Putar Audio Tidak Berfungsi / Tidak Mengeluarkan Suara** | Pemanggilan endpoint audio backend sebelumnya mengarah ke `/recitations/{reciterId}/by_chapter/{chapterId}` yang mengembalikan `{audio_files: [...]}` per ayat (tanpa `audio_file`), sehingga nilai `audio_url` bernilai `null`. | Mengubah endpoint backend ke `/chapter_recitations/{reciterId}/{chapterId}?segments=true` yang mengembalikan URL audio streaming surah penuh beserta data `timestamps` segmen karaoke presisi. | `[x]` |
+| **B-10** | **Error 404 Saat Mengganti Qari / Reciter (`/api/recitation/{id}`)** | Modal ganti qari memanggil route `/api/recitation/{id}?reciter=...` sedangkan route di `web.php` sebelumnya bernama `/api/surah/{id}/recitation`. | Menambahkan route alias `Route::get('/api/recitation/{id}', ...)` di `routes/web.php` dan menyinkronkan client fetch dengan fallback aman. | `[x]` |
 
 ---
 

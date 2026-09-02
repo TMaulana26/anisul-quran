@@ -17,10 +17,11 @@ import {
     ChevronUp,
     ChevronDown,
     Sliders,
-    Radio
+    Radio,
+    Maximize2
 } from '@lucide/vue';
 
-const emit = defineEmits(['open-reciter-modal', 'open-settings', 'open-listen-together']);
+const emit = defineEmits(['open-reciter-modal', 'open-settings', 'open-listen-together', 'open-zen-mode']);
 
 const {
     isPlaying,
@@ -70,6 +71,13 @@ const onVolumeInput = (event) => {
     const val = parseFloat(event.target.value);
     setVolume(val);
 };
+
+const handlePlayClick = () => {
+    togglePlay();
+    if (!isPlaying.value) {
+        emit('open-zen-mode');
+    }
+};
 </script>
 
 <template>
@@ -114,8 +122,19 @@ const onVolumeInput = (event) => {
                         </span>
                     </div>
 
-                    <!-- Right Controls: Qari Button, Listen Together trigger & Settings -->
+                    <!-- Right Controls: Zen Mode, Qari Button, Listen Together trigger -->
                     <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
+                        <!-- Zen Focus Mode Trigger Button -->
+                        <button
+                            type="button"
+                            @click="emit('open-zen-mode')"
+                            class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-primary/15 hover:bg-primary/25 text-primary border border-primary/30 font-semibold text-[11px] transition-all cursor-pointer shadow-2xs"
+                            title="Buka Mode Fokus Zen (Immersive)"
+                        >
+                            <Maximize2 class="h-3.5 w-3.5" />
+                            <span>Mode Zen</span>
+                        </button>
+
                         <!-- Qari Selector Button -->
                         <button
                             type="button"
@@ -171,8 +190,8 @@ const onVolumeInput = (event) => {
                         <!-- Play / Pause Main Button -->
                         <button
                             type="button"
-                            @click="togglePlay"
-                            class="p-3 rounded-2xl bg-primary text-primary-foreground hover:bg-primary/90 active:scale-95 shadow-md shadow-primary/20 transition-all flex items-center justify-center"
+                            @click="handlePlayClick"
+                            class="p-3 rounded-2xl bg-primary text-primary-foreground hover:bg-primary/90 active:scale-95 shadow-md shadow-primary/20 transition-all flex items-center justify-center cursor-pointer"
                             :title="isPlaying ? 'Jeda Audio' : 'Putar Audio'"
                         >
                             <Loader2 v-if="isLoading" class="h-5 w-5 animate-spin" />

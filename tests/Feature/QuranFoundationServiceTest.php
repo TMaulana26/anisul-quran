@@ -84,11 +84,11 @@ it('fetches reciters list and recitation timestamps', function () {
                 ['id' => 7, 'reciter_name' => 'Mishari Rashid al-`Afasy', 'style' => 'Murattal'],
             ],
         ], 200),
-        'api.quran.com/api/v4/recitations/7/by_chapter/1*' => Http::response([
+        'api.quran.com/api/v4/chapter_recitations/7/1*' => Http::response([
             'audio_file' => [
                 'audio_url' => 'https://audio.qurancdn.com/Alafasy/001.mp3',
                 'format' => 'mp3',
-                'verse_timings' => [
+                'timestamps' => [
                     ['verse_key' => '1:1', 'timestamp_from' => 0, 'timestamp_to' => 5400],
                 ],
             ],

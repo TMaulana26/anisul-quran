@@ -7,6 +7,7 @@ import MushafPageView from '@/components/MushafPageView.vue';
 import AudioPlayerBar from '@/components/player/AudioPlayerBar.vue';
 import ReciterSelectorModal from '@/components/player/ReciterSelectorModal.vue';
 import SettingsDrawer from '@/components/player/SettingsDrawer.vue';
+import ZenPlayerView from '@/components/player/ZenPlayerView.vue';
 import { useQuranAudioPlayer } from '@/composables/useQuranAudioPlayer';
 import { 
     ChevronLeft, 
@@ -20,7 +21,8 @@ import {
     List,
     SlidersHorizontal,
     User,
-    Sliders
+    Sliders,
+    Maximize2
 } from '@lucide/vue';
 
 const props = defineProps({
@@ -75,6 +77,7 @@ const showTransliteration = ref(true);
 // Modals State
 const showReciterModal = ref(false);
 const showSettingsDrawer = ref(false);
+const isZenMode = ref(false);
 
 // Active Reciter computed based on localStorage or prop
 const currentReciter = computed(() => {
@@ -158,13 +161,10 @@ const decreaseFontSize = () => {
     }
 };
 
-// Play or toggle individual verse directly from Ayah Card
+// Play or toggle individual verse directly from Ayah Card -> Enter Zen Focus Mode
 const handlePlayVerse = (verse) => {
-    if (audioPlayer.currentAyahNumber.value === verse.verse_number && audioPlayer.isPlaying.value) {
-        audioPlayer.pause();
-    } else {
-        audioPlayer.seekToAyah(verse.verse_number, true);
-    }
+    audioPlayer.seekToAyah(verse.verse_number, true);
+    isZenMode.value = true;
 };
 
 // Dynamic Reciter Switch
@@ -343,6 +343,17 @@ const handleListenTogether = () => {
                         </button>
                     </div>
 
+                    <!-- Mode Zen Trigger Button in Sticky Bar -->
+                    <button
+                        type="button"
+                        @click="isZenMode = true"
+                        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary/10 hover:bg-primary/20 text-primary border border-primary/30 text-xs font-semibold transition-all cursor-pointer shadow-2xs"
+                        title="Buka Mode Fokus Zen (Immersive)"
+                    >
+                        <Maximize2 class="h-3.5 w-3.5" />
+                        <span>Mode Zen</span>
+                    </button>
+
                     <!-- Settings Drawer Trigger Button -->
                     <button
                         type="button"
@@ -415,6 +426,20 @@ const handleListenTogether = () => {
             @open-reciter-modal="showReciterModal = true"
             @open-settings="showSettingsDrawer = true"
             @open-listen-together="handleListenTogether"
+            @open-zen-mode="isZenMode = true"
+        />
+
+        <!-- Fullscreen Zen Focus Reading Player View -->
+        <ZenPlayerView
+            v-model:open="isZenMode"
+            :chapter="chapter"
+            :verses="verses"
+            v-model:mushafType="mushafType"
+            v-model:showTranslation="showTranslation"
+            v-model:showTransliteration="showTransliteration"
+            v-model:arabicFontSize="arabicFontSize"
+            @open-reciter-modal="showReciterModal = true"
+            @open-settings="showSettingsDrawer = true"
         />
 
         <!-- Reciter Selector Modal Dialog -->
