@@ -47,11 +47,14 @@
   - Tambahkan toggle switch di kontrol bar `Surah/Show.vue`.
   - Buat komponen `MushafPageView.vue` untuk layout per halaman mushaf dengan header halaman, teks Arab rata kanan-kiri (*justified*), dan nomor halaman bawah.
 
-### 3. [E-03] Pembuatan Logo Khusus & Favicon Aplikasi
-- **Kebutuhan**: Menghasilkan logo islami modern yang elegan untuk Anisul Qur'an dan memperbarui favicon browser.
+### 3. [E-03] Pembuatan Logo Khusus, Reusable Component & Favicon Aplikasi
+- **Kebutuhan**: Menghasilkan logo islami modern yang elegan untuk Anisul Qur'an dengan perpaduan mushaf terbuka dan equalizer gelombang audio (*M1-V1 Swiss Geometric Soundwave*), tipografi resmi `Fraunces`, warna `primary: sage emerald` pada kata *Qur'an*, serta komponen reusable yang mendukung 3 varian (*clean icon*, *stacked vertical*, dan *horizontal navbar*) dengan dukungan i18n untuk subtitle.
 - **Implementasi**:
-  - Buat komponen SVG `resources/js/components/AppLogo.vue` (Desain Mushaf terbuka berpadu bintang segi delapan islami dan aksen hijau zamrud/emas).
-  - Pasang di `public/favicon.svg` dan header `AppLayout.vue`.
+  - Dibuat komponen SVG murni `resources/js/components/AppLogo.vue` yang fleksibel dengan prop `variant` (`'clean'`, `'stacked'`, `'horizontal'`), `size`, `subtitle`, `subtitleKey`, serta slot `#subtitle`.
+  - Terintegrasi dengan font `Fraunces` (`font-heading font-bold`), kata "Anisul" berwarna foreground dan "Qur'an" berwarna `text-primary`.
+  - Diterapkan efek micro-interaction hover shimmer pada bilah equalizer dan proteksi `prefers-reduced-motion`.
+  - Diperbarui `public/favicon.svg`, `public/logo.svg`, `public/logo.png` dan header `AppLayout.vue`.
+  - Dibuat unit test komprehensif `resources/js/components/AppLogo.test.js` (5 test cases passed).
 
 ### 4. [E-04] Penerapan Impeccable Motion & Animate pada Fase 1
 - **Kebutuhan**: Menerapkan motion bertujuan (*purposeful animation*) dengan standar Impeccable:
