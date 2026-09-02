@@ -15,6 +15,7 @@
 | **E-04** | **Penerapan Impeccable Motion & Animate pada Fase 1** | Animation & Polish | `resources/css/app.css`, `Surah/Index.vue`, `SurahCard.vue` | `[x]` |
 | **E-05** | **Interactive Footnote Popover (Catatan Kaki Kemenag)** | Interactivity & Tafsir | `resources/js/components/AyahItem.vue`, `QuranFoundationService.php` | `[x]` |
 | **E-06** | **Penggunaan Font "Fraunces Variable" untuk Heading & Logo** | Typography & Identity | `public/fonts/Fraunces.woff2`, `resources/css/app.css` | `[x]` |
+| **E-07** | **Ornamen Seni Islami Bulan Sabit (Decorative Crescent Moon)** | Visual Design & Art | `resources/js/components/DecorativeMoon.vue`, `Surah/Index.vue` | `[x]` |
 
 ---
 

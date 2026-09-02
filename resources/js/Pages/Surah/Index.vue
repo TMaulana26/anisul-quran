@@ -2,6 +2,7 @@
 import { ref, computed } from 'vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import SurahCard from '@/components/SurahCard.vue';
+import DecorativeMoon from '@/components/DecorativeMoon.vue';
 import { Search, X, Sparkles, BookOpen, Layers } from '@lucide/vue';
 
 const props = defineProps({
@@ -54,22 +55,32 @@ const clearSearch = () => {
             <!-- Hero Banner & Intro -->
             <section class="relative overflow-hidden rounded-3xl border border-border/80 bg-gradient-to-br from-card via-card to-muted/40 p-6 sm:p-10 lg:p-12 shadow-sm animate-scale-in">
                 <!-- Subtle ambient glow background -->
-                <div class="pointer-events-none absolute -right-16 -top-16 h-72 w-72 rounded-full bg-primary/10 blur-3xl" />
+                <div class="pointer-events-none absolute -right-16 -top-16 h-72 w-72 rounded-full bg-primary/15 blur-3xl" />
                 <div class="pointer-events-none absolute -left-16 -bottom-16 h-72 w-72 rounded-full bg-primary/5 blur-3xl" />
 
-                <div class="relative z-10 max-w-3xl space-y-4">
-                    <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-semibold shadow-2xs">
-                        <Sparkles class="h-3.5 w-3.5" />
-                        <span>Interactive Quran Player & Karaoke Sync</span>
+                <div class="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-8">
+                    <!-- Left Hero Content -->
+                    <div class="max-w-2xl space-y-4">
+                        <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-semibold shadow-2xs">
+                            <Sparkles class="h-3.5 w-3.5" />
+                            <span>Interactive Quran Player & Karaoke Sync</span>
+                        </div>
+
+                        <h1 class="font-heading font-extrabold text-3xl sm:text-4xl lg:text-5xl text-foreground leading-[1.2] sm:leading-[1.25] text-balance">
+                            Dengarkan & Hayati Lantunan Suci <span class="text-primary whitespace-nowrap">Al-Qur'an</span>
+                        </h1>
+
+                        <p class="text-muted-foreground text-sm sm:text-base leading-relaxed max-w-xl text-pretty">
+                            Pilih surah untuk membaca teks ayat, transliterasi Latin, dan terjemahan resmi Kemenag RI yang bergerak selaras dengan lantunan qari favorit Anda.
+                        </p>
                     </div>
 
-                    <h1 class="font-heading font-extrabold text-3xl sm:text-4xl lg:text-5xl text-foreground leading-[1.2] sm:leading-[1.25] text-balance">
-                        Dengarkan & Hayati Lantunan Suci <span class="text-primary whitespace-nowrap">Al-Qur'an</span>
-                    </h1>
-
-                    <p class="text-muted-foreground text-sm sm:text-base leading-relaxed max-w-2xl text-pretty">
-                        Pilih surah untuk membaca teks ayat, transliterasi Latin, dan terjemahan resmi Kemenag RI yang bergerak selaras dengan lantunan qari favorit Anda.
-                    </p>
+                    <!-- Right Decorative Crescent Moon (Islamic Art Ornament) -->
+                    <div class="hidden sm:flex items-center justify-center shrink-0 pr-2 lg:pr-6 select-none pointer-events-none">
+                        <div class="relative flex items-center justify-center">
+                            <DecorativeMoon class="w-44 h-44 md:w-52 md:h-52 lg:w-64 lg:h-64 text-primary opacity-90 drop-shadow-sm transform hover:scale-105 transition-transform duration-700" />
+                        </div>
+                    </div>
                 </div>
             </section>
 
