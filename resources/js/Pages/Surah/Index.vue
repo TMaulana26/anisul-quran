@@ -71,10 +71,10 @@ const clearSearch = () => {
                         </p>
                     </div>
 
-                    <!-- Right Decorative Crescent Moon (Clean & Crisp) -->
-                    <div class="hidden sm:flex items-center justify-center shrink-0 pr-0 lg:pr-2 select-none pointer-events-none">
+                    <!-- Right Decorative Crescent Moon (With Looping & Micro-Interactions) -->
+                    <div class="hidden sm:flex items-center justify-center shrink-0 pr-0 lg:pr-2 select-none">
                         <div class="relative flex items-center justify-center">
-                            <DecorativeMoon class="w-56 h-56 sm:w-68 sm:h-68 md:w-80 md:h-80 lg:w-[350px] lg:h-[350px] text-primary opacity-90 transition-transform duration-700" />
+                            <DecorativeMoon class="w-56 h-56 sm:w-68 sm:h-68 md:w-80 md:h-80 lg:w-[350px] lg:h-[350px] text-primary opacity-90" />
                         </div>
                     </div>
                 </div>
