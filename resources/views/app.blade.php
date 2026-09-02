@@ -9,10 +9,10 @@
         <!-- Local Display Font: Fraunces Variable -->
         <link rel="preload" href="/fonts/Fraunces.woff2" as="font" type="font/woff2" crossorigin>
 
-        <!-- Google Fonts: Nunito Sans & Arabic Fonts (Amiri, Scheherazade New, Noto Naskh Arabic, Gulzar) -->
+        <!-- Google Fonts: Fraunces, Nunito Sans & Arabic Fonts (Amiri, Scheherazade New, Noto Naskh Arabic, Gulzar) -->
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400;1,700&family=Gulzar&family=Noto+Naskh+Arabic:wght@400;500;600;700&family=Nunito+Sans:ital,opsz,wght@0,6..12,300..900;1,6..12,300..900&family=Scheherazade+New:wght@400;500;600;700&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400;1,700&family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,100..900,0..100,0..1;1,9..144,100..900,0..100,0..1&family=Gulzar&family=Noto+Naskh+Arabic:wght@400;500;600;700&family=Nunito+Sans:ital,opsz,wght@0,6..12,300..900;1,6..12,300..900&family=Scheherazade+New:wght@400;500;600;700&display=swap" rel="stylesheet">
 
         @vite(['resources/css/app.css', 'resources/js/app.js'])
         <x-inertia::head />
