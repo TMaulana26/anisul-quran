@@ -13,6 +13,11 @@ Before relying on a package's API, confirm its installed version:
 - PHP packages: run `composer show --direct` to list direct dependencies with versions, or `composer show <vendor/package>` for a single package.
 - JS packages: check `package.json` for the installed versions.
 
+## Project Planning & Task Tracking
+
+- **Master Plan**: [`.agents/PLANNING.md`](.agents/PLANNING.md) — Master product vision, technical architecture, and 4-phase implementation roadmap for Anisul Qur'an (Karaoke Sync reader & Listen Together real-time multi-device sync).
+- **Task Tracker**: [`.agents/tasks.md`](.agents/tasks.md) — Granular task tracking checklist. You MUST consult `tasks.md` before executing features, update tasks in real time (`[ ]` -> `[/]` -> `[x]`), and maintain task alignment across all development phases.
+
 ## Skills Activation
 
 This project has domain-specific skills available in `.agents/skills/`. You MUST activate the relevant skill whenever you work in that domain—don't wait until you're stuck:
