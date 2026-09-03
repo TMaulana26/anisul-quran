@@ -30,6 +30,7 @@
 | **E-19** | **Tri-Stream Word Karaoke (Arab + Latin + Arti per Kata) & Fix Overflow Clipping pada Mode Zen** | Word-by-Word Sync & Layout | `ZenPlayerView.vue`, `useQuranAudioPlayer.js`, `QuranFoundationService.php` | `[x]` |
 | **E-20** | **Arsitektur 3-Row Terpisah Selaras (Row 1: Arab, Row 2: Latin, Row 3: Arti) dengan Sinkronisasi Karaoke Multi-Track** | UI/UX & Multi-Row Streaming | `KhusyuPlayerView.vue` | `[x]` |
 | **E-21** | **Rebranding & Refactoring Mode Zen Menjadi Mode Khusyu' (خُشُوع) & Rename File KhusyuPlayerView** | Rebranding & Architecture | `KhusyuPlayerView.vue`, `Show.vue`, `AudioPlayerBar.vue`, `SettingsDrawer.vue`, `useUserPreferences.js` | `[x]` |
+| **E-22** | **Line-by-Line Sanctuary (Anti-Terburu-buru, Zero Scrollbar) & 3 Live Mockup Konsep Visual Mode Khusyu'** | UI/UX, Immersive Craft & Accessibility | `KhusyuPlayerView.vue`, `app.css` | `[x]` |
 
 ---
 

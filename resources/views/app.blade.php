@@ -16,5 +16,8 @@
     </head>
     <body class="min-h-screen bg-background text-foreground font-sans antialiased selection:bg-primary/20 selection:text-primary">
         <x-inertia::app />
-    </body>
+    <!-- impeccable-live-start -->
+<script src="http://localhost:8400/live.js?token=bbb37ac5-2369-486d-b477-7ba01214c101"></script>
+<!-- impeccable-live-end -->
+</body>
 </html>
