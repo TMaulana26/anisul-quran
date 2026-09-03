@@ -2,7 +2,7 @@
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { useQuranAudioPlayer } from '@/composables/useQuranAudioPlayer';
 import { useUserPreferences } from '@/composables/useUserPreferences';
-import { getFormattedArabicText, getFormattedWordText, parseTranslationTokens } from '@/lib/quranUtils';
+import { getFormattedArabicText, getFormattedWordText, parseTranslationTokens, cleanTranslationText } from '@/lib/quranUtils';
 import FootnoteDialog from '@/components/FootnoteDialog.vue';
 import AyahEndOrnament from '@/components/AyahEndOrnament.vue';
 import {
@@ -146,7 +146,9 @@ const verseChunks = computed(() => {
     // 1. Short Verse: Display entire verse at once
     if (isShortVerse.value) {
         const nonEndWords = words.filter(w => w.char_type_name !== 'end');
-        const translation = currentVerse.value.translations?.[0]?.text || nonEndWords.map(w => w.translation?.text?.trim()).filter(Boolean).join(' ');
+        const rawTranslation = currentVerse.value.translations?.[0]?.text || nonEndWords.map(w => w.translation?.text?.trim()).filter(Boolean).join(' ');
+        const translation = cleanTranslationText(rawTranslation);
+        const tokens = parseTranslationTokens(rawTranslation);
         const transliteration = nonEndWords.map(w => w.transliteration?.text?.trim()).filter(Boolean).join(' ');
 
         return [{
@@ -156,6 +158,7 @@ const verseChunks = computed(() => {
             words,
             nonEndWords,
             translation,
+            tokens,
             transliteration,
             startPosition: words[0]?.position || 1,
             endPosition: words[words.length - 1]?.position || 1,
@@ -190,10 +193,12 @@ const verseChunks = computed(() => {
             const chunkWords = line2 ? [...line1.words, ...line2.words] : [...line1.words];
             const nonEndWords = chunkWords.filter(w => w.char_type_name !== 'end');
 
-            const translation = nonEndWords
+            const rawTranslation = nonEndWords
                 .map(w => w.translation?.text?.trim())
                 .filter(Boolean)
                 .join(' ');
+            const translation = cleanTranslationText(rawTranslation);
+            const tokens = [{ type: 'text', content: translation }];
 
             const transliteration = nonEndWords
                 .map(w => w.transliteration?.text?.trim())
@@ -211,6 +216,7 @@ const verseChunks = computed(() => {
                 words: chunkWords,
                 nonEndWords,
                 translation,
+                tokens,
                 transliteration,
                 startPosition,
                 endPosition,
@@ -232,10 +238,12 @@ const verseChunks = computed(() => {
         const chunkWords = words.slice(i, i + WORDS_PER_CHUNK);
         const nonEndWords = chunkWords.filter(w => w.char_type_name !== 'end');
 
-        const translation = nonEndWords
+        const rawTranslation = nonEndWords
             .map(w => w.translation?.text?.trim())
             .filter(Boolean)
             .join(' ');
+        const translation = cleanTranslationText(rawTranslation);
+        const tokens = [{ type: 'text', content: translation }];
 
         const transliteration = nonEndWords
             .map(w => w.transliteration?.text?.trim())
@@ -253,6 +261,7 @@ const verseChunks = computed(() => {
             words: chunkWords,
             nonEndWords,
             translation,
+            tokens,
             transliteration,
             startPosition,
             endPosition,
@@ -726,7 +735,16 @@ const selectSpeed = (rate) => {
                                                 currentTheme === 'warqah' ? 'font-serif text-[#463024] dark:text-[#d3c2aa] text-sm sm:text-base md:text-lg' : ''
                                             ]"
                                         >
-                                            “{{ currentChunk.translation }}”
+                                            “<template v-if="currentChunk.tokens && currentChunk.tokens.length > 0"><template v-for="(token, idx) in currentChunk.tokens" :key="idx"><span v-if="token.type === 'text'">{{ token.content }}</span><button
+                                                v-else-if="token.type === 'footnote'"
+                                                type="button"
+                                                @click.stop="openFootnote(token.id, token.number)"
+                                                :class="[
+                                                    'inline-flex items-center justify-center px-1.5 py-0.5 mx-0.5 rounded text-[11px] font-sans font-bold transition-colors cursor-pointer align-super select-none not-italic',
+                                                    currentTheme === 'midnight' ? 'bg-amber-500/20 text-amber-300 hover:bg-amber-500 hover:text-slate-950' : currentTheme === 'warqah' ? 'bg-amber-900/15 text-[#5a422d] dark:text-[#d3c2aa] hover:bg-amber-800 hover:text-white' : 'bg-primary/15 text-primary hover:bg-primary hover:text-primary-foreground'
+                                                ]"
+                                                :title="`Buka Catatan Kaki [${token.number}]`"
+                                            >[{{ token.number }}]</button></template></template><template v-else>{{ currentChunk.translation }}</template>”
                                         </p>
                                     </div>
                                 </div>
