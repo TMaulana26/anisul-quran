@@ -147,10 +147,10 @@ const hasArabicWords = computed(() => {
                         <span
                             v-else
                             :class="[
-                                'inline-block transition-all duration-150 mx-0.5 px-1 py-0.5 rounded-lg',
+                                'inline-block transition-all duration-150 mx-0.5 px-1 py-0.5 pb-1 border-b-2 rounded-sm',
                                 isActive && isPlaying && activeWordIndex === word.position
-                                    ? 'bg-primary/20 text-primary font-bold scale-105'
-                                    : ''
+                                    ? 'border-primary text-primary font-bold drop-shadow-sm bg-primary/10'
+                                    : 'border-transparent text-inherit'
                             ]"
                         >
                             {{ getFormattedWordText(word, mushafType) }}

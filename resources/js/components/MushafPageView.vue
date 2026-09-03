@@ -1,7 +1,7 @@
 <script setup>
 import { computed } from 'vue';
 import { Volume2, Play } from '@lucide/vue';
-import { getFormattedArabicText } from '@/lib/quranUtils';
+import { getFormattedArabicText, getFormattedWordText } from '@/lib/quranUtils';
 import AyahEndOrnament from '@/components/AyahEndOrnament.vue';
 
 const props = defineProps({
@@ -24,6 +24,14 @@ const props = defineProps({
     activeAyahNumber: {
         type: Number,
         default: null,
+    },
+    activeWordIndex: {
+        type: Number,
+        default: null,
+    },
+    isPlaying: {
+        type: Boolean,
+        default: false,
     },
 });
 
@@ -89,19 +97,42 @@ const getArabicText = (verse) => {
                         :class="[
                             'inline rounded-md px-1 py-0.5 transition-colors cursor-pointer group',
                             activeAyahNumber === verse.verse_number 
-                                ? 'bg-primary/20 text-foreground font-bold shadow-xs' 
+                                ? 'bg-primary/10 text-foreground font-semibold shadow-xs' 
                                 : 'hover:bg-muted/60 text-foreground'
                         ]"
                         :title="`Klik untuk memutar Ayat ${verse.verse_number}`"
                         @click="emit('play', verse)"
                     >
-                        {{ getArabicText(verse) }}
-                        <!-- Inline Ornamented Ayah Circle Number -->
-                        <AyahEndOrnament
-                            :verse-number="verse.verse_number"
-                            size="sm"
-                            :is-active="activeAyahNumber === verse.verse_number"
-                        />
+                        <template v-if="Array.isArray(verse.words) && verse.words.length > 0">
+                            <template v-for="word in verse.words" :key="word.id || word.position">
+                                <AyahEndOrnament
+                                    v-if="word.char_type_name === 'end'"
+                                    :verse-number="verse.verse_number"
+                                    size="sm"
+                                    :is-active="activeAyahNumber === verse.verse_number"
+                                />
+                                <span
+                                    v-else
+                                    class="inline-block mx-0.5 pb-0.5 border-b-2 transition-all duration-150"
+                                    :class="[
+                                        activeAyahNumber === verse.verse_number && isPlaying && activeWordIndex === word.position
+                                            ? 'border-primary text-primary font-bold drop-shadow-sm bg-primary/15 rounded-xs'
+                                            : 'border-transparent'
+                                    ]"
+                                >
+                                    {{ getFormattedWordText(word, mushafType) }}
+                                </span>
+                            </template>
+                        </template>
+                        <template v-else>
+                            {{ getArabicText(verse) }}
+                            <!-- Inline Ornamented Ayah Circle Number -->
+                            <AyahEndOrnament
+                                :verse-number="verse.verse_number"
+                                size="sm"
+                                :is-active="activeAyahNumber === verse.verse_number"
+                            />
+                        </template>
                     </span>
                     {{ ' ' }}
                 </template>

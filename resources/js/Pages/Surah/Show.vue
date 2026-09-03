@@ -144,6 +144,20 @@ watch(() => audioPlayer.currentAyahNumber.value, (ayahNum) => {
     }
 });
 
+// When exiting Khusyu Mode, smoothly scroll back to the currently playing ayah
+watch(() => isKhusyuMode.value, (isOpen) => {
+    if (!isOpen) {
+        nextTick(() => {
+            const ayahNum = audioPlayer.currentAyahNumber.value || 1;
+            const elId = readingMode.value === 'mushaf' ? `mushaf-ayah-${ayahNum}` : `ayah-${ayahNum}`;
+            const el = document.getElementById(elId);
+            if (el) {
+                el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        });
+    }
+});
+
 const setReadingMode = (mode) => userPreferences.setReadingMode(mode);
 const setMushafType = (type) => userPreferences.setMushafType(type);
 const toggleTranslation = () => userPreferences.setShowTranslation(!showTranslation.value);
@@ -385,6 +399,8 @@ const handleListenTogether = () => {
                         :mushaf-type="mushafType"
                         :arabic-font-size="arabicFontSize"
                         :active-ayah-number="audioPlayer.currentAyahNumber.value"
+                        :active-word-index="audioPlayer.currentWordIndex.value"
+                        :is-playing="audioPlayer.isPlaying.value"
                         @play="handlePlayVerse"
                     />
                 </section>
