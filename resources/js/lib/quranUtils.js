@@ -26,13 +26,31 @@ export function cleanArabicText(text) {
         cleaned = cleaned.replaceAll(pua, standard);
     }
 
-    // Remove remaining unmapped PUA characters & zero-width artifacts that cause tofu boxes (□)
+    // Remove remaining unmapped PUA characters & zero-width / directional artifacts that cause tofu boxes (□)
     cleaned = cleaned
         .replace(/[\uE000-\uF8FF]/g, '')
-        .replace(/[\uFEFF\u200B-\u200F\u202A-\u202E]/g, '')
+        .replace(/[\uFEFF\u200B-\u200F\u202A-\u202E\u2060-\u206F]/g, '')
+        .replace(/\s+/g, ' ')
         .trim();
 
     return cleaned;
+}
+
+/**
+ * Format Arabic text for an individual word based on selected mushaf type.
+ *
+ * @param {Object} word
+ * @param {string} mushafType - 'uthmani' | 'indopak'
+ * @returns {string}
+ */
+export function getFormattedWordText(word, mushafType = 'uthmani') {
+    if (!word) return '';
+
+    const raw = mushafType === 'indopak'
+        ? (word.text_indopak || word.text || '')
+        : (word.text_uthmani || word.text || '');
+
+    return cleanArabicText(raw);
 }
 
 /**

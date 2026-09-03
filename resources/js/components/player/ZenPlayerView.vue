@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { useQuranAudioPlayer } from '@/composables/useQuranAudioPlayer';
-import { getFormattedArabicText, parseTranslationTokens } from '@/lib/quranUtils';
+import { getFormattedArabicText, getFormattedWordText, parseTranslationTokens } from '@/lib/quranUtils';
 import FootnoteDialog from '@/components/FootnoteDialog.vue';
 import AyahEndOrnament from '@/components/AyahEndOrnament.vue';
 import {
@@ -285,7 +285,7 @@ const selectSpeed = (rate) => {
                                                     : 'text-foreground hover:text-primary'
                                             ]"
                                         >
-                                            {{ mushafType === 'indopak' ? (word.text_indopak || word.text) : (word.text_uthmani || word.text) }}
+                                            {{ getFormattedWordText(word, mushafType) }}
                                         </span>
                                     </template>
                                 </template>

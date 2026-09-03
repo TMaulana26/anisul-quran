@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed } from 'vue';
 import { Play, Volume2, Bookmark, Share2 } from '@lucide/vue';
-import { getFormattedArabicText, parseTranslationTokens } from '@/lib/quranUtils';
+import { getFormattedArabicText, getFormattedWordText, parseTranslationTokens } from '@/lib/quranUtils';
 import FootnoteDialog from '@/components/FootnoteDialog.vue';
 import AyahEndOrnament from '@/components/AyahEndOrnament.vue';
 
@@ -153,7 +153,7 @@ const hasArabicWords = computed(() => {
                                     : ''
                             ]"
                         >
-                            {{ mushafType === 'indopak' ? (word.text_indopak || word.text) : (word.text_uthmani || word.text) }}
+                            {{ getFormattedWordText(word, mushafType) }}
                         </span>
                     </template>
                 </template>

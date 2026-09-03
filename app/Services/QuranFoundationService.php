@@ -170,8 +170,8 @@ class QuranFoundationService
                                     'id' => $w['id'] ?? null,
                                     'position' => $w['position'] ?? null,
                                     'char_type_name' => $w['char_type_name'] ?? 'word',
-                                    'text_uthmani' => $w['text_uthmani'] ?? $w['text'] ?? '',
-                                    'text_indopak' => $w['text_indopak'] ?? $w['text'] ?? '',
+                                    'text_uthmani' => $this->sanitizeArabicText($w['text_uthmani'] ?? $w['text'] ?? ''),
+                                    'text_indopak' => $this->sanitizeArabicText($w['text_indopak'] ?? $w['text'] ?? ''),
                                     'transliteration' => isset($w['transliteration']['text']) ? ['text' => $w['transliteration']['text']] : null,
                                     'translation' => isset($w['translation']['text']) ? ['text' => $w['translation']['text']] : null,
                                 ];
@@ -195,8 +195,8 @@ class QuranFoundationService
                             'verse_key' => $verse['verse_key'],
                             'juz_number' => $verse['juz_number'] ?? 1,
                             'page_number' => $verse['page_number'] ?? 1,
-                            'text_uthmani' => $verse['text_uthmani'] ?? '',
-                            'text_indopak' => $verse['text_indopak'] ?? '',
+                            'text_uthmani' => $this->sanitizeArabicText($verse['text_uthmani'] ?? ''),
+                            'text_indopak' => $this->sanitizeArabicText($verse['text_indopak'] ?? ''),
                             'translations' => $cleanTranslations,
                             'words' => $cleanWords,
                         ];
@@ -362,5 +362,34 @@ class QuranFoundationService
                 ];
             }
         });
+    }
+
+    /**
+     * Clean and normalize Arabic text by stripping unmapped PUA stop glyphs and zero-width artifacts.
+     */
+    public function sanitizeArabicText(?string $text): string
+    {
+        if (! $text) {
+            return '';
+        }
+
+        $puaWaqfMap = [
+            "\u{E01B}" => ' ۚ',
+            "\u{E01C}" => ' ۘ',
+            "\u{E022}" => ' ۗ',
+            "\u{E01A}" => ' ۖ',
+            "\u{E01D}" => ' ۜ',
+            "\u{E01E}" => ' ۛ',
+            "\u{E01F}" => ' ۞',
+            "\u{E020}" => ' ۩',
+        ];
+
+        $cleaned = strtr($text, $puaWaqfMap);
+
+        // Strip remaining PUA codepoints and zero-width directional artifacts
+        $cleaned = preg_replace('/[\x{E000}-\x{F8FF}]/u', '', $cleaned);
+        $cleaned = preg_replace('/[\x{FEFF}\x{200B}-\x{200F}\x{202A}-\x{202E}\x{2060}-\x{206F}]/u', '', $cleaned);
+
+        return trim($cleaned ?? '');
     }
 }
