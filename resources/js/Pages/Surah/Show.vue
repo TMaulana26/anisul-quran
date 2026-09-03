@@ -6,7 +6,7 @@ import AyahItem from '@/components/AyahItem.vue';
 import MushafPageView from '@/components/MushafPageView.vue';
 import AudioPlayerBar from '@/components/player/AudioPlayerBar.vue';
 import ReciterSelectorModal from '@/components/player/ReciterSelectorModal.vue';
-import ZenPlayerView from '@/components/player/ZenPlayerView.vue';
+import KhusyuPlayerView from '@/components/player/KhusyuPlayerView.vue';
 import { useQuranAudioPlayer } from '@/composables/useQuranAudioPlayer';
 import { useUserPreferences } from '@/composables/useUserPreferences';
 import { 
@@ -91,14 +91,16 @@ const showTransliteration = computed({
     get: () => userPreferences.preferences.showTransliteration,
     set: (val) => userPreferences.setShowTransliteration(val),
 });
-const autoZenOnPlay = computed({
-    get: () => userPreferences.preferences.autoZenOnPlay,
-    set: (val) => userPreferences.setAutoZenOnPlay(val),
+const autoKhusyuOnPlay = computed({
+    get: () => userPreferences.preferences.autoKhusyuOnPlay,
+    set: (val) => userPreferences.setAutoKhusyuOnPlay(val),
 });
+const autoZenOnPlay = autoKhusyuOnPlay;
 
 // Modals State
 const showReciterModal = ref(false);
-const isZenMode = ref(false);
+const isKhusyuMode = ref(false);
+const isZenMode = isKhusyuMode;
 
 // Active Reciter computed based on global preferences or prop
 const currentReciter = computed(() => {
@@ -149,11 +151,11 @@ const toggleTransliteration = () => userPreferences.setShowTransliteration(!show
 const increaseFontSize = () => userPreferences.setArabicFontSize(arabicFontSize.value + 2);
 const decreaseFontSize = () => userPreferences.setArabicFontSize(arabicFontSize.value - 2);
 
-// Play or toggle individual verse directly from Ayah Card -> Enter Zen Focus Mode (if autoZenOnPlay enabled)
+// Play or toggle individual verse directly from Ayah Card -> Enter Mode Khusyu (if autoKhusyuOnPlay enabled)
 const handlePlayVerse = (verse) => {
     audioPlayer.seekToAyah(verse.verse_number, true);
-    if (autoZenOnPlay.value) {
-        isZenMode.value = true;
+    if (autoKhusyuOnPlay.value) {
+        isKhusyuMode.value = true;
     }
 };
 
@@ -333,15 +335,15 @@ const handleListenTogether = () => {
                         </button>
                     </div>
 
-                    <!-- Mode Zen Trigger Button in Sticky Bar -->
+                    <!-- Mode Khusyu' (خُشُوع) Trigger Button in Sticky Bar -->
                     <button
                         type="button"
-                        @click="isZenMode = true"
+                        @click="isKhusyuMode = true"
                         class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary/10 hover:bg-primary/20 text-primary border border-primary/30 text-xs font-semibold transition-all cursor-pointer shadow-2xs"
-                        title="Buka Mode Fokus Zen (Immersive)"
+                        title="Buka Mode Khusyu' (خُشُوع) - Fokus & Imersif"
                     >
                         <Maximize2 class="h-3.5 w-3.5" />
-                        <span>Mode Zen</span>
+                        <span>Mode Khusyu' (خُشُوع)</span>
                     </button>
 
                     <!-- Settings Drawer Trigger Button -->
@@ -416,12 +418,13 @@ const handleListenTogether = () => {
             @open-reciter-modal="showReciterModal = true"
             @open-settings="userPreferences.openDrawer()"
             @open-listen-together="handleListenTogether"
-            @open-zen-mode="autoZenOnPlay ? (isZenMode = true) : null"
+            @open-khusyu-mode="autoKhusyuOnPlay ? (isKhusyuMode = true) : null"
+            @open-zen-mode="autoKhusyuOnPlay ? (isKhusyuMode = true) : null"
         />
 
-        <!-- Fullscreen Zen Focus Reading Player View -->
-        <ZenPlayerView
-            v-model:open="isZenMode"
+        <!-- Fullscreen Khusyu Focus Reading Player View -->
+        <KhusyuPlayerView
+            v-model:open="isKhusyuMode"
             :chapter="chapter"
             :verses="verses"
             v-model:mushafType="mushafType"

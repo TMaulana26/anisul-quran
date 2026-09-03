@@ -21,7 +21,7 @@ import {
     Maximize2
 } from '@lucide/vue';
 
-const emit = defineEmits(['open-reciter-modal', 'open-settings', 'open-listen-together', 'open-zen-mode']);
+const emit = defineEmits(['open-reciter-modal', 'open-settings', 'open-listen-together', 'open-khusyu-mode', 'open-zen-mode']);
 
 const {
     isPlaying,
@@ -78,6 +78,7 @@ const onVolumeInput = (event) => {
 const handlePlayClick = () => {
     togglePlay();
     if (!isPlaying.value) {
+        emit('open-khusyu-mode');
         emit('open-zen-mode');
     }
 };
@@ -143,17 +144,17 @@ onUnmounted(() => {
                         </span>
                     </div>
 
-                    <!-- Right Controls: Zen Mode, Qari Button, Listen Together trigger -->
+                    <!-- Right Controls: Mode Khusyu, Qari Button, Listen Together trigger -->
                     <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
-                        <!-- Zen Focus Mode Trigger Button -->
+                        <!-- Mode Khusyu' (خُشُوع) Trigger Button -->
                         <button
                             type="button"
-                            @click="emit('open-zen-mode')"
+                            @click="emit('open-khusyu-mode'); emit('open-zen-mode');"
                             class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-primary/15 hover:bg-primary/25 text-primary border border-primary/30 font-semibold text-[11px] transition-all cursor-pointer shadow-2xs"
-                            title="Buka Mode Fokus Zen (Immersive)"
+                            title="Buka Mode Khusyu' (خُشُوع) - Fokus & Imersif"
                         >
                             <Maximize2 class="h-3.5 w-3.5" />
-                            <span>Mode Zen</span>
+                            <span>Mode Khusyu' (خُشُوع)</span>
                         </button>
 
                         <!-- Qari Selector Button -->

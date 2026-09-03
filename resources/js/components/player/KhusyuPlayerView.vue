@@ -117,7 +117,7 @@ const scrollToActiveWord = (pos) => {
     if (!props.open || !pos) return;
     
     // Row 1: Arabic word
-    const arWordEl = document.getElementById(`zen-word-ar-${pos}`);
+    const arWordEl = document.getElementById(`khusyu-word-ar-${pos}`) || document.getElementById(`zen-word-ar-${pos}`);
     if (arWordEl) {
         arWordEl.scrollIntoView({
             behavior: 'smooth',
@@ -128,7 +128,7 @@ const scrollToActiveWord = (pos) => {
 
     // Row 2: Latin word
     if (props.showTransliteration) {
-        const latWordEl = document.getElementById(`zen-word-lat-${pos}`);
+        const latWordEl = document.getElementById(`khusyu-word-lat-${pos}`) || document.getElementById(`zen-word-lat-${pos}`);
         if (latWordEl) {
             latWordEl.scrollIntoView({
                 behavior: 'smooth',
@@ -140,7 +140,7 @@ const scrollToActiveWord = (pos) => {
 
     // Row 3: Indonesian translation word
     if (props.showTranslation) {
-        const transWordEl = document.getElementById(`zen-word-trans-${pos}`);
+        const transWordEl = document.getElementById(`khusyu-word-trans-${pos}`) || document.getElementById(`zen-word-trans-${pos}`);
         if (transWordEl) {
             transWordEl.scrollIntoView({
                 behavior: 'smooth',
@@ -155,11 +155,11 @@ watch(() => audioPlayer.currentWordIndex.value, (pos) => {
     scrollToActiveWord(pos);
 });
 
-// Scroll to top of all 3 viewports whenever current verse changes or when opening Zen Mode
+// Scroll to top of all 3 viewports whenever current verse changes or when opening Mode Khusyu
 watch([() => currentVerse.value?.id, () => props.open], ([verseId, isOpen]) => {
     if (!isOpen) return;
     nextTick(() => {
-        ['zen-arabic-viewport', 'zen-latin-viewport', 'zen-trans-viewport'].forEach(id => {
+        ['khusyu-arabic-viewport', 'zen-arabic-viewport', 'khusyu-latin-viewport', 'zen-latin-viewport', 'khusyu-trans-viewport', 'zen-trans-viewport'].forEach(id => {
             const el = document.getElementById(id);
             if (el) el.scrollTo({ top: 0, behavior: 'instant' });
         });
@@ -187,15 +187,16 @@ const seekToWord = (wordPos) => {
     }
 };
 
-const closeZenMode = () => {
+const closeKhusyuMode = () => {
     emit('update:open', false);
 };
+const closeZenMode = closeKhusyuMode;
 
-// Keyboard shortcut (Escape to exit Zen Mode, Space to toggle play)
+// Keyboard shortcut (Escape to exit Mode Khusyu, Space to toggle play)
 const handleKeyDown = (e) => {
     if (!props.open) return;
     if (e.key === 'Escape') {
-        closeZenMode();
+        closeKhusyuMode();
     } else if (e.key === ' ' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'BUTTON') {
         e.preventDefault();
         audioPlayer.togglePlay();
@@ -255,7 +256,7 @@ const selectSpeed = (rate) => {
                 class="fixed inset-0 z-50 flex flex-col justify-between bg-background text-foreground overflow-hidden select-none"
                 role="dialog"
                 aria-modal="true"
-                aria-label="Zen Focus Reading Mode"
+                aria-label="Mode Khusyu' (خُشُوع)"
             >
                 <!-- Meditative Radial Glow Ambient Background -->
                 <div class="pointer-events-none absolute inset-0 overflow-hidden">
@@ -263,7 +264,7 @@ const selectSpeed = (rate) => {
                     <div class="absolute -bottom-40 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-teal-500/10 rounded-full blur-[130px]" />
                 </div>
 
-                <!-- Top Zen Header Bar -->
+                <!-- Top Khusyu Header Bar -->
                 <header class="relative z-10 flex items-center justify-between p-4 sm:p-6 border-b border-border/40 backdrop-blur-md bg-background/60">
                     <!-- Left: Surah Name & Ayah Counter -->
                     <div class="flex items-center gap-3">
@@ -322,15 +323,15 @@ const selectSpeed = (rate) => {
                             <span class="max-w-[120px] truncate">{{ audioPlayer.activeReciter.value?.name || 'Qari' }}</span>
                         </button>
 
-                        <!-- Exit Zen Mode Button -->
+                        <!-- Exit Khusyu Mode Button -->
                         <button
                             type="button"
-                            @click="closeZenMode"
+                            @click="closeKhusyuMode"
                             class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-muted/80 hover:bg-destructive/15 hover:text-destructive hover:border-destructive/30 border border-border text-xs font-semibold transition-all cursor-pointer ml-1"
-                            title="Keluar dari Mode Zen (Esc)"
+                            title="Keluar dari Mode Khusyu' (Esc)"
                         >
                             <Minimize2 class="h-3.5 w-3.5" />
-                            <span class="hidden sm:inline">Keluar Zen</span>
+                            <span class="hidden sm:inline">Keluar Khusyu'</span>
                         </button>
                     </div>
                 </header>
@@ -350,8 +351,8 @@ const selectSpeed = (rate) => {
 
                             <!-- ROW 1: Hanya Teks Kaligrafi Arab (Streaming Viewport) -->
                             <div 
-                                id="zen-arabic-viewport"
-                                class="zen-lyrics-mask flex-1 w-full overflow-y-auto scrollbar-none py-12 px-4 text-center transition-all duration-300 min-h-0" 
+                                id="khusyu-arabic-viewport"
+                                class="khusyu-lyrics-mask flex-1 w-full overflow-y-auto scrollbar-none py-12 px-4 text-center transition-all duration-300 min-h-0" 
                                 dir="rtl"
                             >
                                 <p 
@@ -367,13 +368,13 @@ const selectSpeed = (rate) => {
                                             <AyahEndOrnament
                                                 v-if="word.char_type_name === 'end'"
                                                 :verse-number="currentVerse.verse_number"
-                                                size="zen"
+                                                size="khusyu"
                                                 :is-active="audioPlayer.isPlaying.value"
                                             />
                                             <!-- Kata Arab Tunggal (Row 1) -->
                                             <span
                                                 v-else
-                                                :id="`zen-word-ar-${word.position}`"
+                                                :id="`khusyu-word-ar-${word.position}`"
                                                 @click="seekToWord(word.position)"
                                                 :class="[
                                                     'inline-block transition-all duration-300 mx-1.5 px-2.5 py-0.5 rounded-2xl cursor-pointer select-none',
@@ -395,7 +396,7 @@ const selectSpeed = (rate) => {
                                         </span>
                                         <AyahEndOrnament 
                                             :verse-number="currentVerse.verse_number"
-                                            size="zen"
+                                            size="khusyu"
                                             :is-active="audioPlayer.isPlaying.value"
                                         />
                                     </template>
@@ -405,8 +406,8 @@ const selectSpeed = (rate) => {
                             <!-- ROW 2: Transliterasi Latin (Jika Aktif) -->
                             <div 
                                 v-if="showTransliteration"
-                                id="zen-latin-viewport"
-                                class="zen-lyrics-mask w-full max-h-[16vh] overflow-y-auto scrollbar-none py-2.5 px-4 border-t border-border/40 text-center transition-all duration-300 shrink-0" 
+                                id="khusyu-latin-viewport"
+                                class="khusyu-lyrics-mask w-full max-h-[16vh] overflow-y-auto scrollbar-none py-2.5 px-4 border-t border-border/40 text-center transition-all duration-300 shrink-0" 
                                 dir="ltr"
                             >
                                 <div class="text-[10px] uppercase font-bold text-muted-foreground/60 tracking-wider mb-1">
@@ -417,7 +418,7 @@ const selectSpeed = (rate) => {
                                         <template v-for="word in currentVerse.words" :key="`lat-${word.id || word.position}`">
                                             <span
                                                 v-if="word.char_type_name !== 'end' && word.transliteration?.text"
-                                                :id="`zen-word-lat-${word.position}`"
+                                                :id="`khusyu-word-lat-${word.position}`"
                                                 @click="seekToWord(word.position)"
                                                 :class="[
                                                     'inline-block transition-all duration-300 mx-1 px-1.5 py-0.5 rounded-lg cursor-pointer',
@@ -441,8 +442,8 @@ const selectSpeed = (rate) => {
                             <!-- ROW 3: Arti Kata dalam Bahasa Indonesia (Jika Aktif) -->
                             <div 
                                 v-if="showTranslation"
-                                id="zen-trans-viewport"
-                                class="zen-lyrics-mask w-full max-h-[20vh] overflow-y-auto scrollbar-none py-2.5 px-4 border-t border-border/40 text-center transition-all duration-300 shrink-0" 
+                                id="khusyu-trans-viewport"
+                                class="khusyu-lyrics-mask w-full max-h-[20vh] overflow-y-auto scrollbar-none py-2.5 px-4 border-t border-border/40 text-center transition-all duration-300 shrink-0" 
                                 dir="ltr"
                             >
                                 <div class="text-[10px] uppercase font-bold text-muted-foreground/60 tracking-wider mb-1">
@@ -453,7 +454,7 @@ const selectSpeed = (rate) => {
                                         <template v-for="word in currentVerse.words" :key="`trans-${word.id || word.position}`">
                                             <span
                                                 v-if="word.char_type_name !== 'end' && word.translation?.text"
-                                                :id="`zen-word-trans-${word.position}`"
+                                                :id="`khusyu-word-trans-${word.position}`"
                                                 @click="seekToWord(word.position)"
                                                 :class="[
                                                     'inline-block transition-all duration-300 mx-1 px-1.5 py-0.5 rounded-lg cursor-pointer',
@@ -489,7 +490,7 @@ const selectSpeed = (rate) => {
                     </Transition>
                 </main>
 
-                <!-- Bottom Zen Player Control Bar -->
+                <!-- Bottom Khusyu Player Control Bar -->
                 <footer class="relative z-10 p-3 sm:p-5 border-t border-border/40 backdrop-blur-md bg-background/70">
                     <div class="max-w-3xl mx-auto space-y-3">
                         <!-- Seekbar Timeline Slider -->

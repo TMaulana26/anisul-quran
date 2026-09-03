@@ -7,7 +7,8 @@ const DEFAULT_PREFERENCES = {
     showTranslation: true,
     showTransliteration: true,
     autoScrollEnabled: true,
-    autoZenOnPlay: true,
+    autoKhusyuOnPlay: true,
+    autoZenOnPlay: true, // Alias for autoKhusyuOnPlay
     selectedReciterId: 7, // Mishary Rashid Alafasy default
 };
 
@@ -61,8 +62,12 @@ export function useUserPreferences() {
         const savedAutoScroll = safeGetItem('anisul_auto_scroll', null);
         if (savedAutoScroll !== null) preferences.autoScrollEnabled = savedAutoScroll === 'true';
 
-        const savedAutoZen = safeGetItem('anisul_auto_zen', null);
-        if (savedAutoZen !== null) preferences.autoZenOnPlay = savedAutoZen === 'true';
+        const savedAutoKhusyu = safeGetItem('anisul_auto_khusyu', null) ?? safeGetItem('anisul_auto_zen', null);
+        if (savedAutoKhusyu !== null) {
+            const boolVal = savedAutoKhusyu === 'true';
+            preferences.autoKhusyuOnPlay = boolVal;
+            preferences.autoZenOnPlay = boolVal;
+        }
 
         const savedReciterId = safeGetItem('anisul_selected_reciter', null);
         if (savedReciterId) preferences.selectedReciterId = parseInt(savedReciterId, 10) || 7;
@@ -113,9 +118,16 @@ export function useUserPreferences() {
         safeSetItem('anisul_auto_scroll', val);
     };
 
+    const setAutoKhusyuOnPlay = (val) => {
+        const boolVal = Boolean(val);
+        preferences.autoKhusyuOnPlay = boolVal;
+        preferences.autoZenOnPlay = boolVal;
+        safeSetItem('anisul_auto_khusyu', boolVal);
+        safeSetItem('anisul_auto_zen', boolVal);
+    };
+
     const setAutoZenOnPlay = (val) => {
-        preferences.autoZenOnPlay = Boolean(val);
-        safeSetItem('anisul_auto_zen', val);
+        setAutoKhusyuOnPlay(val);
     };
 
     const setSelectedReciterId = (id) => {
@@ -132,6 +144,7 @@ export function useUserPreferences() {
         safeSetItem('anisul_show_translation', DEFAULT_PREFERENCES.showTranslation);
         safeSetItem('anisul_show_transliteration', DEFAULT_PREFERENCES.showTransliteration);
         safeSetItem('anisul_auto_scroll', DEFAULT_PREFERENCES.autoScrollEnabled);
+        safeSetItem('anisul_auto_khusyu', DEFAULT_PREFERENCES.autoKhusyuOnPlay);
         safeSetItem('anisul_auto_zen', DEFAULT_PREFERENCES.autoZenOnPlay);
         safeSetItem('anisul_selected_reciter', DEFAULT_PREFERENCES.selectedReciterId);
     };
@@ -148,6 +161,7 @@ export function useUserPreferences() {
         setShowTranslation,
         setShowTransliteration,
         setAutoScrollEnabled,
+        setAutoKhusyuOnPlay,
         setAutoZenOnPlay,
         setSelectedReciterId,
         resetDefaults,

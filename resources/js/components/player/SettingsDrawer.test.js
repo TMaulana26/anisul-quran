@@ -34,7 +34,7 @@ describe('SettingsDrawer.vue', () => {
         expect(wrapper.text()).toContain('Pengaturan & Preferensi');
         expect(wrapper.text()).toContain('Qari Default');
         expect(wrapper.text()).toContain('Mode Baca Default');
-        expect(wrapper.text()).toContain('Mode Zen Saat Putar');
+        expect(wrapper.text()).toContain('Mode Khusyu\' (خُشُوع) Saat Putar');
         expect(wrapper.text()).toContain('Gaya Rasm Bawaan');
         expect(wrapper.text()).toContain('Ukuran Kaligrafi Bawaan');
         expect(wrapper.text()).toContain('Global');
@@ -65,7 +65,7 @@ describe('SettingsDrawer.vue', () => {
         expect(wrapper.text()).toContain('Preferensi Global');
     });
 
-    it('emits update:autoZenOnPlay when toggle is clicked', async () => {
+    it('emits update:autoKhusyuOnPlay and update:autoZenOnPlay when toggle is clicked', async () => {
         const wrapper = mount(SettingsDrawer, {
             props: defaultProps,
             global: {
@@ -79,10 +79,11 @@ describe('SettingsDrawer.vue', () => {
         const switches = wrapper.findAll('button[role="switch"]');
         expect(switches.length).toBeGreaterThan(0);
 
-        // Click the first switch (auto zen)
+        // Click the first switch (auto khusyu)
         await switches[0].trigger('click');
+        expect(wrapper.emitted('update:autoKhusyuOnPlay')).toBeTruthy();
         expect(wrapper.emitted('update:autoZenOnPlay')).toBeTruthy();
-        expect(wrapper.emitted('update:autoZenOnPlay')[0]).toEqual([false]);
+        expect(wrapper.emitted('update:autoKhusyuOnPlay')[0]).toEqual([false]);
     });
 
     it('emits select-reciter when reciter dropdown changes', async () => {

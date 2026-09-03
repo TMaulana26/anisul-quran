@@ -57,6 +57,10 @@ const props = defineProps({
         type: Boolean,
         default: undefined,
     },
+    autoKhusyuOnPlay: {
+        type: Boolean,
+        default: undefined,
+    },
     autoZenOnPlay: {
         type: Boolean,
         default: undefined,
@@ -83,6 +87,7 @@ const emit = defineEmits([
     'update:showTranslation',
     'update:showTransliteration',
     'update:autoScrollEnabled',
+    'update:autoKhusyuOnPlay',
     'update:autoZenOnPlay',
     'select-reciter',
     'reset-defaults'
@@ -113,7 +118,12 @@ const currentFontSize = computed(() => props.arabicFontSize !== undefined ? prop
 const currentShowTranslation = computed(() => props.showTranslation !== undefined ? props.showTranslation : userPreferences.preferences.showTranslation);
 const currentShowTransliteration = computed(() => props.showTransliteration !== undefined ? props.showTransliteration : userPreferences.preferences.showTransliteration);
 const currentAutoScroll = computed(() => props.autoScrollEnabled !== undefined ? props.autoScrollEnabled : userPreferences.preferences.autoScrollEnabled);
-const currentAutoZen = computed(() => props.autoZenOnPlay !== undefined ? props.autoZenOnPlay : userPreferences.preferences.autoZenOnPlay);
+const currentAutoKhusyu = computed(() => {
+    if (props.autoKhusyuOnPlay !== undefined) return props.autoKhusyuOnPlay;
+    if (props.autoZenOnPlay !== undefined) return props.autoZenOnPlay;
+    return userPreferences.preferences.autoKhusyuOnPlay;
+});
+const currentAutoZen = currentAutoKhusyu;
 const currentReciterId = computed(() => props.selectedReciterId !== undefined ? props.selectedReciterId : userPreferences.preferences.selectedReciterId);
 
 // Dynamic reciters list resolution
@@ -175,11 +185,13 @@ const toggleAutoScroll = () => {
     emit('update:autoScrollEnabled', nextVal);
 };
 
-const toggleAutoZen = () => {
-    const nextVal = !currentAutoZen.value;
-    userPreferences.setAutoZenOnPlay(nextVal);
+const toggleAutoKhusyu = () => {
+    const nextVal = !currentAutoKhusyu.value;
+    userPreferences.setAutoKhusyuOnPlay(nextVal);
+    emit('update:autoKhusyuOnPlay', nextVal);
     emit('update:autoZenOnPlay', nextVal);
 };
+const toggleAutoZen = toggleAutoKhusyu;
 
 const selectedReciterLabel = computed(() => {
     const found = effectiveReciters.value.find(r => r.id === currentReciterId.value);
@@ -209,6 +221,7 @@ const resetDefaults = () => {
     emit('update:showTranslation', true);
     emit('update:showTransliteration', true);
     emit('update:autoScrollEnabled', true);
+    emit('update:autoKhusyuOnPlay', true);
     emit('update:autoZenOnPlay', true);
     emit('reset-defaults');
 };
@@ -649,34 +662,34 @@ const resetDefaults = () => {
                                     </div>
                                 </div>
 
-                                <!-- 3. Otomatis Masuk Mode Zen Saat Putar Audio -->
+                                <!-- 3. Otomatis Masuk Mode Khusyu' (خُشُوع) Saat Putar Audio -->
                                 <div class="p-4 rounded-2xl bg-muted/40 border border-border/70 flex items-center justify-between gap-3">
                                     <div class="space-y-1">
                                         <div class="flex items-center gap-2">
                                             <p class="font-heading font-bold text-sm text-foreground flex items-center gap-1.5">
                                                 <Maximize2 class="h-4 w-4 text-primary" />
-                                                <span>Mode Zen Saat Putar</span>
+                                                <span>Mode Khusyu' (خُشُوع) Saat Putar</span>
                                             </p>
                                             <span class="text-[10px] font-medium px-2 py-0.5 rounded-full bg-muted text-muted-foreground border border-border">
                                                 🌐 Global
                                             </span>
                                         </div>
                                         <p class="text-xs text-muted-foreground leading-relaxed">
-                                            Langsung fokus ke layar penuh Zen saat tombol putar ditekan
+                                            Langsung fokus ke layar penuh Mode Khusyu' (خُشُوع) saat tombol putar ditekan
                                         </p>
                                     </div>
 
                                     <button
                                         type="button"
                                         role="switch"
-                                        :aria-checked="currentAutoZen"
-                                        @click="toggleAutoZen"
+                                        :aria-checked="currentAutoKhusyu"
+                                        @click="toggleAutoKhusyu"
                                         class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-                                        :class="currentAutoZen ? 'bg-primary' : 'bg-muted-foreground/30'"
+                                        :class="currentAutoKhusyu ? 'bg-primary' : 'bg-muted-foreground/30'"
                                     >
                                         <span
                                             class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out"
-                                            :class="currentAutoZen ? 'translate-x-5' : 'translate-x-0'"
+                                            :class="currentAutoKhusyu ? 'translate-x-5' : 'translate-x-0'"
                                         />
                                     </button>
                                 </div>

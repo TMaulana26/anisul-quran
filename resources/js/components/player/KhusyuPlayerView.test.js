@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest';
 import { mount } from '@vue/test-utils';
-import ZenPlayerView from './ZenPlayerView.vue';
+import KhusyuPlayerView from './KhusyuPlayerView.vue';
 import { useQuranAudioPlayer } from '@/composables/useQuranAudioPlayer';
 
-describe('ZenPlayerView.vue', () => {
+describe('KhusyuPlayerView.vue', () => {
     const mockChapter = { id: 1, name_simple: 'Al-Fatihah', name_arabic: 'الفاتحة', verses_count: 7 };
     const mockVerses = [
         {
@@ -19,11 +19,11 @@ describe('ZenPlayerView.vue', () => {
         },
     ];
 
-    it('renders Zen mode when open is true', () => {
+    it('renders Mode Khusyu when open is true', () => {
         const player = useQuranAudioPlayer();
         player.loadSurah(mockChapter, { audio_url: 'https://example.com/1.mp3', verse_timings: [] });
 
-        const wrapper = mount(ZenPlayerView, {
+        const wrapper = mount(KhusyuPlayerView, {
             props: {
                 open: true,
                 chapter: mockChapter,
@@ -41,8 +41,8 @@ describe('ZenPlayerView.vue', () => {
         expect(wrapper.text()).toContain('Dengan nama Allah Yang Maha Pengasih, Maha Penyayang.');
     });
 
-    it('emits update:open false when Exit Zen button is clicked', async () => {
-        const wrapper = mount(ZenPlayerView, {
+    it('emits update:open false when Exit Khusyu button is clicked', async () => {
+        const wrapper = mount(KhusyuPlayerView, {
             props: {
                 open: true,
                 chapter: mockChapter,
@@ -55,7 +55,7 @@ describe('ZenPlayerView.vue', () => {
             },
         });
 
-        const exitBtn = wrapper.find('button[title="Keluar dari Mode Zen (Esc)"]');
+        const exitBtn = wrapper.find('button[title*="Keluar dari Mode Khusyu"]');
         expect(exitBtn.exists()).toBe(true);
 
         await exitBtn.trigger('click');

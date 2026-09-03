@@ -39,6 +39,7 @@ const sizeClasses = computed(() => {
             return 'w-6 h-6 mx-1';
         case 'lg':
             return 'w-9 h-9 mx-2';
+        case 'khusyu':
         case 'zen':
             return 'w-11 h-11 sm:w-13 sm:h-13 mx-2.5';
         case 'md':
