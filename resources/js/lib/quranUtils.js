@@ -125,3 +125,16 @@ export function parseTranslationTokens(rawText) {
 
     return tokens;
 }
+
+/**
+ * Convert standard western integer to Eastern Arabic-Indic numeral (e.g. 1 -> ١, 255 -> ٢٥٥).
+ *
+ * @param {number|string} num
+ * @returns {string}
+ */
+export function toArabicIndic(num) {
+    if (num === null || num === undefined || num === '') return '';
+    const arabicDigits = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+    return String(num).replace(/[0-9]/g, (w) => arabicDigits[+w] ?? w);
+}
+

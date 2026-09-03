@@ -3,6 +3,7 @@ import { ref, computed } from 'vue';
 import { Play, Volume2, Bookmark, Share2 } from '@lucide/vue';
 import { getFormattedArabicText, parseTranslationTokens } from '@/lib/quranUtils';
 import FootnoteDialog from '@/components/FootnoteDialog.vue';
+import AyahEndOrnament from '@/components/AyahEndOrnament.vue';
 
 const props = defineProps({
     verse: {
@@ -136,25 +137,34 @@ const hasArabicWords = computed(() => {
             >
                 <!-- Word by Word rendering with active highlight -->
                 <template v-if="hasArabicWords">
-                    <span
-                        v-for="word in verse.words"
-                        :key="word.id || word.position"
-                        :class="[
-                            'inline-block transition-all duration-150 mx-0.5 px-1 py-0.5 rounded-lg',
-                            isActive && isPlaying && activeWordIndex === word.position
-                                ? 'bg-primary/20 text-primary font-bold scale-105'
-                                : ''
-                        ]"
-                    >
-                        {{ word.char_type_name === 'end' ? (word.text_uthmani || verse.verse_number) : (mushafType === 'indopak' ? (word.text_indopak || word.text) : (word.text_uthmani || word.text)) }}
-                    </span>
+                    <template v-for="word in verse.words" :key="word.id || word.position">
+                        <AyahEndOrnament
+                            v-if="word.char_type_name === 'end'"
+                            :verse-number="verse.verse_number"
+                            size="md"
+                            :is-active="isActive"
+                        />
+                        <span
+                            v-else
+                            :class="[
+                                'inline-block transition-all duration-150 mx-0.5 px-1 py-0.5 rounded-lg',
+                                isActive && isPlaying && activeWordIndex === word.position
+                                    ? 'bg-primary/20 text-primary font-bold scale-105'
+                                    : ''
+                            ]"
+                        >
+                            {{ mushafType === 'indopak' ? (word.text_indopak || word.text) : (word.text_uthmani || word.text) }}
+                        </span>
+                    </template>
                 </template>
                 <template v-else>
                     {{ arabicText }}
                     <!-- Ayah End Ornament Symbol -->
-                    <span class="inline-flex items-center justify-center mx-2 text-primary font-sans text-xs px-2 py-0.5 rounded-full border border-primary/30 bg-primary/5 select-none align-middle">
-                        {{ verse.verse_number }}
-                    </span>
+                    <AyahEndOrnament
+                        :verse-number="verse.verse_number"
+                        size="md"
+                        :is-active="isActive"
+                    />
                 </template>
             </p>
         </div>

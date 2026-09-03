@@ -2,6 +2,7 @@
 import { computed } from 'vue';
 import { Volume2, Play } from '@lucide/vue';
 import { getFormattedArabicText } from '@/lib/quranUtils';
+import AyahEndOrnament from '@/components/AyahEndOrnament.vue';
 
 const props = defineProps({
     verses: {
@@ -96,11 +97,11 @@ const getArabicText = (verse) => {
                     >
                         {{ getArabicText(verse) }}
                         <!-- Inline Ornamented Ayah Circle Number -->
-                        <span 
-                            class="inline-flex items-center justify-center mx-1.5 align-middle text-primary font-sans text-xs px-2 py-0.5 rounded-full border border-primary/30 bg-primary/5 select-none group-hover:bg-primary group-hover:text-primary-foreground transition-colors"
-                        >
-                            {{ verse.verse_number }}
-                        </span>
+                        <AyahEndOrnament
+                            :verse-number="verse.verse_number"
+                            size="sm"
+                            :is-active="activeAyahNumber === verse.verse_number"
+                        />
                     </span>
                     {{ ' ' }}
                 </template>

@@ -3,6 +3,7 @@ import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { useQuranAudioPlayer } from '@/composables/useQuranAudioPlayer';
 import { getFormattedArabicText, parseTranslationTokens } from '@/lib/quranUtils';
 import FootnoteDialog from '@/components/FootnoteDialog.vue';
+import AyahEndOrnament from '@/components/AyahEndOrnament.vue';
 import {
     Play,
     Pause,
@@ -267,9 +268,16 @@ const selectSpeed = (rate) => {
                                     :style="{ fontSize: `${arabicFontSize + 6}px` }"
                                 >
                                     <template v-if="hasArabicWords">
+                                    <template v-for="word in currentVerse.words" :key="word.id || word.position">
+                                        <!-- Quranic Rosette End-of-Ayah Symbol -->
+                                        <AyahEndOrnament
+                                            v-if="word.char_type_name === 'end'"
+                                            :verse-number="currentVerse.verse_number"
+                                            size="zen"
+                                            :is-active="audioPlayer.isPlaying.value"
+                                        />
                                         <span
-                                            v-for="word in currentVerse.words"
-                                            :key="word.id || word.position"
+                                            v-else
                                             :class="[
                                                 'inline-block transition-all duration-150 mx-1 px-1.5 py-0.5 rounded-xl',
                                                 audioPlayer.currentWordIndex.value === word.position && audioPlayer.isPlaying.value
@@ -277,17 +285,21 @@ const selectSpeed = (rate) => {
                                                     : 'text-foreground hover:text-primary'
                                             ]"
                                         >
-                                            {{ word.char_type_name === 'end' ? (word.text_uthmani || currentVerse.verse_number) : (mushafType === 'indopak' ? (word.text_indopak || word.text) : (word.text_uthmani || word.text)) }}
+                                            {{ mushafType === 'indopak' ? (word.text_indopak || word.text) : (word.text_uthmani || word.text) }}
                                         </span>
                                     </template>
-                                    <template v-else>
-                                        <span class="text-foreground font-semibold">
-                                            {{ currentArabicText }}
-                                        </span>
-                                        <span class="inline-flex items-center justify-center mx-3 text-primary font-sans text-sm px-2.5 py-0.5 rounded-full border border-primary/40 bg-primary/10 select-none align-middle">
-                                            {{ currentVerse.verse_number }}
-                                        </span>
-                                    </template>
+                                </template>
+                                <template v-else>
+                                    <span class="text-foreground font-semibold">
+                                        {{ currentArabicText }}
+                                    </span>
+                                    <!-- Quranic Rosette End-of-Ayah Symbol -->
+                                    <AyahEndOrnament 
+                                        :verse-number="currentVerse.verse_number"
+                                        size="zen"
+                                        :is-active="audioPlayer.isPlaying.value"
+                                    />
+                                </template>
                                 </p>
                             </div>
 

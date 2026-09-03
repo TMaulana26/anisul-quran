@@ -17,6 +17,7 @@
 | **E-06** | **Penggunaan Font "Fraunces Variable" untuk Heading & Logo** | Typography & Identity | `public/fonts/Fraunces.woff2`, `resources/css/app.css` | `[x]` |
 | **E-07** | **Ornamen Seni Islami Bulan Sabit & Animasi Impeccable** | Visual Design & Motion | `resources/js/components/DecorativeMoon.vue`, `Surah/Index.vue` | `[x]` |
 | **E-08** | **Mode Fokus Zen (Distraction-Free Karaoke View)** | Player UX & Meditative Reading | `resources/js/components/player/ZenPlayerView.vue`, `Surah/Show.vue`, `AudioPlayerBar.vue` | `[x]` |
+| **E-09** | **Ornamen Tanda Akhir Ayat Al-Qur'an (Quranic Ayah Rosette Medallion)** | Islamic Art & Typography | `resources/js/components/AyahEndOrnament.vue`, `quranUtils.js`, `ZenPlayerView.vue`, `AyahItem.vue`, `MushafPageView.vue` | `[x]` |
 
 ---
 
