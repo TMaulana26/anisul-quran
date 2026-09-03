@@ -1,4 +1,7 @@
 <script setup>
+import { computed } from 'vue';
+import { usePage } from '@inertiajs/vue3';
+import { useUserPreferences } from '@/composables/useUserPreferences';
 import { 
     X, 
     SlidersHorizontal, 
@@ -16,35 +19,35 @@ import {
 const props = defineProps({
     open: {
         type: Boolean,
-        default: false,
+        default: undefined,
     },
     readingMode: {
         type: String,
-        default: 'ayah', // 'ayah' | 'mushaf'
+        default: undefined, // 'ayah' | 'mushaf'
     },
     mushafType: {
         type: String,
-        default: 'uthmani', // 'uthmani' | 'indopak'
+        default: undefined, // 'uthmani' | 'indopak'
     },
     arabicFontSize: {
         type: Number,
-        default: 28,
+        default: undefined,
     },
     showTranslation: {
         type: Boolean,
-        default: true,
+        default: undefined,
     },
     showTransliteration: {
         type: Boolean,
-        default: true,
+        default: undefined,
     },
     autoScrollEnabled: {
         type: Boolean,
-        default: true,
+        default: undefined,
     },
     autoZenOnPlay: {
         type: Boolean,
-        default: true,
+        default: undefined,
     },
     reciters: {
         type: Array,
@@ -52,7 +55,7 @@ const props = defineProps({
     },
     selectedReciterId: {
         type: Number,
-        default: 7,
+        default: undefined,
     },
 });
 
@@ -69,68 +72,92 @@ const emit = defineEmits([
     'reset-defaults'
 ]);
 
-const safeSetItem = (key, value) => {
-    try {
-        if (typeof window !== 'undefined' && window.localStorage) {
-            window.localStorage.setItem(key, String(value));
-        }
-    } catch (e) {
-        // Safe fallback in restricted environments
+const page = usePage();
+const userPreferences = useUserPreferences();
+
+// Active preferences with fallback to global composable
+const isOpen = computed(() => props.open !== undefined ? props.open : userPreferences.isDrawerOpen.value);
+const currentReadingMode = computed(() => props.readingMode !== undefined ? props.readingMode : userPreferences.preferences.readingMode);
+const currentMushafType = computed(() => props.mushafType !== undefined ? props.mushafType : userPreferences.preferences.mushafType);
+const currentFontSize = computed(() => props.arabicFontSize !== undefined ? props.arabicFontSize : userPreferences.preferences.arabicFontSize);
+const currentShowTranslation = computed(() => props.showTranslation !== undefined ? props.showTranslation : userPreferences.preferences.showTranslation);
+const currentShowTransliteration = computed(() => props.showTransliteration !== undefined ? props.showTransliteration : userPreferences.preferences.showTransliteration);
+const currentAutoScroll = computed(() => props.autoScrollEnabled !== undefined ? props.autoScrollEnabled : userPreferences.preferences.autoScrollEnabled);
+const currentAutoZen = computed(() => props.autoZenOnPlay !== undefined ? props.autoZenOnPlay : userPreferences.preferences.autoZenOnPlay);
+const currentReciterId = computed(() => props.selectedReciterId !== undefined ? props.selectedReciterId : userPreferences.preferences.selectedReciterId);
+
+// Dynamic reciters list resolution
+const effectiveReciters = computed(() => {
+    if (props.reciters && props.reciters.length > 0) return props.reciters;
+    if (page?.props?.reciters && Array.isArray(page.props.reciters) && page.props.reciters.length > 0) {
+        return page.props.reciters;
     }
-};
+    return [
+        { id: 7, name: 'Mishary Rashid Alafasy', style: 'Murattal' },
+        { id: 4, name: 'Mahmoud Khalil Al-Husary', style: 'Murattal' },
+        { id: 1, name: 'AbdulBaset AbdulSamad', style: 'Mujawwad' },
+        { id: 5, name: 'Saad Al-Ghamdi', style: 'Murattal' },
+        { id: 6, name: 'Abu Bakr al-Shatri', style: 'Murattal' },
+        { id: 3, name: 'Abdur-Rahman as-Sudais', style: 'Murattal' },
+    ];
+});
 
 const close = () => {
     emit('update:open', false);
+    userPreferences.closeDrawer();
 };
 
 const setReadingMode = (mode) => {
+    userPreferences.setReadingMode(mode);
     emit('update:readingMode', mode);
-    safeSetItem('anisul_reading_mode', mode);
 };
 
 const setMushafType = (type) => {
+    userPreferences.setMushafType(type);
     emit('update:mushafType', type);
-    safeSetItem('anisul_mushaf', type);
 };
 
 const onFontSizeChange = (event) => {
     const val = parseInt(event.target.value, 10);
+    userPreferences.setArabicFontSize(val);
     emit('update:arabicFontSize', val);
-    safeSetItem('anisul_font_size', val);
 };
 
 const toggleTranslation = () => {
-    const val = !props.showTranslation;
-    emit('update:showTranslation', val);
-    safeSetItem('anisul_show_translation', val);
+    const nextVal = !currentShowTranslation.value;
+    userPreferences.setShowTranslation(nextVal);
+    emit('update:showTranslation', nextVal);
 };
 
 const toggleTransliteration = () => {
-    const val = !props.showTransliteration;
-    emit('update:showTransliteration', val);
-    safeSetItem('anisul_show_transliteration', val);
+    const nextVal = !currentShowTransliteration.value;
+    userPreferences.setShowTransliteration(nextVal);
+    emit('update:showTransliteration', nextVal);
 };
 
 const toggleAutoScroll = () => {
-    const val = !props.autoScrollEnabled;
-    emit('update:autoScrollEnabled', val);
+    const nextVal = !currentAutoScroll.value;
+    userPreferences.setAutoScrollEnabled(nextVal);
+    emit('update:autoScrollEnabled', nextVal);
 };
 
 const toggleAutoZen = () => {
-    const val = !props.autoZenOnPlay;
-    emit('update:autoZenOnPlay', val);
-    safeSetItem('anisul_auto_zen', val);
+    const nextVal = !currentAutoZen.value;
+    userPreferences.setAutoZenOnPlay(nextVal);
+    emit('update:autoZenOnPlay', nextVal);
 };
 
 const onReciterSelectChange = (event) => {
     const reciterId = parseInt(event.target.value, 10);
-    const reciter = props.reciters.find(r => r.id === reciterId);
+    userPreferences.setSelectedReciterId(reciterId);
+    const reciter = effectiveReciters.value.find(r => r.id === reciterId);
     if (reciter) {
         emit('select-reciter', reciter);
     }
 };
 
 const resetDefaults = () => {
+    userPreferences.resetDefaults();
     emit('update:readingMode', 'ayah');
     emit('update:mushafType', 'uthmani');
     emit('update:arabicFontSize', 28);
@@ -138,21 +165,13 @@ const resetDefaults = () => {
     emit('update:showTransliteration', true);
     emit('update:autoScrollEnabled', true);
     emit('update:autoZenOnPlay', true);
-
-    safeSetItem('anisul_reading_mode', 'ayah');
-    safeSetItem('anisul_mushaf', 'uthmani');
-    safeSetItem('anisul_font_size', 28);
-    safeSetItem('anisul_show_translation', 'true');
-    safeSetItem('anisul_show_transliteration', 'true');
-    safeSetItem('anisul_auto_zen', 'true');
-
     emit('reset-defaults');
 };
 </script>
 
 <template>
     <Teleport to="body">
-        <div v-if="open" class="fixed inset-0 z-50 overflow-hidden" role="dialog" aria-modal="true">
+        <div v-if="isOpen" class="fixed inset-0 z-50 overflow-hidden" role="dialog" aria-modal="true">
             <!-- Backdrop Overlay with Fade -->
             <Transition
                 enter-active-class="transition-opacity duration-300 ease-out"
@@ -219,17 +238,17 @@ const resetDefaults = () => {
                                         <User class="h-3.5 w-3.5 text-primary" />
                                         <span>Qari Default</span>
                                     </label>
-                                    <span class="text-[11px] text-muted-foreground">Otomatis tersimpan</span>
+                                    <span class="text-[11px] text-muted-foreground">Tersimpan di browser</span>
                                 </div>
 
                                 <div class="relative">
                                     <select
-                                        :value="selectedReciterId"
+                                        :value="currentReciterId"
                                         @change="onReciterSelectChange"
                                         class="w-full appearance-none px-3.5 py-2.5 rounded-2xl bg-muted/50 border border-border/70 focus:border-primary focus:bg-background focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm font-semibold transition-all cursor-pointer text-foreground"
                                     >
                                         <option 
-                                            v-for="reciter in reciters" 
+                                            v-for="reciter in effectiveReciters" 
                                             :key="reciter.id" 
                                             :value="reciter.id"
                                         >
@@ -253,7 +272,7 @@ const resetDefaults = () => {
                                         type="button"
                                         @click="setReadingMode('ayah')"
                                         class="flex flex-col items-center justify-center gap-1.5 p-3.5 rounded-2xl border text-xs font-semibold transition-all cursor-pointer"
-                                        :class="readingMode === 'ayah' 
+                                        :class="currentReadingMode === 'ayah' 
                                             ? 'bg-primary/10 border-primary text-primary ring-2 ring-primary/20 shadow-xs' 
                                             : 'bg-card border-border/70 hover:bg-muted/50 text-foreground'"
                                     >
@@ -266,7 +285,7 @@ const resetDefaults = () => {
                                         type="button"
                                         @click="setReadingMode('mushaf')"
                                         class="flex flex-col items-center justify-center gap-1.5 p-3.5 rounded-2xl border text-xs font-semibold transition-all cursor-pointer"
-                                        :class="readingMode === 'mushaf' 
+                                        :class="currentReadingMode === 'mushaf' 
                                             ? 'bg-primary/10 border-primary text-primary ring-2 ring-primary/20 shadow-xs' 
                                             : 'bg-card border-border/70 hover:bg-muted/50 text-foreground'"
                                     >
@@ -292,14 +311,14 @@ const resetDefaults = () => {
                                 <button
                                     type="button"
                                     role="switch"
-                                    :aria-checked="autoZenOnPlay"
+                                    :aria-checked="currentAutoZen"
                                     @click="toggleAutoZen"
                                     class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-                                    :class="autoZenOnPlay ? 'bg-primary' : 'bg-muted-foreground/30'"
+                                    :class="currentAutoZen ? 'bg-primary' : 'bg-muted-foreground/30'"
                                 >
                                     <span
                                         class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out"
-                                        :class="autoZenOnPlay ? 'translate-x-5' : 'translate-x-0'"
+                                        :class="currentAutoZen ? 'translate-x-5' : 'translate-x-0'"
                                     />
                                 </button>
                             </div>
@@ -315,7 +334,7 @@ const resetDefaults = () => {
                                         type="button"
                                         @click="setMushafType('uthmani')"
                                         class="flex flex-col items-center justify-center gap-1.5 p-3.5 rounded-2xl border text-xs font-semibold transition-all cursor-pointer"
-                                        :class="mushafType === 'uthmani' 
+                                        :class="currentMushafType === 'uthmani' 
                                             ? 'bg-primary/10 border-primary text-primary ring-2 ring-primary/20 shadow-xs' 
                                             : 'bg-card border-border/70 hover:bg-muted/50 text-foreground'"
                                     >
@@ -328,7 +347,7 @@ const resetDefaults = () => {
                                         type="button"
                                         @click="setMushafType('indopak')"
                                         class="flex flex-col items-center justify-center gap-1.5 p-3.5 rounded-2xl border text-xs font-semibold transition-all cursor-pointer"
-                                        :class="mushafType === 'indopak' 
+                                        :class="currentMushafType === 'indopak' 
                                             ? 'bg-primary/10 border-primary text-primary ring-2 ring-primary/20 shadow-xs' 
                                             : 'bg-card border-border/70 hover:bg-muted/50 text-foreground'"
                                     >
@@ -346,7 +365,7 @@ const resetDefaults = () => {
                                         Ukuran Kaligrafi Arab
                                     </label>
                                     <span class="px-2.5 py-0.5 rounded-lg bg-primary/15 text-primary text-xs font-mono font-bold">
-                                        {{ arabicFontSize }}px
+                                        {{ currentFontSize }}px
                                     </span>
                                 </div>
 
@@ -355,7 +374,7 @@ const resetDefaults = () => {
                                     min="20"
                                     max="44"
                                     step="2"
-                                    :value="arabicFontSize"
+                                    :value="currentFontSize"
                                     @input="onFontSizeChange"
                                     class="w-full h-2 rounded-lg bg-muted appearance-none cursor-pointer accent-primary focus:outline-none"
                                     aria-label="Ukuran Huruf Kaligrafi Arab"
@@ -370,11 +389,11 @@ const resetDefaults = () => {
                                     </p>
                                     <p 
                                         dir="rtl" 
-                                        :class="mushafType === 'indopak' ? 'font-indopak' : 'font-arabic'"
-                                        :style="{ fontSize: `${arabicFontSize}px` }"
+                                        :class="currentMushafType === 'indopak' ? 'font-indopak' : 'font-arabic'"
+                                        :style="{ fontSize: `${currentFontSize}px` }"
                                         class="leading-relaxed text-foreground transition-all duration-150"
                                     >
-                                        {{ mushafType === 'indopak' ? 'بِسْمِ اللهِ الرَّحْمٰنِ الرَّحِيْمِ' : 'بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ' }}
+                                        {{ currentMushafType === 'indopak' ? 'بِسْمِ اللهِ الرَّحْمٰنِ الرَّحِيْمِ' : 'بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ' }}
                                     </p>
                                 </div>
                             </div>
@@ -396,14 +415,14 @@ const resetDefaults = () => {
                                         <button
                                             type="button"
                                             role="switch"
-                                            :aria-checked="showTranslation"
+                                            :aria-checked="currentShowTranslation"
                                             @click="toggleTranslation"
                                             class="relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out"
-                                            :class="showTranslation ? 'bg-primary' : 'bg-muted-foreground/30'"
+                                            :class="currentShowTranslation ? 'bg-primary' : 'bg-muted-foreground/30'"
                                         >
                                             <span
                                                 class="pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out"
-                                                :class="showTranslation ? 'translate-x-4' : 'translate-x-0'"
+                                                :class="currentShowTranslation ? 'translate-x-4' : 'translate-x-0'"
                                             />
                                         </button>
                                     </div>
@@ -417,14 +436,14 @@ const resetDefaults = () => {
                                         <button
                                             type="button"
                                             role="switch"
-                                            :aria-checked="showTransliteration"
+                                            :aria-checked="currentShowTransliteration"
                                             @click="toggleTransliteration"
                                             class="relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out"
-                                            :class="showTransliteration ? 'bg-primary' : 'bg-muted-foreground/30'"
+                                            :class="currentShowTransliteration ? 'bg-primary' : 'bg-muted-foreground/30'"
                                         >
                                             <span
                                                 class="pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out"
-                                                :class="showTransliteration ? 'translate-x-4' : 'translate-x-0'"
+                                                :class="currentShowTransliteration ? 'translate-x-4' : 'translate-x-0'"
                                             />
                                         </button>
                                     </div>

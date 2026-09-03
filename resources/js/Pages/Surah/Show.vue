@@ -6,9 +6,9 @@ import AyahItem from '@/components/AyahItem.vue';
 import MushafPageView from '@/components/MushafPageView.vue';
 import AudioPlayerBar from '@/components/player/AudioPlayerBar.vue';
 import ReciterSelectorModal from '@/components/player/ReciterSelectorModal.vue';
-import SettingsDrawer from '@/components/player/SettingsDrawer.vue';
 import ZenPlayerView from '@/components/player/ZenPlayerView.vue';
 import { useQuranAudioPlayer } from '@/composables/useQuranAudioPlayer';
+import { useUserPreferences } from '@/composables/useUserPreferences';
 import { 
     ChevronLeft, 
     ChevronRight, 
@@ -67,46 +67,47 @@ const props = defineProps({
 // Audio Engine Composable
 const audioPlayer = useQuranAudioPlayer();
 
-// View & Customization States
-const readingMode = ref('ayah'); // 'ayah' (per ayat) | 'mushaf' (per lembar)
-const mushafType = ref('uthmani'); // 'uthmani' or 'indopak'
-const arabicFontSize = ref(28); // 20 - 44px
-const showTranslation = ref(true);
-const showTransliteration = ref(true);
+// Global User Preferences Composable
+const userPreferences = useUserPreferences();
+
+// View & Customization States synced with global preferences
+const readingMode = computed({
+    get: () => userPreferences.preferences.readingMode,
+    set: (val) => userPreferences.setReadingMode(val),
+});
+const mushafType = computed({
+    get: () => userPreferences.preferences.mushafType,
+    set: (val) => userPreferences.setMushafType(val),
+});
+const arabicFontSize = computed({
+    get: () => userPreferences.preferences.arabicFontSize,
+    set: (val) => userPreferences.setArabicFontSize(val),
+});
+const showTranslation = computed({
+    get: () => userPreferences.preferences.showTranslation,
+    set: (val) => userPreferences.setShowTranslation(val),
+});
+const showTransliteration = computed({
+    get: () => userPreferences.preferences.showTransliteration,
+    set: (val) => userPreferences.setShowTransliteration(val),
+});
+const autoZenOnPlay = computed({
+    get: () => userPreferences.preferences.autoZenOnPlay,
+    set: (val) => userPreferences.setAutoZenOnPlay(val),
+});
 
 // Modals State
 const showReciterModal = ref(false);
-const showSettingsDrawer = ref(false);
 const isZenMode = ref(false);
-const autoZenOnPlay = ref(true);
 
-// Active Reciter computed based on localStorage or prop
+// Active Reciter computed based on global preferences or prop
 const currentReciter = computed(() => {
-    const savedId = typeof window !== 'undefined' ? parseInt(localStorage.getItem('anisul_selected_reciter'), 10) : null;
-    const targetId = savedId || props.selectedReciterId || 7;
+    const targetId = userPreferences.preferences.selectedReciterId || props.selectedReciterId || 7;
     return props.reciters.find(r => r.id === targetId) || props.reciters[0] || { id: 7, name: 'Mishary Rashid Alafasy' };
 });
 
 // Initialize & Load Surah into Audio Engine
 onMounted(() => {
-    const savedReadingMode = localStorage.getItem('anisul_reading_mode');
-    if (savedReadingMode) readingMode.value = savedReadingMode;
-
-    const savedMushaf = localStorage.getItem('anisul_mushaf');
-    if (savedMushaf) mushafType.value = savedMushaf;
-
-    const savedFontSize = localStorage.getItem('anisul_font_size');
-    if (savedFontSize) arabicFontSize.value = parseInt(savedFontSize, 10);
-
-    const savedShowTranslation = localStorage.getItem('anisul_show_translation');
-    if (savedShowTranslation !== null) showTranslation.value = savedShowTranslation === 'true';
-
-    const savedShowTransliteration = localStorage.getItem('anisul_show_transliteration');
-    if (savedShowTransliteration !== null) showTransliteration.value = savedShowTransliteration === 'true';
-
-    const savedAutoZen = localStorage.getItem('anisul_auto_zen');
-    if (savedAutoZen !== null) autoZenOnPlay.value = savedAutoZen === 'true';
-
     // Load current surah audio into engine if not already loaded
     if (props.chapter && props.recitation) {
         audioPlayer.loadSurah(props.chapter, props.recitation, currentReciter.value, 1, false);
@@ -117,6 +118,16 @@ onMounted(() => {
 watch(() => props.chapter?.id, (newId) => {
     if (newId && props.chapter && props.recitation) {
         audioPlayer.loadSurah(props.chapter, props.recitation, currentReciter.value, 1, false);
+    }
+});
+
+// React to reciter preference change from global drawer
+watch(() => userPreferences.preferences.selectedReciterId, async (newReciterId) => {
+    if (newReciterId && newReciterId !== currentReciter.value?.id) {
+        const found = props.reciters.find(r => r.id === newReciterId);
+        if (found) {
+            await handleSelectReciter(found);
+        }
     }
 });
 
@@ -131,39 +142,12 @@ watch(() => audioPlayer.currentAyahNumber.value, (ayahNum) => {
     }
 });
 
-const setReadingMode = (mode) => {
-    readingMode.value = mode;
-    localStorage.setItem('anisul_reading_mode', mode);
-};
-
-const setMushafType = (type) => {
-    mushafType.value = type;
-    localStorage.setItem('anisul_mushaf', type);
-};
-
-const toggleTranslation = () => {
-    showTranslation.value = !showTranslation.value;
-    localStorage.setItem('anisul_show_translation', showTranslation.value);
-};
-
-const toggleTransliteration = () => {
-    showTransliteration.value = !showTransliteration.value;
-    localStorage.setItem('anisul_show_transliteration', showTransliteration.value);
-};
-
-const increaseFontSize = () => {
-    if (arabicFontSize.value < 44) {
-        arabicFontSize.value += 2;
-        localStorage.setItem('anisul_font_size', arabicFontSize.value);
-    }
-};
-
-const decreaseFontSize = () => {
-    if (arabicFontSize.value > 20) {
-        arabicFontSize.value -= 2;
-        localStorage.setItem('anisul_font_size', arabicFontSize.value);
-    }
-};
+const setReadingMode = (mode) => userPreferences.setReadingMode(mode);
+const setMushafType = (type) => userPreferences.setMushafType(type);
+const toggleTranslation = () => userPreferences.setShowTranslation(!showTranslation.value);
+const toggleTransliteration = () => userPreferences.setShowTransliteration(!showTransliteration.value);
+const increaseFontSize = () => userPreferences.setArabicFontSize(arabicFontSize.value + 2);
+const decreaseFontSize = () => userPreferences.setArabicFontSize(arabicFontSize.value - 2);
 
 // Play or toggle individual verse directly from Ayah Card -> Enter Zen Focus Mode (if autoZenOnPlay enabled)
 const handlePlayVerse = (verse) => {
@@ -430,7 +414,7 @@ const handleListenTogether = () => {
         <!-- Floating Audio Player Bar -->
         <AudioPlayerBar 
             @open-reciter-modal="showReciterModal = true"
-            @open-settings="showSettingsDrawer = true"
+            @open-settings="userPreferences.openDrawer()"
             @open-listen-together="handleListenTogether"
             @open-zen-mode="autoZenOnPlay ? (isZenMode = true) : null"
         />
@@ -445,27 +429,12 @@ const handleListenTogether = () => {
             v-model:showTransliteration="showTransliteration"
             v-model:arabicFontSize="arabicFontSize"
             @open-reciter-modal="showReciterModal = true"
-            @open-settings="showSettingsDrawer = true"
+            @open-settings="userPreferences.openDrawer()"
         />
 
         <!-- Reciter Selector Modal Dialog -->
         <ReciterSelectorModal 
             v-model:open="showReciterModal"
-            :reciters="reciters"
-            :selected-reciter-id="currentReciter.id"
-            @select-reciter="handleSelectReciter"
-        />
-
-        <!-- Settings Right Drawer Slide-over -->
-        <SettingsDrawer 
-            v-model:open="showSettingsDrawer"
-            v-model:readingMode="readingMode"
-            v-model:mushafType="mushafType"
-            v-model:arabicFontSize="arabicFontSize"
-            v-model:showTranslation="showTranslation"
-            v-model:showTransliteration="showTransliteration"
-            v-model:autoScrollEnabled="audioPlayer.autoScrollEnabled.value"
-            v-model:autoZenOnPlay="autoZenOnPlay"
             :reciters="reciters"
             :selected-reciter-id="currentReciter.id"
             @select-reciter="handleSelectReciter"

@@ -23,6 +23,7 @@
 | **E-12** | **Kontrol Volume Interaktif (Slider & Mute) pada Layar Penuh Mode Zen** | Player UX & Feature Parity | `resources/js/components/player/ZenPlayerView.vue` | `[x]` |
 | **E-13** | **Elevasi & Spacing Bottom Margin Player Bar Saat Dikecilkan (Collapsed)** | Responsive UX & Polish | `resources/js/components/player/AudioPlayerBar.vue` | `[x]` |
 | **E-14** | **Right Drawer Slide-over Pengaturan & Preferensi Pengguna Lengkap** | User Preferences & Settings | `resources/js/components/player/SettingsDrawer.vue`, `Surah/Show.vue` | `[x]` |
+| **E-15** | **Global User Preferences Architecture & Top Navbar Drawer Integration** | Global State & Architecture | `resources/js/composables/useUserPreferences.js`, `resources/js/Layouts/AppLayout.vue`, `HandleInertiaRequests.php` | `[x]` |
 
 ---
 

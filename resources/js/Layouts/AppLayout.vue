@@ -1,7 +1,9 @@
 <script setup>
-import { ref, onMounted } from 'vue';
-import { Link, Head } from '@inertiajs/vue3';
+import { ref, onMounted, computed } from 'vue';
+import { Link, Head, usePage } from '@inertiajs/vue3';
 import AppLogo from '@/components/AppLogo.vue';
+import SettingsDrawer from '@/components/player/SettingsDrawer.vue';
+import { useUserPreferences } from '@/composables/useUserPreferences';
 import { 
     BookOpen, 
     Moon, 
@@ -11,7 +13,8 @@ import {
     Search, 
     Heart, 
     Compass,
-    Sparkles 
+    Sparkles,
+    SlidersHorizontal
 } from '@lucide/vue';
 
 defineProps({
@@ -20,6 +23,10 @@ defineProps({
         default: "Anisul Qur'an",
     },
 });
+
+const page = usePage();
+const { isDrawerOpen, openDrawer } = useUserPreferences();
+const reciters = computed(() => page.props.reciters || []);
 
 const isDark = ref(false);
 
@@ -61,7 +68,7 @@ onMounted(() => {
                 </Link>
 
                 <!-- Navigation Links & Action Controls -->
-                <nav class="flex items-center gap-2 sm:gap-4">
+                <nav class="flex items-center gap-2 sm:gap-3">
                     <Link 
                         href="/" 
                         class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
@@ -70,11 +77,22 @@ onMounted(() => {
                         Daftar Surah
                     </Link>
 
+                    <!-- Global Preferences & Settings Trigger Button -->
+                    <button
+                        @click="openDrawer"
+                        type="button"
+                        class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-card text-foreground hover:bg-muted hover:text-primary transition-colors focus:outline-none focus:ring-2 focus:ring-primary/40 cursor-pointer"
+                        title="Pengaturan & Preferensi Pengguna"
+                        aria-label="Buka Pengaturan"
+                    >
+                        <SlidersHorizontal class="h-4 w-4" />
+                    </button>
+
                     <!-- Dark / Light Theme Toggle -->
                     <button 
                         @click="toggleTheme" 
                         type="button" 
-                        class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-card text-foreground hover:bg-muted hover:text-primary transition-colors focus:outline-none focus:ring-2 focus:ring-primary/40"
+                        class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-card text-foreground hover:bg-muted hover:text-primary transition-colors focus:outline-none focus:ring-2 focus:ring-primary/40 cursor-pointer"
                         :title="isDark ? 'Beralih ke Mode Terang' : 'Beralih ke Mode Gelap'"
                         aria-label="Toggle theme"
                     >
@@ -110,5 +128,8 @@ onMounted(() => {
                 </div>
             </div>
         </footer>
+
+        <!-- Global Settings & Preferences Right Drawer -->
+        <SettingsDrawer :reciters="reciters" />
     </div>
 </template>
