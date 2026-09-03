@@ -1,11 +1,15 @@
 <script setup>
-import { ref, watch, onMounted, onUnmounted } from 'vue';
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { X, BookOpen, Loader2, Info } from '@lucide/vue';
 
 const props = defineProps({
     modelValue: {
         type: Boolean,
         default: false,
+    },
+    open: {
+        type: Boolean,
+        default: undefined,
     },
     footnoteId: {
         type: Number,
@@ -21,7 +25,11 @@ const props = defineProps({
     },
 });
 
-const emit = defineEmits(['update:modelValue']);
+const emit = defineEmits(['update:modelValue', 'update:open']);
+
+const isVisible = computed(() => {
+    return props.open !== undefined ? props.open : props.modelValue;
+});
 
 const loading = ref(false);
 const footnoteText = ref('');
@@ -57,24 +65,25 @@ const fetchFootnote = async (id) => {
     }
 };
 
-watch(() => props.modelValue, (isOpen) => {
+watch(isVisible, (isOpen) => {
     if (isOpen && props.footnoteId) {
         fetchFootnote(props.footnoteId);
     }
 });
 
 watch(() => props.footnoteId, (newId) => {
-    if (props.modelValue && newId) {
+    if (isVisible.value && newId) {
         fetchFootnote(newId);
     }
 });
 
 const close = () => {
     emit('update:modelValue', false);
+    emit('update:open', false);
 };
 
 const handleKeydown = (e) => {
-    if (e.key === 'Escape' && props.modelValue) {
+    if (e.key === 'Escape' && isVisible.value) {
         close();
     }
 };
@@ -99,7 +108,7 @@ onUnmounted(() => {
             leave-to-class="opacity-0"
         >
             <div 
-                v-if="modelValue" 
+                v-if="isVisible" 
                 class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-xs"
                 @click.self="close"
             >

@@ -1027,7 +1027,7 @@ const selectSpeed = (rate) => {
 
                 <!-- Footnote Dialog -->
                 <FootnoteDialog
-                    v-model:open="showFootnoteDialog"
+                    v-model="showFootnoteDialog"
                     :footnote-id="selectedFootnoteId"
                     :footnote-number="selectedFootnoteNumber"
                 />
