@@ -34,6 +34,7 @@
 | **E-23** | **Smart Adaptive Verse (Full/2-Line Chunks), Stable Card, Upward Exit / Downward Entry, & Word Underline** | Micro-interactions, Motion & UX | `KhusyuPlayerView.vue`, `app.css` | `[x]` |
 | **E-24** | **Highlight Underline Kata Aktif di Mode Baca Per Ayat & Mode Mushaf Fisik serta Auto-Scroll Halus Saat Keluar Khusyu'** | Feature Parity & Reading UX | `AyahItem.vue`, `MushafPageView.vue`, `Show.vue` | `[x]` |
 | **E-25** | **Suasana & Vibe Visual Global Aplikasi (Noor, Midnight, Warqah) Lintas Dark/Light Mode** | Design Tokens, Theming & Global UX | `app.css`, `AppLayout.vue`, `SettingsDrawer.vue`, `useUserPreferences.js`, `KhusyuPlayerView.vue` | `[x]` |
+| **E-26** | **Perbaikan Spacing Cursive Natural & Peningkatan Ukuran Ornamen Nomor Ayat pada Mode Mushaf Fisik** | Typography, Legibility & Spacing | `MushafPageView.vue`, `AyahEndOrnament.vue` | `[x]` |
 
 ---
 

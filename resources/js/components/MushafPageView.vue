@@ -85,7 +85,7 @@ const getArabicText = (verse) => {
             <!-- Continuous Flowing Arabic Text Block -->
             <div 
                 :class="[
-                    'py-4 text-justify leading-[2.6] select-text',
+                    'py-4 text-justify leading-[2.6] select-text [text-align-last:right] [text-justify:inter-word]',
                     mushafType === 'indopak' ? 'font-indopak' : 'font-arabic'
                 ]" 
                 dir="rtl"
@@ -95,46 +95,31 @@ const getArabicText = (verse) => {
                     <span 
                         :id="`mushaf-ayah-${verse.verse_number}`"
                         :class="[
-                            'inline rounded-md px-1 py-0.5 transition-colors cursor-pointer group',
+                            'inline transition-colors cursor-pointer group',
                             activeAyahNumber === verse.verse_number 
-                                ? 'bg-primary/10 text-foreground font-semibold shadow-xs' 
-                                : 'hover:bg-muted/60 text-foreground'
+                                ? 'text-primary font-medium' 
+                                : 'text-foreground'
                         ]"
                         :title="`Klik untuk memutar Ayat ${verse.verse_number}`"
                         @click="emit('play', verse)"
-                    >
-                        <template v-if="Array.isArray(verse.words) && verse.words.length > 0">
-                            <template v-for="word in verse.words" :key="word.id || word.position">
-                                <AyahEndOrnament
+                    ><template v-if="Array.isArray(verse.words) && verse.words.length > 0"><template v-for="(word, wIdx) in verse.words" :key="word.id || word.position"><AyahEndOrnament
                                     v-if="word.char_type_name === 'end'"
                                     :verse-number="verse.verse_number"
-                                    size="sm"
+                                    size="mushaf"
                                     :is-active="activeAyahNumber === verse.verse_number"
-                                />
-                                <span
+                                /><span
                                     v-else
-                                    class="inline-block mx-0.5 pb-0.5 border-b-2 transition-all duration-150"
+                                    class="inline transition-all duration-150"
                                     :class="[
                                         activeAyahNumber === verse.verse_number && isPlaying && activeWordIndex === word.position
-                                            ? 'border-primary text-primary font-bold drop-shadow-sm bg-primary/15 rounded-xs'
-                                            : 'border-transparent'
+                                            ? 'text-primary font-bold underline decoration-primary decoration-2 underline-offset-8 bg-primary/15 rounded-xs'
+                                            : ''
                                     ]"
-                                >
-                                    {{ getFormattedWordText(word, mushafType) }}
-                                </span>
-                            </template>
-                        </template>
-                        <template v-else>
-                            {{ getArabicText(verse) }}
-                            <!-- Inline Ornamented Ayah Circle Number -->
-                            <AyahEndOrnament
+                                >{{ getFormattedWordText(word, mushafType) }}</span>{{ wIdx < verse.words.length - 1 && word.char_type_name !== 'end' ? ' ' : '' }}</template></template><template v-else>{{ getArabicText(verse) }}<AyahEndOrnament
                                 :verse-number="verse.verse_number"
-                                size="sm"
+                                size="mushaf"
                                 :is-active="activeAyahNumber === verse.verse_number"
-                            />
-                        </template>
-                    </span>
-                    {{ ' ' }}
+                            /></template></span>{{ ' ' }}
                 </template>
             </div>
 

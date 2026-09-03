@@ -28,23 +28,25 @@ const arabicNumber = computed(() => {
 // Dynamic font size inside the SVG depending on digit count (1, 2, or 3 digits)
 const textFontSize = computed(() => {
     const len = String(props.verseNumber).length;
-    if (len >= 3) return '11px';
-    if (len === 2) return '13px';
-    return '14.5px';
+    if (len >= 3) return '13px';
+    if (len === 2) return '15.5px';
+    return '17.5px';
 });
 
 const sizeClasses = computed(() => {
     switch (props.size) {
         case 'sm':
-            return 'w-6 h-6 mx-1';
+            return 'w-7.5 h-7.5 mx-1 align-middle';
+        case 'mushaf':
+            return 'w-8.5 h-8.5 sm:w-9 sm:h-9 mx-1.5 align-middle';
         case 'lg':
-            return 'w-9 h-9 mx-2';
+            return 'w-10 h-10 mx-2 align-middle';
         case 'khusyu':
         case 'zen':
-            return 'w-11 h-11 sm:w-13 sm:h-13 mx-2.5';
+            return 'w-11 h-11 sm:w-13 sm:h-13 mx-2';
         case 'md':
         default:
-            return 'w-7.5 h-7.5 mx-1.5';
+            return 'w-8.5 h-8.5 mx-1.5 align-middle';
     }
 });
 </script>
