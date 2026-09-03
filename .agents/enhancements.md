@@ -31,6 +31,7 @@
 | **E-20** | **Arsitektur 3-Row Terpisah Selaras (Row 1: Arab, Row 2: Latin, Row 3: Arti) dengan Sinkronisasi Karaoke Multi-Track** | UI/UX & Multi-Row Streaming | `KhusyuPlayerView.vue` | `[x]` |
 | **E-21** | **Rebranding & Refactoring Mode Zen Menjadi Mode Khusyu' (خُشُوع) & Rename File KhusyuPlayerView** | Rebranding & Architecture | `KhusyuPlayerView.vue`, `Show.vue`, `AudioPlayerBar.vue`, `SettingsDrawer.vue`, `useUserPreferences.js` | `[x]` |
 | **E-22** | **Line-by-Line Sanctuary (Anti-Terburu-buru, Zero Scrollbar) & 3 Live Mockup Konsep Visual Mode Khusyu'** | UI/UX, Immersive Craft & Accessibility | `KhusyuPlayerView.vue`, `app.css` | `[x]` |
+| **E-23** | **Smart Adaptive Verse (Full/2-Line Chunks), Stable Card, Upward Exit / Downward Entry, & Word Underline** | Micro-interactions, Motion & UX | `KhusyuPlayerView.vue`, `app.css` | `[x]` |
 
 ---
 

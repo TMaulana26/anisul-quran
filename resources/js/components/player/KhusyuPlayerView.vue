@@ -13,7 +13,6 @@ import {
     Repeat1,
     Volume2,
     VolumeX,
-    User,
     Minimize2,
     Loader2,
     Sparkles,
@@ -21,9 +20,7 @@ import {
     ChevronRight,
     SlidersHorizontal,
     BookOpen,
-    Eye,
     Moon,
-    Layers,
     X,
     ScrollText
 } from '@lucide/vue';
@@ -55,7 +52,7 @@ const props = defineProps({
     },
     arabicFontSize: {
         type: Number,
-        default: 36,
+        default: 34,
     },
 });
 
@@ -73,7 +70,6 @@ const audioPlayer = useQuranAudioPlayer();
 
 // Active Atmosphere Theme ('noor' | 'midnight' | 'warqah')
 const currentTheme = ref('noor');
-const showCompareModal = ref(false);
 const showFullTranslationDialog = ref(false);
 
 onMounted(() => {
@@ -121,15 +117,45 @@ const currentArabicText = computed(() => {
     return getFormattedArabicText(currentVerse.value, props.mushafType);
 });
 
-// Line-by-Line Grouping: Group words by line_number from Quran Foundation API
-const linesOfVerse = computed(() => {
+// Smart Adaptive Verse Chunking (Short vs Long)
+const isShortVerse = computed(() => {
+    if (!currentVerse.value) return true;
+    const words = currentVerse.value.words || [];
+    const uniqueLines = new Set(words.map(w => w.line_number).filter(l => l !== undefined && l !== null));
+    // Verse is short if it has <= 2 lines or <= 16 words
+    return uniqueLines.size <= 2 || words.length <= 16;
+});
+
+// Chunks of Verse (If short: 1 chunk with all words; If long: 2 lines per chunk)
+const verseChunks = computed(() => {
     if (!currentVerse.value || !Array.isArray(currentVerse.value.words) || currentVerse.value.words.length === 0) {
         return [];
     }
 
     const words = currentVerse.value.words;
-    const lineMap = new Map();
 
+    // 1. Short Verse: Display whole verse at once!
+    if (isShortVerse.value) {
+        const nonEndWords = words.filter(w => w.char_type_name !== 'end');
+        const translation = currentVerse.value.translations?.[0]?.text || nonEndWords.map(w => w.translation?.text?.trim()).filter(Boolean).join(' ');
+        const transliteration = nonEndWords.map(w => w.transliteration?.text?.trim()).filter(Boolean).join(' ');
+
+        return [{
+            index: 1,
+            totalChunks: 1,
+            isShort: true,
+            words,
+            nonEndWords,
+            translation,
+            transliteration,
+            startPosition: words[0]?.position || 1,
+            endPosition: words[words.length - 1]?.position || 1,
+            hasEndSymbol: words.some(w => w.char_type_name === 'end'),
+        }];
+    }
+
+    // 2. Long Verse: Group words by Mushaf lines first, then group by 2 lines per chunk!
+    const lineMap = new Map();
     words.forEach((word) => {
         const lineKey = (word.line_number !== undefined && word.line_number !== null)
             ? `${word.page_number || 0}_${word.line_number}`
@@ -146,65 +172,82 @@ const linesOfVerse = computed(() => {
     });
 
     const lines = Array.from(lineMap.values());
+    const chunks = [];
 
-    return lines.map((line, index) => {
-        const lineWords = line.words;
-        const nonEndWords = lineWords.filter(w => w.char_type_name !== 'end');
+    for (let i = 0; i < lines.length; i += 2) {
+        const line1 = lines[i];
+        const line2 = lines[i + 1] || null;
+        const chunkWords = line2 ? [...line1.words, ...line2.words] : [...line1.words];
+        const nonEndWords = chunkWords.filter(w => w.char_type_name !== 'end');
 
-        // Assembled flowing Indonesian translation for this line
-        const lineTranslation = nonEndWords
+        const translation = nonEndWords
             .map(w => w.translation?.text?.trim())
             .filter(Boolean)
             .join(' ');
 
-        // Assembled Latin transliteration for this line
-        const lineTransliteration = nonEndWords
+        const transliteration = nonEndWords
             .map(w => w.transliteration?.text?.trim())
             .filter(Boolean)
             .join(' ');
 
-        const startPosition = lineWords[0]?.position || 1;
-        const endPosition = lineWords[lineWords.length - 1]?.position || startPosition;
-        const hasEndSymbol = lineWords.some(w => w.char_type_name === 'end');
+        const startPosition = chunkWords[0]?.position || 1;
+        const endPosition = chunkWords[chunkWords.length - 1]?.position || startPosition;
+        const hasEndSymbol = chunkWords.some(w => w.char_type_name === 'end');
 
-        return {
-            index: index + 1,
-            totalLines: lines.length,
-            words: lineWords,
+        chunks.push({
+            index: Math.floor(i / 2) + 1,
+            totalChunks: Math.ceil(lines.length / 2),
+            isShort: false,
+            words: chunkWords,
             nonEndWords,
-            lineTranslation: lineTranslation || currentVerse.value?.translations?.[0]?.text || '',
-            lineTransliteration,
+            translation,
+            transliteration,
             startPosition,
             endPosition,
             hasEndSymbol,
-        };
-    });
+        });
+    }
+
+    const total = chunks.length;
+    chunks.forEach(c => c.totalChunks = total);
+    return chunks;
 });
 
-// Active Line Index
-const activeLineIndex = ref(1);
+// Active Chunk Index & Directional Transition ('forward' | 'backward')
+const activeChunkIndex = ref(1);
+const transitionDirection = ref('forward');
 
-// Sync active line automatically with audioPlayer.currentWordIndex
+// Sync active chunk automatically with audioPlayer.currentWordIndex
 watch(() => audioPlayer.currentWordIndex.value, (wordPos) => {
-    if (!wordPos || linesOfVerse.value.length === 0) return;
-    const foundLine = linesOfVerse.value.find(l => wordPos >= l.startPosition && wordPos <= l.endPosition);
-    if (foundLine) {
-        activeLineIndex.value = foundLine.index;
+    if (!wordPos || verseChunks.value.length === 0) return;
+    const foundChunk = verseChunks.value.find(c => wordPos >= c.startPosition && wordPos <= c.endPosition);
+    if (foundChunk && foundChunk.index !== activeChunkIndex.value) {
+        transitionDirection.value = foundChunk.index > activeChunkIndex.value ? 'forward' : 'backward';
+        activeChunkIndex.value = foundChunk.index;
     }
 }, { immediate: true });
 
-// Reset activeLineIndex to 1 when verse changes
-watch(() => currentVerse.value?.id, () => {
-    activeLineIndex.value = 1;
+// Reset activeChunkIndex to 1 when verse changes
+watch(() => currentVerse.value?.id, (newId, oldId) => {
+    if (newId !== oldId) {
+        transitionDirection.value = 'forward';
+        activeChunkIndex.value = 1;
+    }
 });
 
-const currentLine = computed(() => {
-    if (linesOfVerse.value.length === 0) return null;
-    const idx = Math.min(Math.max(1, activeLineIndex.value), linesOfVerse.value.length);
-    return linesOfVerse.value[idx - 1] || linesOfVerse.value[0];
+const currentChunk = computed(() => {
+    if (verseChunks.value.length === 0) return null;
+    const idx = Math.min(Math.max(1, activeChunkIndex.value), verseChunks.value.length);
+    return verseChunks.value[idx - 1] || verseChunks.value[0];
 });
 
-// Seek audio to specific word position
+// Check if a specific word is actively being recited
+const isWordActive = (word) => {
+    if (!word || !audioPlayer.isPlaying.value) return false;
+    return audioPlayer.currentWordIndex.value === word.position;
+};
+
+// Seek audio to word position
 const seekToWord = (wordPos) => {
     if (!currentVerse.value || !audioPlayer.currentRecitation.value?.verse_timings) return;
     
@@ -222,27 +265,30 @@ const seekToWord = (wordPos) => {
     }
 };
 
-const goToLine = (lineIdx) => {
-    if (lineIdx < 1 || lineIdx > linesOfVerse.value.length) return;
-    activeLineIndex.value = lineIdx;
-    const targetLine = linesOfVerse.value[lineIdx - 1];
-    if (targetLine) {
-        seekToWord(targetLine.startPosition);
+const goToChunk = (chunkIdx) => {
+    if (chunkIdx < 1 || chunkIdx > verseChunks.value.length) return;
+    transitionDirection.value = chunkIdx > activeChunkIndex.value ? 'forward' : 'backward';
+    activeChunkIndex.value = chunkIdx;
+    const target = verseChunks.value[chunkIdx - 1];
+    if (target) {
+        seekToWord(target.startPosition);
     }
 };
 
-const nextLine = () => {
-    if (activeLineIndex.value < linesOfVerse.value.length) {
-        goToLine(activeLineIndex.value + 1);
+const nextChunk = () => {
+    if (activeChunkIndex.value < verseChunks.value.length) {
+        goToChunk(activeChunkIndex.value + 1);
     } else {
+        transitionDirection.value = 'forward';
         audioPlayer.nextAyah();
     }
 };
 
-const prevLine = () => {
-    if (activeLineIndex.value > 1) {
-        goToLine(activeLineIndex.value - 1);
+const prevChunk = () => {
+    if (activeChunkIndex.value > 1) {
+        goToChunk(activeChunkIndex.value - 1);
     } else {
+        transitionDirection.value = 'backward';
         audioPlayer.prevAyah();
     }
 };
@@ -252,13 +298,11 @@ const closeKhusyuMode = () => {
 };
 const closeZenMode = closeKhusyuMode;
 
-// Keyboard shortcut (Escape, Left/Right for lines, Space for play)
+// Keyboard shortcuts
 const handleKeyDown = (e) => {
     if (!props.open) return;
     if (e.key === 'Escape') {
-        if (showCompareModal.value) {
-            showCompareModal.value = false;
-        } else if (showFullTranslationDialog.value) {
+        if (showFullTranslationDialog.value) {
             showFullTranslationDialog.value = false;
         } else {
             closeKhusyuMode();
@@ -268,10 +312,10 @@ const handleKeyDown = (e) => {
         audioPlayer.togglePlay();
     } else if (e.key === 'ArrowRight' && e.target.tagName !== 'INPUT') {
         e.preventDefault();
-        nextLine();
+        nextChunk();
     } else if (e.key === 'ArrowLeft' && e.target.tagName !== 'INPUT') {
         e.preventDefault();
-        prevLine();
+        prevChunk();
     }
 };
 
@@ -337,19 +381,16 @@ const selectSpeed = (rate) => {
             >
                 <!-- Meditative Radial Glow Ambient Background -->
                 <div class="pointer-events-none absolute inset-0 overflow-hidden">
-                    <!-- Noor Theme Ambient -->
                     <template v-if="currentTheme === 'noor'">
                         <div class="absolute -top-40 left-1/2 -translate-x-1/2 w-[700px] h-[500px] bg-primary/10 rounded-full blur-[140px]" />
                         <div class="absolute -bottom-40 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-teal-500/10 rounded-full blur-[130px]" />
                     </template>
 
-                    <!-- Midnight Theme Ambient (Golden Tahajjud Glow) -->
                     <template v-else-if="currentTheme === 'midnight'">
                         <div class="absolute -top-40 left-1/2 -translate-x-1/2 w-[650px] h-[450px] bg-amber-500/10 rounded-full blur-[160px]" />
                         <div class="absolute -bottom-40 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-indigo-500/10 rounded-full blur-[150px]" />
                     </template>
 
-                    <!-- Warqah Theme Ambient (Warm Parchment Glow) -->
                     <template v-else-if="currentTheme === 'warqah'">
                         <div class="absolute -top-40 left-1/2 -translate-x-1/2 w-[700px] h-[500px] bg-amber-700/8 dark:bg-amber-600/10 rounded-full blur-[150px]" />
                         <div class="absolute -bottom-40 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-orange-700/6 dark:bg-orange-600/8 rounded-full blur-[140px]" />
@@ -365,7 +406,7 @@ const selectSpeed = (rate) => {
                         currentTheme === 'warqah' ? 'border-amber-900/15 dark:border-amber-700/20 bg-[#fcf7ee]/75 dark:bg-[#1a1612]/75' : ''
                     ]"
                 >
-                    <!-- Left: Surah Info & Line Progress -->
+                    <!-- Left: Surah Info & Chunk Progress -->
                     <div class="flex items-center gap-3">
                         <div 
                             :class="[
@@ -386,14 +427,14 @@ const selectSpeed = (rate) => {
                             </div>
                             <p class="text-xs opacity-75 font-medium">
                                 Ayat <span class="font-bold">{{ audioPlayer.currentAyahNumber.value || 1 }}</span> dari {{ chapter.verses_count }}
-                                <span v-if="currentLine && currentLine.totalLines > 1" class="ml-1 opacity-90 font-semibold">
-                                    • Baris {{ currentLine.index }} dari {{ currentLine.totalLines }}
+                                <span v-if="currentChunk && currentChunk.totalChunks > 1" class="ml-1 opacity-90 font-semibold">
+                                    • Bagian {{ currentChunk.index }} dari {{ currentChunk.totalChunks }}
                                 </span>
                             </p>
                         </div>
                     </div>
 
-                    <!-- Center / Right Controls: Atmosphere Switcher, Latin Toggle, Full Translation, Exit -->
+                    <!-- Right Controls: Theme Switcher, Latin Toggle, Full Translation, Exit -->
                     <div class="flex items-center gap-1.5 sm:gap-2">
                         <!-- Atmosphere Theme Switcher Segmented Pills -->
                         <div 
@@ -413,7 +454,7 @@ const selectSpeed = (rate) => {
                                         ? 'bg-primary text-primary-foreground shadow-xs font-bold'
                                         : 'opacity-70 hover:opacity-100 hover:text-foreground'
                                 ]"
-                                title="Konsep 1: Noor Sanctuary (Modern Bersih)"
+                                title="Noor Sanctuary (Modern Bersih)"
                             >
                                 <Sparkles class="h-3.5 w-3.5" />
                                 <span class="hidden md:inline">Noor</span>
@@ -428,7 +469,7 @@ const selectSpeed = (rate) => {
                                         ? 'bg-amber-500 text-slate-950 font-bold shadow-xs'
                                         : 'opacity-70 hover:opacity-100 hover:text-foreground'
                                 ]"
-                                title="Konsep 2: Midnight Mushaf (Tahajjud Malam Emas)"
+                                title="Midnight Mushaf (Tahajjud Malam Emas)"
                             >
                                 <Moon class="h-3.5 w-3.5" />
                                 <span class="hidden md:inline">Midnight</span>
@@ -443,28 +484,12 @@ const selectSpeed = (rate) => {
                                         ? 'bg-amber-800 dark:bg-amber-600 text-white font-bold shadow-xs'
                                         : 'opacity-70 hover:opacity-100 hover:text-foreground'
                                 ]"
-                                title="Konsep 3: Warqah Turath (Manuskrip Perkamen Klasik)"
+                                title="Warqah Turath (Manuskrip Perkamen Klasik)"
                             >
                                 <ScrollText class="h-3.5 w-3.5" />
                                 <span class="hidden md:inline">Warqah</span>
                             </button>
                         </div>
-
-                        <!-- Button to compare all 3 mockups side by side -->
-                        <button
-                            type="button"
-                            @click="showCompareModal = true"
-                            :class="[
-                                'hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-semibold transition-all cursor-pointer',
-                                currentTheme === 'noor' ? 'bg-muted/60 border-border/60 hover:bg-muted' : '',
-                                currentTheme === 'midnight' ? 'bg-amber-500/10 border-amber-500/30 text-amber-300 hover:bg-amber-500/20' : '',
-                                currentTheme === 'warqah' ? 'bg-amber-900/10 dark:bg-amber-400/10 border-amber-900/25 dark:border-amber-400/25 hover:bg-amber-900/20' : ''
-                            ]"
-                            title="Bandingkan Ketiga Konsep Mockup Secara Langsung"
-                        >
-                            <Layers class="h-3.5 w-3.5" />
-                            <span>3 Preview</span>
-                        </button>
 
                         <!-- Toggle Latin -->
                         <button
@@ -481,7 +506,7 @@ const selectSpeed = (rate) => {
                             Latin
                         </button>
 
-                        <!-- Full Translation Modal Trigger -->
+                        <!-- Full Translation Dialog Trigger -->
                         <button
                             type="button"
                             @click="showFullTranslationDialog = true"
@@ -509,148 +534,168 @@ const selectSpeed = (rate) => {
                     </div>
                 </header>
 
-                <!-- Center Stage: Pure Isolated Line Sanctuary (Zero-Scrollbar Guaranteed) -->
+                <!-- Center Stage: Permanent Stable Card Container (No Disappearing Card) -->
                 <main class="relative z-10 flex-1 flex flex-col items-center justify-center px-4 py-4 sm:px-12 sm:py-8 overflow-hidden max-w-5xl mx-auto w-full text-center">
-                    <!-- Previous Line / Verse Floating Arrow (Left) -->
+                    <!-- Left Arrow: Prev Chunk / Ayah -->
                     <button
                         type="button"
-                        @click="prevLine"
+                        @click="prevChunk"
                         class="absolute left-2 sm:left-6 top-1/2 -translate-y-1/2 p-3 rounded-full opacity-40 hover:opacity-100 hover:scale-110 active:scale-95 transition-all cursor-pointer z-20 backdrop-blur-md"
-                        :title="activeLineIndex > 1 ? 'Baris Sebelumnya (Panah Kiri)' : 'Ayat Sebelumnya'"
+                        :title="activeChunkIndex > 1 ? 'Bagian Sebelumnya' : 'Ayat Sebelumnya'"
                     >
                         <ChevronLeft class="h-6 w-6 sm:h-8 sm:w-8" />
                     </button>
 
-                    <!-- Next Line / Verse Floating Arrow (Right) -->
+                    <!-- Right Arrow: Next Chunk / Ayah -->
                     <button
                         type="button"
-                        @click="nextLine"
+                        @click="nextChunk"
                         class="absolute right-2 sm:right-6 top-1/2 -translate-y-1/2 p-3 rounded-full opacity-40 hover:opacity-100 hover:scale-110 active:scale-95 transition-all cursor-pointer z-20 backdrop-blur-md"
-                        :title="activeLineIndex < linesOfVerse.length ? 'Baris Selanjutnya (Panah Kanan)' : 'Ayat Selanjutnya'"
+                        :title="activeChunkIndex < verseChunks.length ? 'Bagian Selanjutnya' : 'Ayat Selanjutnya'"
                     >
                         <ChevronRight class="h-6 w-6 sm:h-8 sm:w-8" />
                     </button>
 
-                    <!-- Active Line Card Container with Gentle Elevation & Dissolve Transition -->
-                    <Transition name="khusyu-line" mode="out-in">
+                    <!-- Permanent Outer Sanctuary Card (Card NEVER blinks or disappears) -->
+                    <div 
+                        :class="[
+                            'w-full max-w-4xl mx-auto flex flex-col items-center justify-center p-6 sm:p-10 transition-colors duration-500 relative overflow-hidden select-text',
+                            currentTheme === 'noor' 
+                                ? 'rounded-3xl border border-primary/20 bg-card/60 backdrop-blur-xl shadow-[0_10px_40px_-15px_rgba(16,185,129,0.12)]' 
+                                : '',
+                            currentTheme === 'midnight' 
+                                ? 'rounded-3xl border border-amber-500/25 bg-[#0e131d]/85 backdrop-blur-xl shadow-[0_10px_50px_-15px_rgba(245,158,11,0.15)]' 
+                                : '',
+                            currentTheme === 'warqah' 
+                                ? 'rounded-3xl border-2 border-amber-900/20 dark:border-amber-600/25 bg-[#faf4e6]/95 dark:bg-[#201b16]/95 shadow-[0_10px_35px_-10px_rgba(120,53,15,0.15)] ring-1 ring-amber-900/10 dark:ring-amber-500/10' 
+                                : ''
+                        ]"
+                    >
+                        <!-- Top Chunk Badge -->
                         <div 
-                            v-if="currentLine"
-                            :key="`${currentVerse?.id}_${currentLine.index}_${currentTheme}`"
                             :class="[
-                                'w-full max-w-4xl mx-auto flex flex-col items-center justify-center p-6 sm:p-10 transition-all duration-500 select-text',
-                                currentTheme === 'noor' 
-                                    ? 'rounded-3xl border border-primary/20 bg-card/60 backdrop-blur-xl shadow-[0_10px_40px_-15px_rgba(16,185,129,0.12)]' 
-                                    : '',
-                                currentTheme === 'midnight' 
-                                    ? 'rounded-3xl border border-amber-500/25 bg-[#0e131d]/85 backdrop-blur-xl shadow-[0_10px_50px_-15px_rgba(245,158,11,0.15)]' 
-                                    : '',
-                                currentTheme === 'warqah' 
-                                    ? 'rounded-3xl border-2 border-amber-900/20 dark:border-amber-600/25 bg-[#faf4e6]/95 dark:bg-[#201b16]/95 shadow-[0_10px_35px_-10px_rgba(120,53,15,0.15)] ring-1 ring-amber-900/10 dark:ring-amber-500/10' 
-                                    : ''
+                                'inline-flex items-center justify-center px-4 py-1 rounded-full text-xs font-bold mb-6 tracking-wide transition-colors',
+                                currentTheme === 'noor' ? 'bg-primary/10 text-primary border border-primary/25' : '',
+                                currentTheme === 'midnight' ? 'bg-amber-500/15 text-amber-300 border border-amber-500/35' : '',
+                                currentTheme === 'warqah' ? 'bg-amber-800/15 dark:bg-amber-500/15 text-amber-800 dark:text-amber-300 border border-amber-800/25 dark:border-amber-500/30' : ''
                             ]"
                         >
-                            <!-- Line Indicator Badge -->
-                            <div 
-                                :class="[
-                                    'inline-flex items-center justify-center px-4 py-1 rounded-full text-xs font-bold mb-6 tracking-wide transition-colors',
-                                    currentTheme === 'noor' ? 'bg-primary/10 text-primary border border-primary/25' : '',
-                                    currentTheme === 'midnight' ? 'bg-amber-500/15 text-amber-300 border border-amber-500/35' : '',
-                                    currentTheme === 'warqah' ? 'bg-amber-800/15 dark:bg-amber-500/15 text-amber-800 dark:text-amber-300 border border-amber-800/25 dark:border-amber-500/30' : ''
-                                ]"
-                            >
-                                <span v-if="currentLine.totalLines > 1">
-                                    Ayat {{ currentVerse.verse_number }} • Bagian {{ currentLine.index }} dari {{ currentLine.totalLines }}
-                                </span>
-                                <span v-else>
-                                    Ayat {{ currentVerse.verse_number }}
-                                </span>
-                            </div>
-
-                            <!-- 1. Teks Arab Murni Baris Tersebut (Besar, Agung, Megah) -->
-                            <div class="w-full mb-6 text-center" dir="rtl">
-                                <p 
-                                    :class="[
-                                        'leading-[2.4] sm:leading-[2.8] tracking-normal transition-all duration-300',
-                                        mushafType === 'indopak' ? 'font-indopak' : 'font-arabic',
-                                        currentTheme === 'noor' ? 'text-foreground' : '',
-                                        currentTheme === 'midnight' ? 'text-[#faebd7] drop-shadow-[0_2px_12px_rgba(245,158,11,0.2)]' : '',
-                                        currentTheme === 'warqah' ? 'text-[#2b1810] dark:text-[#f8ecd0]' : ''
-                                    ]"
-                                    :style="{ fontSize: `${arabicFontSize + 8}px` }"
-                                >
-                                    <template v-for="word in currentLine.words" :key="word.id || word.position">
-                                        <AyahEndOrnament
-                                            v-if="word.char_type_name === 'end'"
-                                            :verse-number="currentVerse.verse_number"
-                                            size="khusyu"
-                                            :is-active="audioPlayer.isPlaying.value"
-                                        />
-                                        <span 
-                                            v-else 
-                                            class="inline-block mx-1.5 transition-colors duration-200"
-                                        >
-                                            {{ getFormattedWordText(word, mushafType) }}
-                                        </span>
-                                    </template>
-                                </p>
-                            </div>
-
-                            <!-- 2. Transliterasi Latin Penggalan Baris (Opsional) -->
-                            <div 
-                                v-if="showTransliteration && currentLine.lineTransliteration"
-                                class="w-full max-w-2xl mx-auto mb-3 text-center"
-                                dir="ltr"
-                            >
-                                <p 
-                                    :class="[
-                                        'text-xs sm:text-sm font-serif italic leading-relaxed tracking-wide',
-                                        currentTheme === 'noor' ? 'text-primary/80' : '',
-                                        currentTheme === 'midnight' ? 'text-amber-300/80' : '',
-                                        currentTheme === 'warqah' ? 'text-amber-900/80 dark:text-amber-300/80' : ''
-                                    ]"
-                                >
-                                    {{ currentLine.lineTransliteration }}
-                                </p>
-                            </div>
-
-                            <!-- 3. Terjemahan Penggalan Baris (Kalimat Mengalir Tenang) -->
-                            <div 
-                                class="w-full max-w-2xl mx-auto text-center"
-                                dir="ltr"
-                            >
-                                <p 
-                                    :class="[
-                                        'leading-relaxed sm:leading-loose text-base sm:text-lg transition-colors duration-300',
-                                        currentTheme === 'noor' ? 'font-sans font-medium text-foreground/85' : '',
-                                        currentTheme === 'midnight' ? 'font-serif italic text-amber-100/90 text-lg sm:text-xl' : '',
-                                        currentTheme === 'warqah' ? 'font-serif text-[#463024] dark:text-[#d3c2aa] text-base sm:text-lg' : ''
-                                    ]"
-                                >
-                                    “{{ currentLine.lineTranslation }}”
-                                </p>
-                            </div>
-
-                            <!-- Line Pagination Dots (if multi-line) -->
-                            <div 
-                                v-if="currentLine.totalLines > 1" 
-                                class="flex items-center justify-center gap-1.5 mt-6"
-                            >
-                                <button
-                                    v-for="l in linesOfVerse"
-                                    :key="l.index"
-                                    type="button"
-                                    @click="goToLine(l.index)"
-                                    :class="[
-                                        'h-1.5 rounded-full transition-all cursor-pointer',
-                                        l.index === currentLine.index 
-                                            ? (currentTheme === 'midnight' ? 'w-6 bg-amber-400' : 'w-6 bg-primary')
-                                            : 'w-1.5 opacity-30 hover:opacity-80 bg-foreground'
-                                    ]"
-                                    :title="`Menuju Baris ${l.index}`"
-                                />
-                            </div>
+                            <span v-if="currentChunk && currentChunk.totalChunks > 1">
+                                Ayat {{ currentVerse.verse_number }} • Bagian {{ currentChunk.index }} dari {{ currentChunk.totalChunks }}
+                            </span>
+                            <span v-else>
+                                Ayat {{ currentVerse.verse_number }}
+                            </span>
                         </div>
-                    </Transition>
+
+                        <!-- Inner Content: Vertical Conveyor Transition (Exit UP, Enter from DOWN) -->
+                        <div class="relative w-full flex flex-col items-center justify-center min-h-[180px]">
+                            <Transition 
+                                :name="transitionDirection === 'forward' ? 'khusyu-slide-forward' : 'khusyu-slide-backward'" 
+                                mode="out-in"
+                            >
+                                <div 
+                                    v-if="currentChunk"
+                                    :key="`${currentVerse?.id}_${currentChunk.index}`"
+                                    class="w-full flex flex-col items-center justify-center text-center"
+                                >
+                                    <!-- 1. Teks Arab (2 Baris atau 1 Ayat Utuh) dengan Underline Kata Aktif -->
+                                    <div class="w-full mb-6 text-center" dir="rtl">
+                                        <p 
+                                            :class="[
+                                                'leading-[2.4] sm:leading-[2.8] tracking-normal transition-all duration-300',
+                                                mushafType === 'indopak' ? 'font-indopak' : 'font-arabic',
+                                                currentTheme === 'noor' ? 'text-foreground' : '',
+                                                currentTheme === 'midnight' ? 'text-[#faebd7] drop-shadow-[0_2px_12px_rgba(245,158,11,0.2)]' : '',
+                                                currentTheme === 'warqah' ? 'text-[#2b1810] dark:text-[#f8ecd0]' : ''
+                                            ]"
+                                            :style="{ fontSize: `${arabicFontSize + 6}px` }"
+                                        >
+                                            <template v-for="word in currentChunk.words" :key="word.id || word.position">
+                                                <AyahEndOrnament
+                                                    v-if="word.char_type_name === 'end'"
+                                                    :verse-number="currentVerse.verse_number"
+                                                    size="khusyu"
+                                                    :is-active="audioPlayer.isPlaying.value"
+                                                />
+                                                <!-- Word span with calm underline when active -->
+                                                <span 
+                                                    v-else 
+                                                    class="inline-block mx-1.5 pb-0.5 border-b-2 transition-all duration-200"
+                                                    :class="[
+                                                        isWordActive(word)
+                                                            ? (currentTheme === 'midnight' 
+                                                                ? 'border-amber-400 text-amber-200 drop-shadow-sm font-semibold' 
+                                                                : currentTheme === 'warqah'
+                                                                    ? 'border-amber-800 dark:border-amber-400 text-amber-950 dark:text-amber-200 font-semibold'
+                                                                    : 'border-primary text-primary font-bold')
+                                                            : 'border-transparent'
+                                                    ]"
+                                                >
+                                                    {{ getFormattedWordText(word, mushafType) }}
+                                                </span>
+                                            </template>
+                                        </p>
+                                    </div>
+
+                                    <!-- 2. Transliterasi Latin (Opsional) -->
+                                    <div 
+                                        v-if="showTransliteration && currentChunk.transliteration"
+                                        class="w-full max-w-2xl mx-auto mb-3 text-center"
+                                        dir="ltr"
+                                    >
+                                        <p 
+                                            :class="[
+                                                'text-xs sm:text-sm font-serif italic leading-relaxed tracking-wide',
+                                                currentTheme === 'noor' ? 'text-primary/80' : '',
+                                                currentTheme === 'midnight' ? 'text-amber-300/80' : '',
+                                                currentTheme === 'warqah' ? 'text-amber-900/80 dark:text-amber-300/80' : ''
+                                            ]"
+                                        >
+                                            {{ currentChunk.transliteration }}
+                                        </p>
+                                    </div>
+
+                                    <!-- 3. Terjemahan Indonesia (Mengalir Tenang Sesuai Bagian/Ayat) -->
+                                    <div 
+                                        class="w-full max-w-2xl mx-auto text-center"
+                                        dir="ltr"
+                                    >
+                                        <p 
+                                            :class="[
+                                                'leading-relaxed sm:leading-loose text-base sm:text-lg transition-colors duration-300',
+                                                currentTheme === 'noor' ? 'font-sans font-medium text-foreground/85' : '',
+                                                currentTheme === 'midnight' ? 'font-serif italic text-amber-100/90 text-lg sm:text-xl' : '',
+                                                currentTheme === 'warqah' ? 'font-serif text-[#463024] dark:text-[#d3c2aa] text-base sm:text-lg' : ''
+                                            ]"
+                                        >
+                                            “{{ currentChunk.translation }}”
+                                        </p>
+                                    </div>
+                                </div>
+                            </Transition>
+                        </div>
+
+                        <!-- Pagination Dots (Hanya muncul jika ayat panjang > 1 bagian) -->
+                        <div 
+                            v-if="currentChunk && currentChunk.totalChunks > 1" 
+                            class="flex items-center justify-center gap-1.5 mt-6"
+                        >
+                            <button
+                                v-for="c in verseChunks"
+                                :key="c.index"
+                                type="button"
+                                @click="goToChunk(c.index)"
+                                :class="[
+                                    'h-1.5 rounded-full transition-all cursor-pointer',
+                                    c.index === currentChunk.index 
+                                        ? (currentTheme === 'midnight' ? 'w-6 bg-amber-400' : 'w-6 bg-primary')
+                                        : 'w-1.5 opacity-30 hover:opacity-80 bg-foreground'
+                                ]"
+                                :title="`Menuju Bagian ${c.index}`"
+                            />
+                        </div>
+                    </div>
                 </main>
 
                 <!-- Bottom Khusyu Player Control Bar -->
@@ -694,7 +739,6 @@ const selectSpeed = (rate) => {
                         <div class="flex items-center justify-between gap-4">
                             <!-- Left: Speed & Repeat Mode -->
                             <div class="flex items-center gap-2">
-                                <!-- Speed Menu Button -->
                                 <div ref="speedMenuRef" class="relative">
                                     <button
                                         type="button"
@@ -723,7 +767,6 @@ const selectSpeed = (rate) => {
                                     </div>
                                 </div>
 
-                                <!-- Repeat Mode Toggle -->
                                 <button
                                     type="button"
                                     @click="audioPlayer.cycleRepeatMode"
@@ -738,7 +781,7 @@ const selectSpeed = (rate) => {
                                 </button>
                             </div>
 
-                            <!-- Center: Prev, Play/Pause, Next Main Controls -->
+                            <!-- Center: Prev, Play/Pause, Next Controls -->
                             <div class="flex items-center gap-3">
                                 <button
                                     type="button"
@@ -775,7 +818,7 @@ const selectSpeed = (rate) => {
                                 </button>
                             </div>
 
-                            <!-- Right: Volume Popover Slider & Settings Trigger -->
+                            <!-- Right: Volume Popover & Settings -->
                             <div class="flex items-center gap-2">
                                 <div ref="volumeContainerRef" class="relative flex items-center">
                                     <button
@@ -789,7 +832,6 @@ const selectSpeed = (rate) => {
                                         <Volume2 v-else class="h-4 w-4" />
                                     </button>
 
-                                    <!-- Volume Slider Popover -->
                                     <div 
                                         v-if="showVolumeSlider" 
                                         class="absolute bottom-full right-0 mb-3 p-3 rounded-2xl border border-border/80 bg-popover/95 backdrop-blur-xl shadow-2xl z-50 flex items-center gap-2.5 animate-scale-in w-40"
@@ -832,151 +874,7 @@ const selectSpeed = (rate) => {
                     </div>
                 </footer>
 
-                <!-- MODAL 1: Compare 3 Atmosphere Concepts Side by Side (/impeccable live preview) -->
-                <div 
-                    v-if="showCompareModal" 
-                    class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-8 bg-black/80 backdrop-blur-xl select-text animate-fade-in"
-                    role="dialog"
-                >
-                    <div class="relative w-full max-w-6xl max-h-[90vh] overflow-y-auto scrollbar-none rounded-3xl bg-background border border-border p-6 sm:p-8 shadow-2xl flex flex-col gap-6">
-                        <!-- Header Modal -->
-                        <div class="flex items-center justify-between border-b border-border/50 pb-4">
-                            <div>
-                                <h2 class="font-heading font-extrabold text-lg sm:text-xl flex items-center gap-2">
-                                    <Layers class="h-5 w-5 text-primary" />
-                                    <span>3 Pratinjau Konsep Visual Mode Khusyu' (خُشُوع)</span>
-                                </h2>
-                                <p class="text-xs text-muted-foreground mt-0.5">
-                                    Pilih suasana yang paling menenteramkan batin Anda untuk tilawah dan tadabbur.
-                                </p>
-                            </div>
-
-                            <button
-                                type="button"
-                                @click="showCompareModal = false"
-                                class="p-2 rounded-xl bg-muted/60 hover:bg-muted transition-colors cursor-pointer"
-                            >
-                                <X class="h-5 w-5" />
-                            </button>
-                        </div>
-
-                        <!-- 3 Cards Grid -->
-                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
-                            <!-- Konsep 1: Noor Sanctuary -->
-                            <div 
-                                @click="setTheme('noor'); showCompareModal = false;"
-                                class="group relative flex flex-col justify-between p-6 rounded-3xl border-2 transition-all cursor-pointer bg-card hover:scale-[1.02] shadow-lg"
-                                :class="currentTheme === 'noor' ? 'border-primary ring-2 ring-primary/30' : 'border-border/60 hover:border-primary/50'"
-                            >
-                                <div class="space-y-4">
-                                    <div class="flex items-center justify-between">
-                                        <span class="px-3 py-1 rounded-full text-xs font-bold bg-primary/15 text-primary border border-primary/25 flex items-center gap-1.5">
-                                            <Sparkles class="h-3.5 w-3.5" />
-                                            1. Noor Sanctuary
-                                        </span>
-                                        <span v-if="currentTheme === 'noor'" class="text-xs font-bold text-primary">Aktif ✓</span>
-                                    </div>
-                                    <p class="text-xs text-muted-foreground leading-relaxed">
-                                        Modern, sejuk, lapang dengan aksen zamrud fajar dan font sans modern yang bersih.
-                                    </p>
-
-                                    <!-- Mini Preview Box -->
-                                    <div class="p-4 rounded-2xl bg-muted/30 border border-border/50 text-center space-y-3">
-                                        <p class="font-arabic text-xl leading-loose" dir="rtl">
-                                            {{ currentLine?.words?.slice(0, 4)?.map(w => getFormattedWordText(w, mushafType))?.join(' ') || 'بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ' }}
-                                        </p>
-                                        <p class="text-xs font-sans text-foreground/80 leading-relaxed">
-                                            “{{ currentLine?.lineTranslation?.slice(0, 60) || 'Dengan nama Allah Yang Maha Pengasih...' }}...”
-                                        </p>
-                                    </div>
-                                </div>
-
-                                <button 
-                                    type="button" 
-                                    class="w-full mt-4 py-2 rounded-xl text-xs font-bold transition-colors bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground"
-                                >
-                                    Gunakan Konsep Noor
-                                </button>
-                            </div>
-
-                            <!-- Konsep 2: Midnight Mushaf -->
-                            <div 
-                                @click="setTheme('midnight'); showCompareModal = false;"
-                                class="group relative flex flex-col justify-between p-6 rounded-3xl border-2 transition-all cursor-pointer bg-[#0a0e17] text-[#faebd7] hover:scale-[1.02] shadow-lg"
-                                :class="currentTheme === 'midnight' ? 'border-amber-400 ring-2 ring-amber-400/30' : 'border-amber-500/20 hover:border-amber-400/50'"
-                            >
-                                <div class="space-y-4">
-                                    <div class="flex items-center justify-between">
-                                        <span class="px-3 py-1 rounded-full text-xs font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30 flex items-center gap-1.5">
-                                            <Moon class="h-3.5 w-3.5" />
-                                            2. Midnight Mushaf
-                                        </span>
-                                        <span v-if="currentTheme === 'midnight'" class="text-xs font-bold text-amber-400">Aktif ✓</span>
-                                    </div>
-                                    <p class="text-xs text-amber-100/70 leading-relaxed">
-                                        Suasana hening malam tahajjud, obsidian pekat dengan kaligrafi emas hangat dan font terjemahan serif puitis.
-                                    </p>
-
-                                    <!-- Mini Preview Box -->
-                                    <div class="p-4 rounded-2xl bg-white/5 border border-amber-500/20 text-center space-y-3">
-                                        <p class="font-arabic text-xl leading-loose text-amber-200" dir="rtl">
-                                            {{ currentLine?.words?.slice(0, 4)?.map(w => getFormattedWordText(w, mushafType))?.join(' ') || 'بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ' }}
-                                        </p>
-                                        <p class="text-xs font-serif italic text-amber-100/80 leading-relaxed">
-                                            “{{ currentLine?.lineTranslation?.slice(0, 60) || 'Dengan nama Allah Yang Maha Pengasih...' }}...”
-                                        </p>
-                                    </div>
-                                </div>
-
-                                <button 
-                                    type="button" 
-                                    class="w-full mt-4 py-2 rounded-xl text-xs font-bold transition-colors bg-amber-500/20 text-amber-300 group-hover:bg-amber-400 group-hover:text-slate-950"
-                                >
-                                    Gunakan Konsep Midnight
-                                </button>
-                            </div>
-
-                            <!-- Konsep 3: Warqah Turath -->
-                            <div 
-                                @click="setTheme('warqah'); showCompareModal = false;"
-                                class="group relative flex flex-col justify-between p-6 rounded-3xl border-2 transition-all cursor-pointer bg-[#fcf8f0] text-[#2c1d11] dark:bg-[#1f1a15] dark:text-[#f4ebd0] hover:scale-[1.02] shadow-lg"
-                                :class="currentTheme === 'warqah' ? 'border-amber-800 dark:border-amber-500 ring-2 ring-amber-800/30' : 'border-amber-800/20 dark:border-amber-600/30 hover:border-amber-800/50'"
-                            >
-                                <div class="space-y-4">
-                                    <div class="flex items-center justify-between">
-                                        <span class="px-3 py-1 rounded-full text-xs font-bold bg-amber-800/15 dark:bg-amber-500/15 text-amber-800 dark:text-amber-300 border border-amber-800/25 dark:border-amber-500/30 flex items-center gap-1.5">
-                                            <ScrollText class="h-3.5 w-3.5" />
-                                            3. Warqah Turath
-                                        </span>
-                                        <span v-if="currentTheme === 'warqah'" class="text-xs font-bold text-amber-700 dark:text-amber-400">Aktif ✓</span>
-                                    </div>
-                                    <p class="text-xs opacity-75 leading-relaxed">
-                                        Nuansa lembaran perkamen naskah klasik kuno (linen/sepia) dengan ornamen border warisan Islam.
-                                    </p>
-
-                                    <!-- Mini Preview Box -->
-                                    <div class="p-4 rounded-2xl bg-amber-900/5 dark:bg-white/5 border border-amber-900/15 dark:border-amber-600/20 text-center space-y-3">
-                                        <p class="font-arabic text-xl leading-loose text-[#2b1810] dark:text-[#f8ecd0]" dir="rtl">
-                                            {{ currentLine?.words?.slice(0, 4)?.map(w => getFormattedWordText(w, mushafType))?.join(' ') || 'بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ' }}
-                                        </p>
-                                        <p class="text-xs font-serif text-[#463024] dark:text-[#d3c2aa] leading-relaxed">
-                                            “{{ currentLine?.lineTranslation?.slice(0, 60) || 'Dengan nama Allah Yang Maha Pengasih...' }}...”
-                                        </p>
-                                    </div>
-                                </div>
-
-                                <button 
-                                    type="button" 
-                                    class="w-full mt-4 py-2 rounded-xl text-xs font-bold transition-colors bg-amber-800/15 dark:bg-amber-500/15 text-amber-800 dark:text-amber-300 group-hover:bg-amber-800 dark:group-hover:bg-amber-500 group-hover:text-white"
-                                >
-                                    Gunakan Konsep Warqah
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- MODAL 2: Full Verse Translation Dialog (Kemenag RI Resmi) -->
+                <!-- MODAL: Full Verse Translation Dialog (Kemenag RI Resmi) -->
                 <div 
                     v-if="showFullTranslationDialog" 
                     class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/75 backdrop-blur-md select-text animate-fade-in"
