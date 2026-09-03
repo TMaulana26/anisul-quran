@@ -146,7 +146,7 @@ class QuranFoundationService
             'language' => 'id',
             'words' => true,
             'word_translation_language' => 'id',
-            'word_fields' => 'text_uthmani,text_indopak',
+            'word_fields' => 'text_uthmani,text_indopak,line_number,page_number',
             'translations' => '33', // 33: Indonesian Ministry of Religious Affairs (Kemenag RI)
             'fields' => 'text_uthmani,text_indopak,chapter_id,verse_key,verse_number,page_number,juz_number',
             'per_page' => 300, // Fetch all verses of the chapter in one request where possible
@@ -171,6 +171,8 @@ class QuranFoundationService
                                     'id' => $w['id'] ?? null,
                                     'position' => $w['position'] ?? null,
                                     'char_type_name' => $w['char_type_name'] ?? 'word',
+                                    'line_number' => $w['line_number'] ?? null,
+                                    'page_number' => $w['page_number'] ?? null,
                                     'text_uthmani' => $this->sanitizeArabicText($w['text_uthmani'] ?? $w['text'] ?? ''),
                                     'text_indopak' => $this->sanitizeArabicText($w['text_indopak'] ?? $w['text'] ?? ''),
                                     'transliteration' => isset($w['transliteration']['text']) ? ['text' => $w['transliteration']['text']] : null,

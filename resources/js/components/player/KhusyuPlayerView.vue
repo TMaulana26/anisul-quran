@@ -52,7 +52,7 @@ const props = defineProps({
     },
     arabicFontSize: {
         type: Number,
-        default: 34,
+        default: 32,
     },
 });
 
@@ -121,12 +121,20 @@ const currentArabicText = computed(() => {
 const isShortVerse = computed(() => {
     if (!currentVerse.value) return true;
     const words = currentVerse.value.words || [];
-    const uniqueLines = new Set(words.map(w => w.line_number).filter(l => l !== undefined && l !== null));
-    // Verse is short if it has <= 2 lines or <= 16 words
-    return uniqueLines.size <= 2 || words.length <= 16;
+    // If verse has <= 14 words, it fits in 1-2 lines on screen easily: display all!
+    if (words.length <= 14) return true;
+
+    // Check distinct line numbers if available
+    const validLines = words.map(w => w.line_number).filter(l => l !== undefined && l !== null);
+    if (validLines.length > 0) {
+        const uniqueLines = new Set(validLines);
+        return uniqueLines.size <= 2;
+    }
+
+    return false;
 });
 
-// Chunks of Verse (If short: 1 chunk with all words; If long: 2 lines per chunk)
+// Chunks of Verse (If short: 1 chunk with all words; If long: strictly 2 lines per chunk)
 const verseChunks = computed(() => {
     if (!currentVerse.value || !Array.isArray(currentVerse.value.words) || currentVerse.value.words.length === 0) {
         return [];
@@ -134,7 +142,7 @@ const verseChunks = computed(() => {
 
     const words = currentVerse.value.words;
 
-    // 1. Short Verse: Display whole verse at once!
+    // 1. Short Verse: Display entire verse at once
     if (isShortVerse.value) {
         const nonEndWords = words.filter(w => w.char_type_name !== 'end');
         const translation = currentVerse.value.translations?.[0]?.text || nonEndWords.map(w => w.translation?.text?.trim()).filter(Boolean).join(' ');
@@ -154,30 +162,73 @@ const verseChunks = computed(() => {
         }];
     }
 
-    // 2. Long Verse: Group words by Mushaf lines first, then group by 2 lines per chunk!
-    const lineMap = new Map();
-    words.forEach((word) => {
-        const lineKey = (word.line_number !== undefined && word.line_number !== null)
-            ? `${word.page_number || 0}_${word.line_number}`
-            : Math.ceil((word.position || 1) / 8);
+    // 2. Long Verse: Check if line_number is present
+    const validLines = words.filter(w => w.line_number !== undefined && w.line_number !== null);
 
-        if (!lineMap.has(lineKey)) {
-            lineMap.set(lineKey, {
-                lineKey,
-                lineNumber: word.line_number,
-                words: [],
+    if (validLines.length >= words.length * 0.5) {
+        // Group by line_number from Quran Foundation
+        const lineMap = new Map();
+        words.forEach((word) => {
+            const lineKey = `${word.page_number || 0}_${word.line_number}`;
+            if (!lineMap.has(lineKey)) {
+                lineMap.set(lineKey, {
+                    lineKey,
+                    lineNumber: word.line_number,
+                    words: [],
+                });
+            }
+            lineMap.get(lineKey).words.push(word);
+        });
+
+        const lines = Array.from(lineMap.values());
+        const chunks = [];
+
+        for (let i = 0; i < lines.length; i += 2) {
+            const line1 = lines[i];
+            const line2 = lines[i + 1] || null;
+            const chunkWords = line2 ? [...line1.words, ...line2.words] : [...line1.words];
+            const nonEndWords = chunkWords.filter(w => w.char_type_name !== 'end');
+
+            const translation = nonEndWords
+                .map(w => w.translation?.text?.trim())
+                .filter(Boolean)
+                .join(' ');
+
+            const transliteration = nonEndWords
+                .map(w => w.transliteration?.text?.trim())
+                .filter(Boolean)
+                .join(' ');
+
+            const startPosition = chunkWords[0]?.position || 1;
+            const endPosition = chunkWords[chunkWords.length - 1]?.position || startPosition;
+            const hasEndSymbol = chunkWords.some(w => w.char_type_name === 'end');
+
+            chunks.push({
+                index: Math.floor(i / 2) + 1,
+                totalChunks: Math.ceil(lines.length / 2),
+                isShort: false,
+                words: chunkWords,
+                nonEndWords,
+                translation,
+                transliteration,
+                startPosition,
+                endPosition,
+                hasEndSymbol,
             });
         }
-        lineMap.get(lineKey).words.push(word);
-    });
 
-    const lines = Array.from(lineMap.values());
+        const total = chunks.length;
+        chunks.forEach(c => c.totalChunks = total);
+        return chunks;
+    }
+
+    // Fallback: chunk strictly by 12 words per view (~2 lines of Arabic)
+    const WORDS_PER_CHUNK = 12;
     const chunks = [];
+    const totalChunks = Math.ceil(words.length / WORDS_PER_CHUNK);
 
-    for (let i = 0; i < lines.length; i += 2) {
-        const line1 = lines[i];
-        const line2 = lines[i + 1] || null;
-        const chunkWords = line2 ? [...line1.words, ...line2.words] : [...line1.words];
+    for (let i = 0; i < words.length; i += WORDS_PER_CHUNK) {
+        const chunkWords = words.slice(i, i + WORDS_PER_CHUNK);
         const nonEndWords = chunkWords.filter(w => w.char_type_name !== 'end');
 
         const translation = nonEndWords
@@ -195,8 +246,8 @@ const verseChunks = computed(() => {
         const hasEndSymbol = chunkWords.some(w => w.char_type_name === 'end');
 
         chunks.push({
-            index: Math.floor(i / 2) + 1,
-            totalChunks: Math.ceil(lines.length / 2),
+            index: Math.floor(i / WORDS_PER_CHUNK) + 1,
+            totalChunks,
             isShort: false,
             words: chunkWords,
             nonEndWords,
@@ -208,8 +259,6 @@ const verseChunks = computed(() => {
         });
     }
 
-    const total = chunks.length;
-    chunks.forEach(c => c.totalChunks = total);
     return chunks;
 });
 
@@ -379,7 +428,7 @@ const selectSpeed = (rate) => {
                 aria-modal="true"
                 aria-label="Mode Khusyu' (خُشُوع)"
             >
-                <!-- Meditative Radial Glow Ambient Background -->
+                <!-- Meditative Ambient Background Glow -->
                 <div class="pointer-events-none absolute inset-0 overflow-hidden">
                     <template v-if="currentTheme === 'noor'">
                         <div class="absolute -top-40 left-1/2 -translate-x-1/2 w-[700px] h-[500px] bg-primary/10 rounded-full blur-[140px]" />
@@ -534,8 +583,8 @@ const selectSpeed = (rate) => {
                     </div>
                 </header>
 
-                <!-- Center Stage: Permanent Stable Card Container (No Disappearing Card) -->
-                <main class="relative z-10 flex-1 flex flex-col items-center justify-center px-4 py-4 sm:px-12 sm:py-8 overflow-hidden max-w-5xl mx-auto w-full text-center">
+                <!-- Center Stage: Permanent Stable Card Container -->
+                <main class="relative z-10 flex-1 flex flex-col items-center justify-center px-4 py-4 sm:px-12 sm:py-6 overflow-hidden max-w-5xl mx-auto w-full text-center">
                     <!-- Left Arrow: Prev Chunk / Ayah -->
                     <button
                         type="button"
@@ -559,7 +608,7 @@ const selectSpeed = (rate) => {
                     <!-- Permanent Outer Sanctuary Card (Card NEVER blinks or disappears) -->
                     <div 
                         :class="[
-                            'w-full max-w-4xl mx-auto flex flex-col items-center justify-center p-6 sm:p-10 transition-colors duration-500 relative overflow-hidden select-text',
+                            'w-full max-w-4xl mx-auto flex flex-col items-center justify-between min-h-[360px] p-6 sm:p-8 transition-colors duration-500 relative select-text',
                             currentTheme === 'noor' 
                                 ? 'rounded-3xl border border-primary/20 bg-card/60 backdrop-blur-xl shadow-[0_10px_40px_-15px_rgba(16,185,129,0.12)]' 
                                 : '',
@@ -571,25 +620,27 @@ const selectSpeed = (rate) => {
                                 : ''
                         ]"
                     >
-                        <!-- Top Chunk Badge -->
-                        <div 
-                            :class="[
-                                'inline-flex items-center justify-center px-4 py-1 rounded-full text-xs font-bold mb-6 tracking-wide transition-colors',
-                                currentTheme === 'noor' ? 'bg-primary/10 text-primary border border-primary/25' : '',
-                                currentTheme === 'midnight' ? 'bg-amber-500/15 text-amber-300 border border-amber-500/35' : '',
-                                currentTheme === 'warqah' ? 'bg-amber-800/15 dark:bg-amber-500/15 text-amber-800 dark:text-amber-300 border border-amber-800/25 dark:border-amber-500/30' : ''
-                            ]"
-                        >
-                            <span v-if="currentChunk && currentChunk.totalChunks > 1">
-                                Ayat {{ currentVerse.verse_number }} • Bagian {{ currentChunk.index }} dari {{ currentChunk.totalChunks }}
-                            </span>
-                            <span v-else>
-                                Ayat {{ currentVerse.verse_number }}
-                            </span>
+                        <!-- Top Chunk Badge (Permanent, not in transition) -->
+                        <div class="shrink-0 mb-4">
+                            <div 
+                                :class="[
+                                    'inline-flex items-center justify-center px-4 py-1 rounded-full text-xs font-bold tracking-wide transition-colors',
+                                    currentTheme === 'noor' ? 'bg-primary/10 text-primary border border-primary/25' : '',
+                                    currentTheme === 'midnight' ? 'bg-amber-500/15 text-amber-300 border border-amber-500/35' : '',
+                                    currentTheme === 'warqah' ? 'bg-amber-800/15 dark:bg-amber-500/15 text-amber-800 dark:text-amber-300 border border-amber-800/25 dark:border-amber-500/30' : ''
+                                ]"
+                            >
+                                <span v-if="currentChunk && currentChunk.totalChunks > 1">
+                                    Ayat {{ currentVerse.verse_number }} • Bagian {{ currentChunk.index }} dari {{ currentChunk.totalChunks }}
+                                </span>
+                                <span v-else>
+                                    Ayat {{ currentVerse.verse_number }}
+                                </span>
+                            </div>
                         </div>
 
-                        <!-- Inner Content: Vertical Conveyor Transition (Exit UP, Enter from DOWN) -->
-                        <div class="relative w-full flex flex-col items-center justify-center min-h-[180px]">
+                        <!-- Inner Content: Directional Vertical Conveyor (Exit UP, Enter from DOWN) -->
+                        <div class="w-full flex-1 flex flex-col items-center justify-center relative overflow-hidden py-2">
                             <Transition 
                                 :name="transitionDirection === 'forward' ? 'khusyu-slide-forward' : 'khusyu-slide-backward'" 
                                 mode="out-in"
@@ -597,19 +648,19 @@ const selectSpeed = (rate) => {
                                 <div 
                                     v-if="currentChunk"
                                     :key="`${currentVerse?.id}_${currentChunk.index}`"
-                                    class="w-full flex flex-col items-center justify-center text-center"
+                                    class="w-full flex flex-col items-center justify-center text-center space-y-5"
                                 >
                                     <!-- 1. Teks Arab (2 Baris atau 1 Ayat Utuh) dengan Underline Kata Aktif -->
-                                    <div class="w-full mb-6 text-center" dir="rtl">
+                                    <div class="w-full text-center" dir="rtl">
                                         <p 
                                             :class="[
-                                                'leading-[2.4] sm:leading-[2.8] tracking-normal transition-all duration-300',
+                                                'leading-[2.2] sm:leading-[2.6] tracking-normal transition-all duration-300',
                                                 mushafType === 'indopak' ? 'font-indopak' : 'font-arabic',
                                                 currentTheme === 'noor' ? 'text-foreground' : '',
                                                 currentTheme === 'midnight' ? 'text-[#faebd7] drop-shadow-[0_2px_12px_rgba(245,158,11,0.2)]' : '',
                                                 currentTheme === 'warqah' ? 'text-[#2b1810] dark:text-[#f8ecd0]' : ''
                                             ]"
-                                            :style="{ fontSize: `${arabicFontSize + 6}px` }"
+                                            :style="{ fontSize: `${arabicFontSize + 4}px` }"
                                         >
                                             <template v-for="word in currentChunk.words" :key="word.id || word.position">
                                                 <AyahEndOrnament
@@ -621,15 +672,15 @@ const selectSpeed = (rate) => {
                                                 <!-- Word span with calm underline when active -->
                                                 <span 
                                                     v-else 
-                                                    class="inline-block mx-1.5 pb-0.5 border-b-2 transition-all duration-200"
+                                                    class="inline-block mx-1 sm:mx-1.5 pb-1 border-b-2 transition-all duration-200"
                                                     :class="[
                                                         isWordActive(word)
                                                             ? (currentTheme === 'midnight' 
-                                                                ? 'border-amber-400 text-amber-200 drop-shadow-sm font-semibold' 
+                                                                ? 'border-amber-400 text-amber-200 drop-shadow-[0_0_8px_rgba(245,158,11,0.4)] font-bold' 
                                                                 : currentTheme === 'warqah'
-                                                                    ? 'border-amber-800 dark:border-amber-400 text-amber-950 dark:text-amber-200 font-semibold'
-                                                                    : 'border-primary text-primary font-bold')
-                                                            : 'border-transparent'
+                                                                    ? 'border-amber-700 dark:border-amber-400 text-[#1f1008] dark:text-[#fff5db] font-bold'
+                                                                    : 'border-primary text-primary drop-shadow-[0_0_8px_rgba(16,185,129,0.3)] font-bold')
+                                                            : 'border-transparent text-inherit'
                                                     ]"
                                                 >
                                                     {{ getFormattedWordText(word, mushafType) }}
@@ -641,7 +692,7 @@ const selectSpeed = (rate) => {
                                     <!-- 2. Transliterasi Latin (Opsional) -->
                                     <div 
                                         v-if="showTransliteration && currentChunk.transliteration"
-                                        class="w-full max-w-2xl mx-auto mb-3 text-center"
+                                        class="w-full max-w-2xl mx-auto text-center"
                                         dir="ltr"
                                     >
                                         <p 
@@ -663,10 +714,10 @@ const selectSpeed = (rate) => {
                                     >
                                         <p 
                                             :class="[
-                                                'leading-relaxed sm:leading-loose text-base sm:text-lg transition-colors duration-300',
+                                                'leading-relaxed sm:leading-loose text-sm sm:text-base md:text-lg transition-colors duration-300',
                                                 currentTheme === 'noor' ? 'font-sans font-medium text-foreground/85' : '',
-                                                currentTheme === 'midnight' ? 'font-serif italic text-amber-100/90 text-lg sm:text-xl' : '',
-                                                currentTheme === 'warqah' ? 'font-serif text-[#463024] dark:text-[#d3c2aa] text-base sm:text-lg' : ''
+                                                currentTheme === 'midnight' ? 'font-serif italic text-amber-100/90 text-base sm:text-lg' : '',
+                                                currentTheme === 'warqah' ? 'font-serif text-[#463024] dark:text-[#d3c2aa] text-sm sm:text-base md:text-lg' : ''
                                             ]"
                                         >
                                             “{{ currentChunk.translation }}”
@@ -676,10 +727,10 @@ const selectSpeed = (rate) => {
                             </Transition>
                         </div>
 
-                        <!-- Pagination Dots (Hanya muncul jika ayat panjang > 1 bagian) -->
+                        <!-- Bottom Pagination Dots (Hanya muncul jika ayat panjang > 1 bagian) -->
                         <div 
                             v-if="currentChunk && currentChunk.totalChunks > 1" 
-                            class="flex items-center justify-center gap-1.5 mt-6"
+                            class="shrink-0 mt-4 flex items-center justify-center gap-1.5"
                         >
                             <button
                                 v-for="c in verseChunks"
