@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { mount } from '@vue/test-utils';
 import SettingsDrawer from './SettingsDrawer.vue';
+import { Select } from '@/components/ui/select';
 
 describe('SettingsDrawer.vue', () => {
     const defaultProps = {
@@ -95,8 +96,9 @@ describe('SettingsDrawer.vue', () => {
             },
         });
 
-        const select = wrapper.find('select');
-        await select.setValue('1');
+        const select = wrapper.findComponent(Select);
+        expect(select.exists()).toBe(true);
+        await select.vm.$emit('update:modelValue', '1');
 
         expect(wrapper.emitted('select-reciter')).toBeTruthy();
         expect(wrapper.emitted('select-reciter')[0][0].id).toBe(1);

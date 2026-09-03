@@ -18,6 +18,15 @@ import {
     FileText,
     Bookmark
 } from '@lucide/vue';
+import {
+    Select,
+    SelectContent,
+    SelectGroup,
+    SelectItem,
+    SelectLabel,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 
 const props = defineProps({
     open: {
@@ -172,12 +181,23 @@ const toggleAutoZen = () => {
     emit('update:autoZenOnPlay', nextVal);
 };
 
-const onReciterSelectChange = (event) => {
-    const reciterId = parseInt(event.target.value, 10);
-    userPreferences.setSelectedReciterId(reciterId);
-    const reciter = effectiveReciters.value.find(r => r.id === reciterId);
-    if (reciter) {
-        emit('select-reciter', reciter);
+const selectedReciterLabel = computed(() => {
+    const found = effectiveReciters.value.find(r => r.id === currentReciterId.value);
+    if (found) {
+        return `${getReciterName(found)} (${found.style || 'Murattal'})`;
+    }
+    return 'Pilih Qari...';
+});
+
+const onReciterSelectChange = (val) => {
+    const rawId = typeof val === 'object' && val?.target ? val.target.value : val;
+    const reciterId = parseInt(rawId, 10);
+    if (!isNaN(reciterId)) {
+        userPreferences.setSelectedReciterId(reciterId);
+        const reciter = effectiveReciters.value.find(r => r.id === reciterId);
+        if (reciter) {
+            emit('select-reciter', reciter);
+        }
     }
 };
 
@@ -353,24 +373,42 @@ const resetDefaults = () => {
                                         </span>
                                     </div>
 
-                                    <div class="relative">
-                                        <select
-                                            :value="currentReciterId"
-                                            @change="onReciterSelectChange"
-                                            class="w-full appearance-none px-3.5 py-2.5 rounded-2xl bg-muted/50 border border-border/70 focus:border-primary focus:bg-background focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm font-semibold transition-all cursor-pointer text-foreground"
-                                        >
-                                            <option 
-                                                v-for="reciter in effectiveReciters" 
-                                                :key="reciter.id" 
-                                                :value="reciter.id"
-                                            >
-                                                {{ getReciterName(reciter) }} ({{ reciter.style || 'Murattal' }})
-                                            </option>
-                                        </select>
-                                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-muted-foreground">
-                                            <Volume2 class="h-4 w-4" />
-                                        </div>
-                                    </div>
+                                    <Select
+                                        :model-value="String(currentReciterId)"
+                                        @update:model-value="onReciterSelectChange"
+                                    >
+                                        <SelectTrigger class="w-full h-11 rounded-2xl bg-muted/50 border border-border/70 hover:border-primary/50 text-sm font-semibold cursor-pointer transition-all flex items-center justify-between px-3.5">
+                                            <div class="flex items-center gap-2.5 truncate min-w-0 pr-2">
+                                                <Volume2 class="h-4 w-4 text-primary shrink-0" />
+                                                <span class="truncate text-foreground font-semibold">{{ selectedReciterLabel }}</span>
+                                            </div>
+                                        </SelectTrigger>
+                                        <SelectContent class="z-[60] max-h-72 rounded-2xl border-border bg-card shadow-xl custom-scrollbar">
+                                            <SelectGroup>
+                                                <SelectLabel class="text-[11px] text-muted-foreground uppercase font-bold tracking-wider px-3 py-2">
+                                                    Daftar Qari Murottal & Mujawwad
+                                                </SelectLabel>
+                                                <SelectItem
+                                                    v-for="reciter in effectiveReciters"
+                                                    :key="reciter.id"
+                                                    :value="String(reciter.id)"
+                                                    class="cursor-pointer py-2.5 px-3 rounded-xl focus:bg-primary/10 focus:text-primary transition-colors my-0.5"
+                                                >
+                                                    <div class="flex items-center justify-between w-full gap-3 pr-2">
+                                                        <span class="font-semibold text-sm truncate text-foreground">{{ getReciterName(reciter) }}</span>
+                                                        <span
+                                                            class="text-[10px] px-2 py-0.5 rounded-full font-bold uppercase shrink-0 border"
+                                                            :class="reciter.style === 'Mujawwad' 
+                                                                ? 'bg-blue-500/15 text-blue-600 dark:text-blue-400 border-blue-500/30' 
+                                                                : 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'"
+                                                        >
+                                                            {{ reciter.style || 'Murattal' }}
+                                                        </span>
+                                                    </div>
+                                                </SelectItem>
+                                            </SelectGroup>
+                                        </SelectContent>
+                                    </Select>
                                 </div>
 
                                 <!-- 2. Gaya Rasm Kaligrafi Surah Ini -->
@@ -532,24 +570,42 @@ const resetDefaults = () => {
                                         </span>
                                     </div>
 
-                                    <div class="relative">
-                                        <select
-                                            :value="currentReciterId"
-                                            @change="onReciterSelectChange"
-                                            class="w-full appearance-none px-3.5 py-2.5 rounded-2xl bg-muted/50 border border-border/70 focus:border-primary focus:bg-background focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm font-semibold transition-all cursor-pointer text-foreground"
-                                        >
-                                            <option 
-                                                v-for="reciter in effectiveReciters" 
-                                                :key="reciter.id" 
-                                                :value="reciter.id"
-                                            >
-                                                {{ getReciterName(reciter) }} ({{ reciter.style || 'Murattal' }})
-                                            </option>
-                                        </select>
-                                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-muted-foreground">
-                                            <Volume2 class="h-4 w-4" />
-                                        </div>
-                                    </div>
+                                    <Select
+                                        :model-value="String(currentReciterId)"
+                                        @update:model-value="onReciterSelectChange"
+                                    >
+                                        <SelectTrigger class="w-full h-11 rounded-2xl bg-muted/50 border border-border/70 hover:border-primary/50 text-sm font-semibold cursor-pointer transition-all flex items-center justify-between px-3.5">
+                                            <div class="flex items-center gap-2.5 truncate min-w-0 pr-2">
+                                                <Volume2 class="h-4 w-4 text-primary shrink-0" />
+                                                <span class="truncate text-foreground font-semibold">{{ selectedReciterLabel }}</span>
+                                            </div>
+                                        </SelectTrigger>
+                                        <SelectContent class="z-[60] max-h-72 rounded-2xl border-border bg-card shadow-xl custom-scrollbar">
+                                            <SelectGroup>
+                                                <SelectLabel class="text-[11px] text-muted-foreground uppercase font-bold tracking-wider px-3 py-2">
+                                                    Daftar Qari Murottal & Mujawwad
+                                                </SelectLabel>
+                                                <SelectItem
+                                                    v-for="reciter in effectiveReciters"
+                                                    :key="reciter.id"
+                                                    :value="String(reciter.id)"
+                                                    class="cursor-pointer py-2.5 px-3 rounded-xl focus:bg-primary/10 focus:text-primary transition-colors my-0.5"
+                                                >
+                                                    <div class="flex items-center justify-between w-full gap-3 pr-2">
+                                                        <span class="font-semibold text-sm truncate text-foreground">{{ getReciterName(reciter) }}</span>
+                                                        <span
+                                                            class="text-[10px] px-2 py-0.5 rounded-full font-bold uppercase shrink-0 border"
+                                                            :class="reciter.style === 'Mujawwad' 
+                                                                ? 'bg-blue-500/15 text-blue-600 dark:text-blue-400 border-blue-500/30' 
+                                                                : 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'"
+                                                        >
+                                                            {{ reciter.style || 'Murattal' }}
+                                                        </span>
+                                                    </div>
+                                                </SelectItem>
+                                            </SelectGroup>
+                                        </SelectContent>
+                                    </Select>
                                 </div>
 
                                 <!-- 2. Mode Tampilan Bacaan Default Global -->
