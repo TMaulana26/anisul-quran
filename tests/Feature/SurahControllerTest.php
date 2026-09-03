@@ -1,6 +1,5 @@
 <?php
 
-use App\Services\QuranFoundationService;
 use Illuminate\Support\Facades\Http;
 use Inertia\Testing\AssertableInertia as Assert;
 

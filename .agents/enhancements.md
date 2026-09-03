@@ -27,6 +27,7 @@
 | **E-16** | **Komponen Select shadcn-vue Berstandar Aksesibilitas (Reka UI) untuk Pemilihan Qari** | UI Components & Accessibility | `resources/js/components/ui/select/*`, `SettingsDrawer.vue`, `package.json` | `[x]` |
 | **E-17** | **Smart Dynamic Font Auto-Fit & Zero-Scrollbar Architecture pada Mode Zen** | Typography & Zen Player UX | `ZenPlayerView.vue`, `resources/css/app.css` | `[x]` |
 | **E-18** | **Cinematic Focus Window & Karaoke Streaming (Apple Music / Spotify Style) pada Mode Zen** | Immersive Player UX & Motion | `ZenPlayerView.vue`, `resources/css/app.css` | `[x]` |
+| **E-19** | **Tri-Stream Word Karaoke (Arab + Latin + Arti per Kata) & Fix Overflow Clipping pada Mode Zen** | Word-by-Word Sync & Layout | `ZenPlayerView.vue`, `useQuranAudioPlayer.js`, `QuranFoundationService.php` | `[x]` |
 
 ---
 

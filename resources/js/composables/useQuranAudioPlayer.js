@@ -52,11 +52,32 @@ export function matchTimestampToVerseAndWord(timeMs, verseTimings = []) {
 
             // Check word segments if available
             let wordIdx = null;
-            if (Array.isArray(timing.segments)) {
-                for (const segment of timing.segments) {
+            if (Array.isArray(timing.segments) && timing.segments.length > 0) {
+                for (let i = 0; i < timing.segments.length; i++) {
+                    const segment = timing.segments[i];
                     // Segment schema: [wordPosition, startMs, endMs]
                     const [pos, start, end] = segment;
+                    
                     if (timeMs >= start && timeMs < end) {
+                        wordIdx = pos;
+                        break;
+                    }
+                    
+                    // Bridge pauses between words so highlight stays locked until next word starts
+                    const nextSegment = timing.segments[i + 1];
+                    if (nextSegment && timeMs >= end && timeMs < nextSegment[1]) {
+                        wordIdx = pos;
+                        break;
+                    }
+
+                    // Before first word in verse
+                    if (i === 0 && timeMs < start) {
+                        wordIdx = pos;
+                        break;
+                    }
+
+                    // After last word in verse
+                    if (i === timing.segments.length - 1 && timeMs >= end) {
                         wordIdx = pos;
                         break;
                     }
@@ -297,6 +318,11 @@ export function useQuranAudioPlayer() {
             const startSec = (targetTiming.timestamp_from || 0) / 1000;
             seekToTime(startSec);
             currentAyahNumber.value = ayahNumber;
+            if (Array.isArray(targetTiming.segments) && targetTiming.segments.length > 0) {
+                currentWordIndex.value = targetTiming.segments[0][0] || 1;
+            } else {
+                currentWordIndex.value = 1;
+            }
             if (autoPlay && !isPlaying.value) {
                 play();
             }

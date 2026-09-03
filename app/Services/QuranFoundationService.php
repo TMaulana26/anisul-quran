@@ -145,6 +145,7 @@ class QuranFoundationService
         $defaultParams = [
             'language' => 'id',
             'words' => true,
+            'word_translation_language' => 'id',
             'word_fields' => 'text_uthmani,text_indopak',
             'translations' => '33', // 33: Indonesian Ministry of Religious Affairs (Kemenag RI)
             'fields' => 'text_uthmani,text_indopak,chapter_id,verse_key,verse_number,page_number,juz_number',
