@@ -18,6 +18,11 @@
 | **E-07** | **Ornamen Seni Islami Bulan Sabit & Animasi Impeccable** | Visual Design & Motion | `resources/js/components/DecorativeMoon.vue`, `Surah/Index.vue` | `[x]` |
 | **E-08** | **Mode Fokus Zen (Distraction-Free Karaoke View)** | Player UX & Meditative Reading | `resources/js/components/player/ZenPlayerView.vue`, `Surah/Show.vue`, `AudioPlayerBar.vue` | `[x]` |
 | **E-09** | **Ornamen Tanda Akhir Ayat Al-Qur'an (Quranic Ayah Rosette Medallion)** | Islamic Art & Typography | `resources/js/components/AyahEndOrnament.vue`, `quranUtils.js`, `ZenPlayerView.vue`, `AyahItem.vue`, `MushafPageView.vue` | `[x]` |
+| **E-10** | **Modal Pemilihan Qari 3x4 Grid & Highlight Murattal (Hijau) / Mujawwad (Biru)** | Player UI & Layout | `resources/js/components/player/ReciterSelectorModal.vue`, `resources/css/app.css` | `[x]` |
+| **E-11** | **Popover Kecepatan & Volume dengan Outside Click & Anti-Clipping** | UX & Micro-interactions | `resources/js/components/player/AudioPlayerBar.vue` | `[x]` |
+| **E-12** | **Kontrol Volume Interaktif (Slider & Mute) pada Layar Penuh Mode Zen** | Player UX & Feature Parity | `resources/js/components/player/ZenPlayerView.vue` | `[x]` |
+| **E-13** | **Elevasi & Spacing Bottom Margin Player Bar Saat Dikecilkan (Collapsed)** | Responsive UX & Polish | `resources/js/components/player/AudioPlayerBar.vue` | `[x]` |
+| **E-14** | **Right Drawer Slide-over Pengaturan & Preferensi Pengguna Lengkap** | User Preferences & Settings | `resources/js/components/player/SettingsDrawer.vue`, `Surah/Show.vue` | `[x]` |
 
 ---
 

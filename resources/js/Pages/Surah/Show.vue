@@ -78,6 +78,7 @@ const showTransliteration = ref(true);
 const showReciterModal = ref(false);
 const showSettingsDrawer = ref(false);
 const isZenMode = ref(false);
+const autoZenOnPlay = ref(true);
 
 // Active Reciter computed based on localStorage or prop
 const currentReciter = computed(() => {
@@ -102,6 +103,9 @@ onMounted(() => {
 
     const savedShowTransliteration = localStorage.getItem('anisul_show_transliteration');
     if (savedShowTransliteration !== null) showTransliteration.value = savedShowTransliteration === 'true';
+
+    const savedAutoZen = localStorage.getItem('anisul_auto_zen');
+    if (savedAutoZen !== null) autoZenOnPlay.value = savedAutoZen === 'true';
 
     // Load current surah audio into engine if not already loaded
     if (props.chapter && props.recitation) {
@@ -161,10 +165,12 @@ const decreaseFontSize = () => {
     }
 };
 
-// Play or toggle individual verse directly from Ayah Card -> Enter Zen Focus Mode
+// Play or toggle individual verse directly from Ayah Card -> Enter Zen Focus Mode (if autoZenOnPlay enabled)
 const handlePlayVerse = (verse) => {
     audioPlayer.seekToAyah(verse.verse_number, true);
-    isZenMode.value = true;
+    if (autoZenOnPlay.value) {
+        isZenMode.value = true;
+    }
 };
 
 // Dynamic Reciter Switch
@@ -426,7 +432,7 @@ const handleListenTogether = () => {
             @open-reciter-modal="showReciterModal = true"
             @open-settings="showSettingsDrawer = true"
             @open-listen-together="handleListenTogether"
-            @open-zen-mode="isZenMode = true"
+            @open-zen-mode="autoZenOnPlay ? (isZenMode = true) : null"
         />
 
         <!-- Fullscreen Zen Focus Reading Player View -->
@@ -450,7 +456,7 @@ const handleListenTogether = () => {
             @select-reciter="handleSelectReciter"
         />
 
-        <!-- Settings Drawer Dialog -->
+        <!-- Settings Right Drawer Slide-over -->
         <SettingsDrawer 
             v-model:open="showSettingsDrawer"
             v-model:readingMode="readingMode"
@@ -459,6 +465,10 @@ const handleListenTogether = () => {
             v-model:showTranslation="showTranslation"
             v-model:showTransliteration="showTransliteration"
             v-model:autoScrollEnabled="audioPlayer.autoScrollEnabled.value"
+            v-model:autoZenOnPlay="autoZenOnPlay"
+            :reciters="reciters"
+            :selected-reciter-id="currentReciter.id"
+            @select-reciter="handleSelectReciter"
         />
     </AppLayout>
 </template>

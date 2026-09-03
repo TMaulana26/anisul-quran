@@ -127,12 +127,30 @@ const handleKeyDown = (e) => {
     }
 };
 
+const showSpeedMenu = ref(false);
+const showVolumeSlider = ref(false);
+const speedMenuRef = ref(null);
+const volumeContainerRef = ref(null);
+
+const speedOptions = [0.75, 1.0, 1.25, 1.5, 2.0];
+
+const handleDocumentClick = (e) => {
+    if (showSpeedMenu.value && speedMenuRef.value && !speedMenuRef.value.contains(e.target)) {
+        showSpeedMenu.value = false;
+    }
+    if (showVolumeSlider.value && volumeContainerRef.value && !volumeContainerRef.value.contains(e.target)) {
+        showVolumeSlider.value = false;
+    }
+};
+
 onMounted(() => {
     window.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('click', handleDocumentClick);
 });
 
 onUnmounted(() => {
     window.removeEventListener('keydown', handleKeyDown);
+    document.removeEventListener('click', handleDocumentClick);
 });
 
 const onSeekbarChange = (event) => {
@@ -140,9 +158,6 @@ const onSeekbarChange = (event) => {
     const targetSeconds = (val / 100) * (audioPlayer.duration.value || 1);
     audioPlayer.seekToTime(targetSeconds);
 };
-
-const showSpeedMenu = ref(false);
-const speedOptions = [0.75, 1.0, 1.25, 1.5, 2.0];
 
 const selectSpeed = (rate) => {
     audioPlayer.setPlaybackRate(rate);
@@ -368,11 +383,11 @@ const selectSpeed = (rate) => {
                             <!-- Left: Speed & Repeat Mode -->
                             <div class="flex items-center gap-2">
                                 <!-- Speed Menu Button -->
-                                <div class="relative">
+                                <div ref="speedMenuRef" class="relative">
                                     <button
                                         type="button"
                                         @click="showSpeedMenu = !showSpeedMenu"
-                                        class="px-2.5 py-1.5 rounded-xl text-xs font-mono font-bold bg-muted/60 hover:bg-muted text-foreground border border-border/50 transition-colors"
+                                        class="px-2.5 py-1.5 rounded-xl text-xs font-mono font-bold bg-muted/60 hover:bg-muted text-foreground border border-border/50 transition-colors cursor-pointer"
                                         title="Kecepatan Pemutaran"
                                     >
                                         {{ audioPlayer.playbackRate.value }}x
@@ -380,14 +395,14 @@ const selectSpeed = (rate) => {
 
                                     <div 
                                         v-if="showSpeedMenu" 
-                                        class="absolute bottom-full left-0 mb-2 w-28 rounded-xl border border-border bg-popover/95 backdrop-blur-md p-1 shadow-lg z-50 flex flex-col gap-0.5 animate-scale-in"
+                                        class="absolute bottom-full left-0 mb-3 w-28 rounded-2xl border border-border/80 bg-popover/95 backdrop-blur-xl p-1.5 shadow-2xl z-50 flex flex-col gap-0.5 animate-scale-in"
                                     >
                                         <button
                                             v-for="rate in speedOptions"
                                             :key="rate"
                                             type="button"
                                             @click="selectSpeed(rate)"
-                                            class="w-full text-left px-2.5 py-1.5 text-xs rounded-lg font-mono transition-colors flex items-center justify-between"
+                                            class="w-full text-left px-2.5 py-1.5 text-xs rounded-xl font-mono transition-colors flex items-center justify-between cursor-pointer"
                                             :class="audioPlayer.playbackRate.value === rate ? 'bg-primary/15 text-primary font-bold' : 'text-foreground hover:bg-muted'"
                                         >
                                             <span>{{ rate }}x</span>
@@ -400,7 +415,7 @@ const selectSpeed = (rate) => {
                                 <button
                                     type="button"
                                     @click="audioPlayer.cycleRepeatMode"
-                                    class="p-2 rounded-xl border transition-colors relative"
+                                    class="p-2 rounded-xl border transition-colors relative cursor-pointer"
                                     :class="audioPlayer.repeatMode.value !== 'none' 
                                         ? 'bg-primary/15 border-primary/40 text-primary' 
                                         : 'bg-muted/60 border-border/50 text-muted-foreground hover:text-foreground'"
@@ -416,7 +431,7 @@ const selectSpeed = (rate) => {
                                 <button
                                     type="button"
                                     @click="audioPlayer.prevAyah"
-                                    class="p-2.5 rounded-2xl bg-muted/60 hover:bg-muted text-foreground active:scale-95 transition-all"
+                                    class="p-2.5 rounded-2xl bg-muted/60 hover:bg-muted text-foreground active:scale-95 transition-all cursor-pointer"
                                     title="Ayat Sebelumnya"
                                 >
                                     <SkipBack class="h-5 w-5" />
@@ -425,7 +440,7 @@ const selectSpeed = (rate) => {
                                 <button
                                     type="button"
                                     @click="audioPlayer.togglePlay"
-                                    class="p-4 rounded-3xl bg-primary text-primary-foreground hover:bg-primary/90 active:scale-95 shadow-lg shadow-primary/25 transition-all flex items-center justify-center"
+                                    class="p-4 rounded-3xl bg-primary text-primary-foreground hover:bg-primary/90 active:scale-95 shadow-lg shadow-primary/25 transition-all flex items-center justify-center cursor-pointer"
                                     :title="audioPlayer.isPlaying.value ? 'Jeda Audio' : 'Putar Audio'"
                                 >
                                     <Loader2 v-if="audioPlayer.isLoading.value" class="h-6 w-6 animate-spin" />
@@ -436,29 +451,62 @@ const selectSpeed = (rate) => {
                                 <button
                                     type="button"
                                     @click="audioPlayer.nextAyah"
-                                    class="p-2.5 rounded-2xl bg-muted/60 hover:bg-muted text-foreground active:scale-95 transition-all"
+                                    class="p-2.5 rounded-2xl bg-muted/60 hover:bg-muted text-foreground active:scale-95 transition-all cursor-pointer"
                                     title="Ayat Selanjutnya"
                                 >
                                     <SkipForward class="h-5 w-5" />
                                 </button>
                             </div>
 
-                            <!-- Right: Volume Mute & Settings Trigger -->
+                            <!-- Right: Volume Popover Slider & Settings Trigger -->
                             <div class="flex items-center gap-2">
-                                <button
-                                    type="button"
-                                    @click="audioPlayer.toggleMute"
-                                    class="p-2 rounded-xl bg-muted/60 hover:bg-muted border border-border/50 text-muted-foreground hover:text-foreground transition-colors"
-                                    :title="audioPlayer.isMuted.value ? 'Nyalakan Suara' : 'Bisukan Suara'"
-                                >
-                                    <VolumeX v-if="audioPlayer.isMuted.value || audioPlayer.volume.value === 0" class="h-4 w-4 text-destructive" />
-                                    <Volume2 v-else class="h-4 w-4" />
-                                </button>
+                                <!-- Volume Container with Popover Slider in Zen Mode -->
+                                <div ref="volumeContainerRef" class="relative flex items-center">
+                                    <button
+                                        type="button"
+                                        @click="showVolumeSlider = !showVolumeSlider"
+                                        @mouseenter="showVolumeSlider = true"
+                                        class="p-2 rounded-xl bg-muted/60 hover:bg-muted border border-border/50 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                                        :title="audioPlayer.isMuted.value ? 'Nyalakan Suara' : 'Pengaturan Volume'"
+                                    >
+                                        <VolumeX v-if="audioPlayer.isMuted.value || audioPlayer.volume.value === 0" class="h-4 w-4 text-destructive" />
+                                        <Volume2 v-else class="h-4 w-4" />
+                                    </button>
+
+                                    <!-- Volume Slider Popover -->
+                                    <div 
+                                        v-if="showVolumeSlider" 
+                                        class="absolute bottom-full right-0 mb-3 p-3 rounded-2xl border border-border/80 bg-popover/95 backdrop-blur-xl shadow-2xl z-50 flex items-center gap-2.5 animate-scale-in w-40"
+                                    >
+                                        <button
+                                            type="button"
+                                            @click="audioPlayer.toggleMute"
+                                            class="p-1 rounded-lg text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                                            :title="audioPlayer.isMuted.value ? 'Nyalakan Suara' : 'Bisukan Suara'"
+                                        >
+                                            <VolumeX v-if="audioPlayer.isMuted.value || audioPlayer.volume.value === 0" class="h-3.5 w-3.5 text-destructive" />
+                                            <Volume2 v-else class="h-3.5 w-3.5" />
+                                        </button>
+                                        <input
+                                            type="range"
+                                            min="0"
+                                            max="1"
+                                            step="0.05"
+                                            :value="audioPlayer.isMuted.value ? 0 : audioPlayer.volume.value"
+                                            @input="(e) => audioPlayer.setVolume(parseFloat(e.target.value))"
+                                            class="w-full h-1.5 rounded-lg bg-muted appearance-none cursor-pointer accent-primary"
+                                            aria-label="Volume Slider"
+                                        />
+                                        <span class="text-[10px] font-mono text-muted-foreground tabular-nums w-7 text-right">
+                                            {{ audioPlayer.isMuted.value ? 0 : Math.round(audioPlayer.volume.value * 100) }}%
+                                        </span>
+                                    </div>
+                                </div>
 
                                 <button
                                     type="button"
                                     @click="emit('open-settings')"
-                                    class="p-2 rounded-xl bg-muted/60 hover:bg-muted border border-border/50 text-muted-foreground hover:text-foreground transition-colors"
+                                    class="p-2 rounded-xl bg-muted/60 hover:bg-muted border border-border/50 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                                     title="Pengaturan Tampilan"
                                 >
                                     <SlidersHorizontal class="h-4 w-4" />

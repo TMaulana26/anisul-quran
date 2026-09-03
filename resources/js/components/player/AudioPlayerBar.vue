@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useQuranAudioPlayer } from '@/composables/useQuranAudioPlayer';
 import {
     Play,
@@ -54,6 +54,9 @@ const isCollapsed = ref(false);
 const showVolumeSlider = ref(false);
 const showSpeedMenu = ref(false);
 
+const speedMenuRef = ref(null);
+const volumeContainerRef = ref(null);
+
 const speedOptions = [0.75, 1.0, 1.25, 1.5, 2.0];
 
 const onSeekbarChange = (event) => {
@@ -78,13 +81,31 @@ const handlePlayClick = () => {
         emit('open-zen-mode');
     }
 };
+
+// Outside click auto-close for speed menu and volume popup
+const handleDocumentClick = (e) => {
+    if (showSpeedMenu.value && speedMenuRef.value && !speedMenuRef.value.contains(e.target)) {
+        showSpeedMenu.value = false;
+    }
+    if (showVolumeSlider.value && volumeContainerRef.value && !volumeContainerRef.value.contains(e.target)) {
+        showVolumeSlider.value = false;
+    }
+};
+
+onMounted(() => {
+    document.addEventListener('click', handleDocumentClick);
+});
+
+onUnmounted(() => {
+    document.removeEventListener('click', handleDocumentClick);
+});
 </script>
 
 <template>
     <aside 
         v-if="currentSurahName"
-        class="fixed bottom-3 sm:bottom-5 left-1/2 -translate-x-1/2 w-[95%] max-w-4xl z-40 transition-all duration-300 ease-out"
-        :class="isCollapsed ? 'translate-y-[calc(100%-3rem)]' : 'translate-y-0'"
+        class="fixed bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 w-[95%] max-w-4xl z-40 transition-all duration-300 ease-out"
+        :class="isCollapsed ? 'translate-y-[calc(100%-4.25rem)]' : 'translate-y-0'"
         aria-label="Pemutar Audio Al-Qur'an"
     >
         <!-- Collapse/Expand floating tab toggle on top right -->
@@ -92,7 +113,7 @@ const handlePlayClick = () => {
             <button
                 type="button"
                 @click="isCollapsed = !isCollapsed"
-                class="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-t-xl bg-card/95 backdrop-blur-md border-t border-x border-border/80 text-foreground/80 hover:text-primary shadow-sm hover:bg-card transition-all"
+                class="inline-flex items-center gap-1.5 px-3.5 py-1 text-xs font-semibold rounded-t-xl bg-card/95 backdrop-blur-md border-t border-x border-border/80 text-foreground/80 hover:text-primary shadow-sm hover:bg-card transition-all cursor-pointer"
                 :title="isCollapsed ? 'Tampilkan Player Bar' : 'Sembunyikan Player Bar'"
             >
                 <component :is="isCollapsed ? ChevronUp : ChevronDown" class="h-3.5 w-3.5 text-primary" />
@@ -100,10 +121,10 @@ const handlePlayClick = () => {
             </button>
         </div>
 
-        <!-- Main Glassmorphism Player Card -->
-        <div class="relative overflow-hidden rounded-2xl sm:rounded-3xl border border-border/80 bg-card/95 dark:bg-card/90 backdrop-blur-xl shadow-2xl p-3 sm:p-4 text-card-foreground">
+        <!-- Main Glassmorphism Player Card (overflow-visible to prevent clipping popups) -->
+        <div class="relative rounded-2xl sm:rounded-3xl border border-border/80 bg-card/95 dark:bg-card/90 backdrop-blur-xl shadow-2xl p-3 sm:p-4 pb-4 sm:pb-5 text-card-foreground">
             <!-- Ambient Emerald Glow Line on Top of Player -->
-            <div class="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-primary/60 to-transparent" />
+            <div class="absolute top-0 left-0 right-0 h-[2px] rounded-t-3xl overflow-hidden bg-gradient-to-r from-transparent via-primary/60 to-transparent" />
 
             <div class="flex flex-col gap-2.5">
                 <!-- Top Row: Surah & Ayah Info, Qari pill, & Action triggers -->
@@ -254,11 +275,11 @@ const handlePlayClick = () => {
                         </button>
 
                         <!-- Speed Popover Trigger -->
-                        <div class="relative">
+                        <div ref="speedMenuRef" class="relative">
                             <button
                                 type="button"
                                 @click="showSpeedMenu = !showSpeedMenu"
-                                class="px-2 py-1 rounded-xl text-xs font-semibold font-mono text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors flex items-center gap-1"
+                                class="px-2 py-1 rounded-xl text-xs font-semibold font-mono text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors flex items-center gap-1 cursor-pointer"
                                 title="Kecepatan Pemutaran"
                             >
                                 <span>{{ playbackRate }}x</span>
@@ -267,14 +288,14 @@ const handlePlayClick = () => {
                             <!-- Speed Dropdown Menu -->
                             <div 
                                 v-if="showSpeedMenu" 
-                                class="absolute bottom-full right-0 mb-2 w-28 rounded-xl border border-border/80 bg-popover/95 backdrop-blur-md p-1 shadow-lg z-50 flex flex-col gap-0.5 animate-scale-in"
+                                class="absolute bottom-full right-0 mb-3 w-28 rounded-2xl border border-border/80 bg-popover/95 backdrop-blur-xl p-1.5 shadow-2xl z-50 flex flex-col gap-0.5 animate-scale-in"
                             >
                                 <button
                                     v-for="rate in speedOptions"
                                     :key="rate"
                                     type="button"
                                     @click="selectSpeed(rate)"
-                                    class="w-full text-left px-2.5 py-1.5 text-xs rounded-lg font-mono transition-colors flex items-center justify-between"
+                                    class="w-full text-left px-2.5 py-1.5 text-xs rounded-xl font-mono transition-colors flex items-center justify-between cursor-pointer"
                                     :class="playbackRate === rate ? 'bg-primary/15 text-primary font-bold' : 'text-foreground hover:bg-muted'"
                                 >
                                     <span>{{ rate }}x</span>
@@ -284,24 +305,32 @@ const handlePlayClick = () => {
                         </div>
 
                         <!-- Volume Mute & Slider Container -->
-                        <div class="relative flex items-center">
+                        <div ref="volumeContainerRef" class="relative flex items-center">
                             <button
                                 type="button"
-                                @click="toggleMute"
+                                @click="showVolumeSlider = !showVolumeSlider"
                                 @mouseenter="showVolumeSlider = true"
-                                class="p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
-                                :title="isMuted ? 'Nyalakan Suara' : 'Bisukan Suara'"
+                                class="p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors cursor-pointer"
+                                :title="isMuted ? 'Nyalakan Suara' : 'Pengaturan Volume'"
                             >
                                 <VolumeX v-if="isMuted || volume === 0" class="h-4 w-4 text-destructive" />
                                 <Volume2 v-else class="h-4 w-4" />
                             </button>
 
-                            <!-- Volume Slider Popover on hover -->
+                            <!-- Volume Slider Popover -->
                             <div 
-                                v-if="showVolumeSlider"
-                                @mouseleave="showVolumeSlider = false"
-                                class="absolute bottom-full right-0 mb-2 p-2 rounded-xl border border-border/80 bg-popover/95 backdrop-blur-md shadow-lg z-50 flex items-center gap-2 animate-scale-in w-32"
+                                v-if="showVolumeSlider" 
+                                class="absolute bottom-full right-0 mb-3 p-3 rounded-2xl border border-border/80 bg-popover/95 backdrop-blur-xl shadow-2xl z-50 flex items-center gap-2.5 animate-scale-in w-40"
                             >
+                                <button
+                                    type="button"
+                                    @click="toggleMute"
+                                    class="p-1 rounded-lg text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                                    :title="isMuted ? 'Nyalakan Suara' : 'Bisukan Suara'"
+                                >
+                                    <VolumeX v-if="isMuted || volume === 0" class="h-3.5 w-3.5 text-destructive" />
+                                    <Volume2 v-else class="h-3.5 w-3.5" />
+                                </button>
                                 <input
                                     type="range"
                                     min="0"
@@ -312,6 +341,9 @@ const handlePlayClick = () => {
                                     class="w-full h-1.5 rounded-lg bg-muted appearance-none cursor-pointer accent-primary"
                                     aria-label="Volume Slider"
                                 />
+                                <span class="text-[10px] font-mono text-muted-foreground tabular-nums w-7 text-right">
+                                    {{ isMuted ? 0 : Math.round(volume * 100) }}%
+                                </span>
                             </div>
                         </div>
                     </div>
