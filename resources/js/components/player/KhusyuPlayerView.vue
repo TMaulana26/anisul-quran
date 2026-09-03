@@ -78,6 +78,17 @@ const setTheme = (theme) => {
     userPreferences.setAppVibe(theme);
 };
 
+// Theme-aware button styles for footer controls
+const controlButtonClass = computed(() => {
+    if (currentTheme.value === 'midnight') {
+        return 'bg-white/10 hover:bg-white/20 text-[#f4efe6] border-white/10';
+    }
+    if (currentTheme.value === 'warqah') {
+        return 'bg-amber-900/10 dark:bg-white/10 hover:bg-amber-900/20 text-[#2c1d11] dark:text-[#f4ebd0] border-amber-900/20 dark:border-amber-700/30';
+    }
+    return 'bg-muted/60 hover:bg-muted text-foreground border-border/50';
+});
+
 // Footnote Dialog State
 const showFootnoteDialog = ref(false);
 const selectedFootnoteId = ref(null);
@@ -564,7 +575,12 @@ const selectSpeed = (rate) => {
                         <button
                             type="button"
                             @click="closeKhusyuMode"
-                            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-muted/80 hover:bg-destructive/15 hover:text-destructive hover:border-destructive/30 border border-border text-xs font-semibold transition-all cursor-pointer ml-1"
+                            :class="[
+                                'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-semibold transition-all cursor-pointer ml-1',
+                                currentTheme === 'noor' ? 'bg-muted/80 hover:bg-destructive/15 hover:text-destructive hover:border-destructive/30 border-border text-foreground' : '',
+                                currentTheme === 'midnight' ? 'bg-white/10 hover:bg-destructive/20 text-[#f4efe6] hover:text-destructive hover:border-destructive/40 border-amber-500/20' : '',
+                                currentTheme === 'warqah' ? 'bg-amber-900/10 dark:bg-white/10 hover:bg-destructive/15 hover:text-destructive hover:border-destructive/30 border-amber-900/20 dark:border-amber-700/30 text-[#2c1d11] dark:text-[#f4ebd0]' : ''
+                            ]"
                             title="Keluar dari Mode Khusyu' (Esc)"
                         >
                             <Minimize2 class="h-3.5 w-3.5" />
@@ -764,8 +780,12 @@ const selectSpeed = (rate) => {
                                     :value="audioPlayer.progressPercent.value"
                                     @input="onSeekbarChange"
                                     :class="[
-                                        'w-full h-2 rounded-lg bg-muted appearance-none cursor-pointer focus:outline-none focus-visible:ring-2',
-                                        currentTheme === 'midnight' ? 'accent-amber-400 focus-visible:ring-amber-400/40' : 'accent-primary focus-visible:ring-primary/40'
+                                        'w-full h-2 rounded-lg appearance-none cursor-pointer focus:outline-none focus-visible:ring-2',
+                                        currentTheme === 'midnight' 
+                                            ? 'bg-white/15 accent-amber-400 focus-visible:ring-amber-400/40' 
+                                            : currentTheme === 'warqah'
+                                                ? 'bg-amber-900/15 dark:bg-white/15 accent-amber-700 dark:accent-amber-500'
+                                                : 'bg-muted accent-primary focus-visible:ring-primary/40'
                                     ]"
                                     aria-label="Timeline Audio"
                                 />
@@ -784,7 +804,10 @@ const selectSpeed = (rate) => {
                                     <button
                                         type="button"
                                         @click="showSpeedMenu = !showSpeedMenu"
-                                        class="px-2.5 py-1.5 rounded-xl text-xs font-mono font-bold bg-muted/60 hover:bg-muted border border-border/50 transition-colors cursor-pointer"
+                                        :class="[
+                                            'px-2.5 py-1.5 rounded-xl text-xs font-mono font-bold border transition-colors cursor-pointer',
+                                            controlButtonClass
+                                        ]"
                                         title="Kecepatan Pemutaran"
                                     >
                                         {{ audioPlayer.playbackRate.value }}x
@@ -811,10 +834,12 @@ const selectSpeed = (rate) => {
                                 <button
                                     type="button"
                                     @click="audioPlayer.cycleRepeatMode"
-                                    class="p-2 rounded-xl border transition-colors relative cursor-pointer"
-                                    :class="audioPlayer.repeatMode.value !== 'none' 
-                                        ? 'bg-primary/15 border-primary/40 text-primary' 
-                                        : 'bg-muted/60 border-border/50 opacity-75 hover:opacity-100'"
+                                    :class="[
+                                        'p-2 rounded-xl border transition-colors relative cursor-pointer',
+                                        audioPlayer.repeatMode.value !== 'none' 
+                                            ? (currentTheme === 'midnight' ? 'bg-amber-500/20 border-amber-500/40 text-amber-300' : 'bg-primary/15 border-primary/40 text-primary') 
+                                            : controlButtonClass
+                                    ]"
                                     :title="audioPlayer.repeatMode.value === 'ayah' ? 'Ulangi Ayat Ini' : audioPlayer.repeatMode.value === 'surah' ? 'Ulangi Surah' : 'Tanpa Pengulangan'"
                                 >
                                     <Repeat1 v-if="audioPlayer.repeatMode.value === 'ayah'" class="h-4 w-4" />
@@ -827,7 +852,10 @@ const selectSpeed = (rate) => {
                                 <button
                                     type="button"
                                     @click="audioPlayer.prevAyah"
-                                    class="p-2.5 rounded-2xl bg-muted/60 hover:bg-muted active:scale-95 transition-all cursor-pointer"
+                                    :class="[
+                                        'p-2.5 rounded-2xl border active:scale-95 transition-all cursor-pointer',
+                                        controlButtonClass
+                                    ]"
                                     title="Ayat Sebelumnya"
                                 >
                                     <SkipBack class="h-5 w-5" />
@@ -852,7 +880,10 @@ const selectSpeed = (rate) => {
                                 <button
                                     type="button"
                                     @click="audioPlayer.nextAyah"
-                                    class="p-2.5 rounded-2xl bg-muted/60 hover:bg-muted active:scale-95 transition-all cursor-pointer"
+                                    :class="[
+                                        'p-2.5 rounded-2xl border active:scale-95 transition-all cursor-pointer',
+                                        controlButtonClass
+                                    ]"
                                     title="Ayat Selanjutnya"
                                 >
                                     <SkipForward class="h-5 w-5" />
@@ -866,7 +897,10 @@ const selectSpeed = (rate) => {
                                         type="button"
                                         @click="showVolumeSlider = !showVolumeSlider"
                                         @mouseenter="showVolumeSlider = true"
-                                        class="p-2 rounded-xl bg-muted/60 hover:bg-muted border border-border/50 opacity-75 hover:opacity-100 transition-colors cursor-pointer"
+                                        :class="[
+                                            'p-2 rounded-xl border opacity-80 hover:opacity-100 transition-colors cursor-pointer',
+                                            controlButtonClass
+                                        ]"
                                         :title="audioPlayer.isMuted.value ? 'Nyalakan Suara' : 'Pengaturan Volume'"
                                     >
                                         <VolumeX v-if="audioPlayer.isMuted.value || audioPlayer.volume.value === 0" class="h-4 w-4 text-destructive" />
@@ -905,7 +939,10 @@ const selectSpeed = (rate) => {
                                 <button
                                     type="button"
                                     @click="emit('open-settings')"
-                                    class="p-2 rounded-xl bg-muted/60 hover:bg-muted border border-border/50 opacity-75 hover:opacity-100 transition-colors cursor-pointer"
+                                    :class="[
+                                        'p-2 rounded-xl border opacity-80 hover:opacity-100 transition-colors cursor-pointer',
+                                        controlButtonClass
+                                    ]"
                                     title="Pengaturan Tampilan"
                                 >
                                     <SlidersHorizontal class="h-4 w-4" />

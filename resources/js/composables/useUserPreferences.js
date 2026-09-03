@@ -152,6 +152,10 @@ export function useUserPreferences() {
         safeSetItem('anisul_khusyu_theme', valid);
         if (typeof document !== 'undefined') {
             document.documentElement.setAttribute('data-vibe', valid);
+            if (valid === 'midnight') {
+                document.documentElement.classList.add('dark');
+                safeSetItem('anisul_theme', 'dark');
+            }
         }
     };
 
