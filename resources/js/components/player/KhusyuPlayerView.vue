@@ -606,25 +606,35 @@ const selectSpeed = (rate) => {
                 </header>
 
                 <!-- Center Stage: Permanent Stable Card Container -->
-                <main class="relative z-10 flex-1 flex flex-col items-center justify-center px-4 py-4 sm:px-12 sm:py-6 overflow-hidden max-w-5xl mx-auto w-full text-center">
+                <main class="relative z-10 flex-1 flex flex-col items-center justify-center px-4 py-4 sm:px-16 md:px-20 lg:px-28 overflow-hidden max-w-7xl mx-auto w-full text-center">
                     <!-- Left Arrow: Prev Chunk / Ayah -->
                     <button
                         type="button"
                         @click="prevChunk"
-                        class="absolute left-2 sm:left-6 top-1/2 -translate-y-1/2 p-3 rounded-full opacity-40 hover:opacity-100 hover:scale-110 active:scale-95 transition-all cursor-pointer z-20 backdrop-blur-md"
+                        :class="[
+                            'absolute left-2 sm:left-6 md:left-8 lg:left-10 top-1/2 -translate-y-1/2 p-2.5 sm:p-3.5 rounded-full transition-all cursor-pointer z-20 backdrop-blur-md opacity-40 hover:opacity-100 hover:scale-110 active:scale-95 border',
+                            currentTheme === 'noor' ? 'bg-muted/40 hover:bg-muted text-foreground border-border/40' : '',
+                            currentTheme === 'midnight' ? 'bg-white/5 hover:bg-white/15 text-amber-200 border-amber-500/20' : '',
+                            currentTheme === 'warqah' ? 'bg-amber-900/5 dark:bg-white/5 hover:bg-amber-900/15 text-[#3b2416] dark:text-[#ebd8ba] border-amber-900/20 dark:border-amber-600/30' : ''
+                        ]"
                         :title="activeChunkIndex > 1 ? 'Bagian Sebelumnya' : 'Ayat Sebelumnya'"
                     >
-                        <ChevronLeft class="h-6 w-6 sm:h-8 sm:w-8" />
+                        <ChevronLeft class="h-6 w-6 sm:h-7 sm:w-7" />
                     </button>
 
                     <!-- Right Arrow: Next Chunk / Ayah -->
                     <button
                         type="button"
                         @click="nextChunk"
-                        class="absolute right-2 sm:right-6 top-1/2 -translate-y-1/2 p-3 rounded-full opacity-40 hover:opacity-100 hover:scale-110 active:scale-95 transition-all cursor-pointer z-20 backdrop-blur-md"
+                        :class="[
+                            'absolute right-2 sm:right-6 md:right-8 lg:right-10 top-1/2 -translate-y-1/2 p-2.5 sm:p-3.5 rounded-full transition-all cursor-pointer z-20 backdrop-blur-md opacity-40 hover:opacity-100 hover:scale-110 active:scale-95 border',
+                            currentTheme === 'noor' ? 'bg-muted/40 hover:bg-muted text-foreground border-border/40' : '',
+                            currentTheme === 'midnight' ? 'bg-white/5 hover:bg-white/15 text-amber-200 border-amber-500/20' : '',
+                            currentTheme === 'warqah' ? 'bg-amber-900/5 dark:bg-white/5 hover:bg-amber-900/15 text-[#3b2416] dark:text-[#ebd8ba] border-amber-900/20 dark:border-amber-600/30' : ''
+                        ]"
                         :title="activeChunkIndex < verseChunks.length ? 'Bagian Selanjutnya' : 'Ayat Selanjutnya'"
                     >
-                        <ChevronRight class="h-6 w-6 sm:h-8 sm:w-8" />
+                        <ChevronRight class="h-6 w-6 sm:h-7 sm:w-7" />
                     </button>
 
                     <!-- Permanent Outer Sanctuary Card (Card NEVER blinks or disappears) -->

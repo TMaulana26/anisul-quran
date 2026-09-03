@@ -36,6 +36,7 @@
 | **E-25** | **Suasana & Vibe Visual Global Aplikasi (Noor, Midnight, Warqah) Lintas Dark/Light Mode** | Design Tokens, Theming & Global UX | `app.css`, `AppLayout.vue`, `SettingsDrawer.vue`, `useUserPreferences.js`, `KhusyuPlayerView.vue` | `[x]` |
 | **E-26** | **Perbaikan Spacing Cursive Natural & Peningkatan Ukuran Ornamen Nomor Ayat pada Mode Mushaf Fisik** | Typography, Legibility & Spacing | `MushafPageView.vue`, `AyahEndOrnament.vue` | `[x]` |
 | **E-27** | **Perbaikan Kontras & Visual Bug Tombol Midnight saat dalam Mode Terang (Light Mode)** | Theming Contrast & Accessibility | `KhusyuPlayerView.vue`, `app.css`, `useUserPreferences.js` | `[x]` |
+| **E-28** | **Pelebaran Jarak & Area Nafas Chevron Navigasi (Kiri-Kanan) di Mode Khusyu'** | UI/UX Spacing & Breathing Room | `KhusyuPlayerView.vue` | `[x]` |
 
 ---
 
