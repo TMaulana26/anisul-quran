@@ -14,6 +14,7 @@ import {
     Heart, 
     Compass,
     Sparkles,
+    ScrollText,
     SlidersHorizontal
 } from '@lucide/vue';
 
@@ -25,7 +26,8 @@ defineProps({
 });
 
 const page = usePage();
-const { isDrawerOpen, openDrawer } = useUserPreferences();
+const userPreferences = useUserPreferences();
+const { isDrawerOpen, openDrawer } = userPreferences;
 const reciters = computed(() => page.props.reciters || []);
 
 const isDark = ref(false);
@@ -76,6 +78,48 @@ onMounted(() => {
                         <Compass class="h-4 w-4" />
                         Daftar Surah
                     </Link>
+
+                    <!-- Global Suasana / Vibe Switcher (Noor, Midnight, Warqah) -->
+                    <div class="flex items-center p-1 rounded-xl border border-border/80 bg-card/80 text-xs font-semibold backdrop-blur-md shadow-2xs">
+                        <button
+                            type="button"
+                            @click="userPreferences.setAppVibe('noor')"
+                            class="px-2 py-1 rounded-lg transition-all cursor-pointer flex items-center gap-1.5"
+                            :class="userPreferences.preferences.appVibe === 'noor'
+                                ? 'bg-primary text-primary-foreground shadow-xs font-bold'
+                                : 'text-muted-foreground hover:text-foreground'"
+                            title="Suasana Noor (Zamrud Sejuk)"
+                        >
+                            <Sparkles class="h-3.5 w-3.5" />
+                            <span class="hidden md:inline">Noor</span>
+                        </button>
+
+                        <button
+                            type="button"
+                            @click="userPreferences.setAppVibe('midnight')"
+                            class="px-2 py-1 rounded-lg transition-all cursor-pointer flex items-center gap-1.5"
+                            :class="userPreferences.preferences.appVibe === 'midnight'
+                                ? 'bg-amber-500 text-slate-950 shadow-xs font-bold'
+                                : 'text-muted-foreground hover:text-foreground'"
+                            title="Suasana Midnight (Emas Tahajjud)"
+                        >
+                            <Moon class="h-3.5 w-3.5" />
+                            <span class="hidden md:inline">Midnight</span>
+                        </button>
+
+                        <button
+                            type="button"
+                            @click="userPreferences.setAppVibe('warqah')"
+                            class="px-2 py-1 rounded-lg transition-all cursor-pointer flex items-center gap-1.5"
+                            :class="userPreferences.preferences.appVibe === 'warqah'
+                                ? 'bg-amber-800 dark:bg-amber-600 text-white shadow-xs font-bold'
+                                : 'text-muted-foreground hover:text-foreground'"
+                            title="Suasana Warqah (Perkamen Klasik)"
+                        >
+                            <ScrollText class="h-3.5 w-3.5" />
+                            <span class="hidden md:inline">Warqah</span>
+                        </button>
+                    </div>
 
                     <!-- Global Preferences & Settings Trigger Button -->
                     <button

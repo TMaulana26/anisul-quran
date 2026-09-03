@@ -70,6 +70,105 @@
   --ring: oklch(0.75 0.13 160);
 }
 
+/* =========================================
+   SUASANA 2: MIDNIGHT MUSHAF (TAHAJJUD VELVET)
+   ========================================= */
+
+/* Light Mode Midnight (Regal Navy & Warm Amber) */
+:root[data-vibe="midnight"],
+[data-vibe="midnight"]:not(.dark) {
+  --background: oklch(0.98 0.01 260);
+  --foreground: oklch(0.16 0.03 260);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.16 0.03 260);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.16 0.03 260);
+  --primary: oklch(0.68 0.16 75);
+  --primary-foreground: oklch(0.12 0.02 260);
+  --secondary: oklch(0.94 0.015 260);
+  --secondary-foreground: oklch(0.22 0.03 260);
+  --muted: oklch(0.95 0.01 260);
+  --muted-foreground: oklch(0.46 0.02 260);
+  --accent: oklch(0.94 0.04 75);
+  --accent-foreground: oklch(0.35 0.12 75);
+  --border: oklch(0.90 0.015 260);
+  --input: oklch(0.90 0.015 260);
+  --ring: oklch(0.68 0.16 75);
+}
+
+/* Dark Mode Midnight (Deep Tahajjud Velvet Obsidian & Warm Gold) */
+.dark[data-vibe="midnight"],
+[data-vibe="midnight"].dark,
+[data-vibe="midnight"] .dark {
+  --background: oklch(0.11 0.018 260);
+  --foreground: oklch(0.96 0.01 75);
+  --card: oklch(0.15 0.02 260);
+  --card-foreground: oklch(0.96 0.01 75);
+  --popover: oklch(0.15 0.02 260);
+  --popover-foreground: oklch(0.96 0.01 75);
+  --primary: oklch(0.78 0.16 75);
+  --primary-foreground: oklch(0.11 0.018 260);
+  --secondary: oklch(0.20 0.025 260);
+  --secondary-foreground: oklch(0.95 0.01 75);
+  --muted: oklch(0.19 0.02 260);
+  --muted-foreground: oklch(0.68 0.02 260);
+  --accent: oklch(0.22 0.04 75);
+  --accent-foreground: oklch(0.88 0.14 75);
+  --border: oklch(0.24 0.025 260);
+  --input: oklch(0.24 0.025 260);
+  --ring: oklch(0.78 0.16 75);
+}
+
+/* =========================================
+   SUASANA 3: WARQAH TURATH (ANTIQUE PARCHMENT)
+   ========================================= */
+
+/* Light Mode Warqah (Aged Linen Parchment & Deep Sepia Ink) */
+:root[data-vibe="warqah"],
+[data-vibe="warqah"]:not(.dark) {
+  --background: oklch(0.97 0.015 85);
+  --foreground: oklch(0.20 0.03 55);
+  --card: oklch(0.95 0.02 85);
+  --card-foreground: oklch(0.20 0.03 55);
+  --popover: oklch(0.97 0.015 85);
+  --popover-foreground: oklch(0.20 0.03 55);
+  --primary: oklch(0.55 0.14 55);
+  --primary-foreground: oklch(0.99 0 0);
+  --secondary: oklch(0.92 0.025 85);
+  --secondary-foreground: oklch(0.25 0.03 55);
+  --muted: oklch(0.92 0.02 85);
+  --muted-foreground: oklch(0.48 0.025 55);
+  --accent: oklch(0.90 0.04 65);
+  --accent-foreground: oklch(0.35 0.12 55);
+  --border: oklch(0.88 0.025 85);
+  --input: oklch(0.88 0.025 85);
+  --ring: oklch(0.55 0.14 55);
+}
+
+/* Dark Mode Warqah (Warm Charred Walnut & Golden Sepia) */
+.dark[data-vibe="warqah"],
+[data-vibe="warqah"].dark,
+[data-vibe="warqah"] .dark {
+  --background: oklch(0.14 0.015 55);
+  --foreground: oklch(0.94 0.02 85);
+  --card: oklch(0.18 0.018 55);
+  --card-foreground: oklch(0.94 0.02 85);
+  --popover: oklch(0.18 0.018 55);
+  --popover-foreground: oklch(0.94 0.02 85);
+  --primary: oklch(0.68 0.15 55);
+  --primary-foreground: oklch(0.12 0.015 55);
+  --secondary: oklch(0.24 0.02 55);
+  --secondary-foreground: oklch(0.94 0.02 85);
+  --muted: oklch(0.22 0.018 55);
+  --muted-foreground: oklch(0.65 0.02 55);
+  --accent: oklch(0.26 0.035 55);
+  --accent-foreground: oklch(0.85 0.10 65);
+  --border: oklch(0.28 0.025 55);
+  --input: oklch(0.28 0.025 55);
+  --ring: oklch(0.68 0.15 55);
+}
+
+
 @theme inline {
   --font-sans: 'Nunito Sans', ui-sans-serif, system-ui, sans-serif;
   --font-heading: 'Fraunces', 'Nunito Sans', ui-serif, Georgia, serif;

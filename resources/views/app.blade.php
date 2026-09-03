@@ -12,6 +12,21 @@
         <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400;1,700&family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,100..900,0..100,0..1;1,9..144,100..900,0..100,0..1&family=Gulzar&family=Noto+Naskh+Arabic:wght@400;500;600;700&family=Nunito+Sans:ital,opsz,wght@0,6..12,300..900;1,6..12,300..900&family=Scheherazade+New:wght@400;500;600;700&display=swap" rel="stylesheet">
 
         @vite(['resources/css/app.css', 'resources/js/app.js'])
+        <script>
+            (function() {
+                try {
+                    const theme = localStorage.getItem('anisul_theme');
+                    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                    if (theme === 'dark' || (!theme && prefersDark)) {
+                        document.documentElement.classList.add('dark');
+                    } else {
+                        document.documentElement.classList.remove('dark');
+                    }
+                    const vibe = localStorage.getItem('anisul_app_vibe') || localStorage.getItem('anisul_khusyu_theme') || 'noor';
+                    document.documentElement.setAttribute('data-vibe', vibe);
+                } catch (e) {}
+            })();
+        </script>
         <x-inertia::head />
     </head>
     <body class="min-h-screen bg-background text-foreground font-sans antialiased selection:bg-primary/20 selection:text-primary">

@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { useQuranAudioPlayer } from '@/composables/useQuranAudioPlayer';
+import { useUserPreferences } from '@/composables/useUserPreferences';
 import { getFormattedArabicText, getFormattedWordText, parseTranslationTokens } from '@/lib/quranUtils';
 import FootnoteDialog from '@/components/FootnoteDialog.vue';
 import AyahEndOrnament from '@/components/AyahEndOrnament.vue';
@@ -67,25 +68,14 @@ const emit = defineEmits([
 ]);
 
 const audioPlayer = useQuranAudioPlayer();
+const userPreferences = useUserPreferences();
 
-// Active Atmosphere Theme ('noor' | 'midnight' | 'warqah')
-const currentTheme = ref('noor');
+// Active Atmosphere Theme ('noor' | 'midnight' | 'warqah') synced with global preferences
+const currentTheme = computed(() => userPreferences.preferences.appVibe || 'noor');
 const showFullTranslationDialog = ref(false);
 
-onMounted(() => {
-    try {
-        const saved = localStorage.getItem('anisul_khusyu_theme');
-        if (saved && ['noor', 'midnight', 'warqah'].includes(saved)) {
-            currentTheme.value = saved;
-        }
-    } catch (e) {}
-});
-
 const setTheme = (theme) => {
-    currentTheme.value = theme;
-    try {
-        localStorage.setItem('anisul_khusyu_theme', theme);
-    } catch (e) {}
+    userPreferences.setAppVibe(theme);
 };
 
 // Footnote Dialog State

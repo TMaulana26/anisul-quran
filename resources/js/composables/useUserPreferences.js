@@ -10,6 +10,7 @@ const DEFAULT_PREFERENCES = {
     autoKhusyuOnPlay: true,
     autoZenOnPlay: true, // Alias for autoKhusyuOnPlay
     selectedReciterId: 7, // Mishary Rashid Alafasy default
+    appVibe: 'noor', // 'noor' | 'midnight' | 'warqah'
 };
 
 const safeGetItem = (key, fallback) => {
@@ -71,6 +72,14 @@ export function useUserPreferences() {
 
         const savedReciterId = safeGetItem('anisul_selected_reciter', null);
         if (savedReciterId) preferences.selectedReciterId = parseInt(savedReciterId, 10) || 7;
+
+        const savedVibe = safeGetItem('anisul_app_vibe', null) || safeGetItem('anisul_khusyu_theme', null);
+        if (savedVibe && ['noor', 'midnight', 'warqah'].includes(savedVibe)) {
+            preferences.appVibe = savedVibe;
+        }
+        if (typeof document !== 'undefined') {
+            document.documentElement.setAttribute('data-vibe', preferences.appVibe);
+        }
     };
 
     init();
@@ -136,6 +145,16 @@ export function useUserPreferences() {
         safeSetItem('anisul_selected_reciter', num);
     };
 
+    const setAppVibe = (vibe) => {
+        const valid = ['noor', 'midnight', 'warqah'].includes(vibe) ? vibe : 'noor';
+        preferences.appVibe = valid;
+        safeSetItem('anisul_app_vibe', valid);
+        safeSetItem('anisul_khusyu_theme', valid);
+        if (typeof document !== 'undefined') {
+            document.documentElement.setAttribute('data-vibe', valid);
+        }
+    };
+
     const resetDefaults = () => {
         Object.assign(preferences, DEFAULT_PREFERENCES);
         safeSetItem('anisul_reading_mode', DEFAULT_PREFERENCES.readingMode);
@@ -147,6 +166,11 @@ export function useUserPreferences() {
         safeSetItem('anisul_auto_khusyu', DEFAULT_PREFERENCES.autoKhusyuOnPlay);
         safeSetItem('anisul_auto_zen', DEFAULT_PREFERENCES.autoZenOnPlay);
         safeSetItem('anisul_selected_reciter', DEFAULT_PREFERENCES.selectedReciterId);
+        safeSetItem('anisul_app_vibe', DEFAULT_PREFERENCES.appVibe);
+        safeSetItem('anisul_khusyu_theme', DEFAULT_PREFERENCES.appVibe);
+        if (typeof document !== 'undefined') {
+            document.documentElement.setAttribute('data-vibe', DEFAULT_PREFERENCES.appVibe);
+        }
     };
 
     return {
@@ -164,6 +188,7 @@ export function useUserPreferences() {
         setAutoKhusyuOnPlay,
         setAutoZenOnPlay,
         setSelectedReciterId,
+        setAppVibe,
         resetDefaults,
     };
 }

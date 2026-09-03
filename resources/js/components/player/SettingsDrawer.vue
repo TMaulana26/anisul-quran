@@ -16,7 +16,9 @@ import {
     Volume2,
     Globe,
     FileText,
-    Bookmark
+    Bookmark,
+    Moon,
+    ScrollText
 } from '@lucide/vue';
 import {
     Select,
@@ -694,7 +696,70 @@ const resetDefaults = () => {
                                     </button>
                                 </div>
 
-                                <!-- 4. Gaya Rasm Kaligrafi Bawaan Global -->
+                                <!-- 4. Suasana & Vibe Visual Aplikasi (Global) -->
+                                <div class="space-y-2.5">
+                                    <div class="flex items-center justify-between">
+                                        <label class="block font-heading font-bold text-xs uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                                            <Sparkles class="h-3.5 w-3.5 text-primary" />
+                                            <span>Suasana & Vibe Aplikasi</span>
+                                        </label>
+                                        <span class="text-[10px] font-medium px-2 py-0.5 rounded-full bg-muted text-muted-foreground border border-border">
+                                            🌐 Tema Global
+                                        </span>
+                                    </div>
+
+                                    <div class="grid grid-cols-3 gap-2">
+                                        <!-- Noor -->
+                                        <button
+                                            type="button"
+                                            @click="userPreferences.setAppVibe('noor')"
+                                            class="flex flex-col items-center justify-center gap-1.5 p-3 rounded-2xl border text-xs font-semibold transition-all cursor-pointer text-center"
+                                            :class="userPreferences.preferences.appVibe === 'noor'
+                                                ? 'bg-primary/10 border-primary text-primary ring-2 ring-primary/20 shadow-xs'
+                                                : 'bg-card border-border/70 hover:bg-muted/50 text-foreground'"
+                                        >
+                                            <div class="h-6 w-6 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+                                                <Sparkles class="h-3.5 w-3.5" />
+                                            </div>
+                                            <span class="font-bold">Noor</span>
+                                            <span class="text-[10px] text-muted-foreground font-normal leading-tight">Zamrud Sejuk</span>
+                                        </button>
+
+                                        <!-- Midnight -->
+                                        <button
+                                            type="button"
+                                            @click="userPreferences.setAppVibe('midnight')"
+                                            class="flex flex-col items-center justify-center gap-1.5 p-3 rounded-2xl border text-xs font-semibold transition-all cursor-pointer text-center"
+                                            :class="userPreferences.preferences.appVibe === 'midnight'
+                                                ? 'bg-amber-500/10 border-amber-500 text-amber-500 ring-2 ring-amber-500/20 shadow-xs'
+                                                : 'bg-card border-border/70 hover:bg-muted/50 text-foreground'"
+                                        >
+                                            <div class="h-6 w-6 rounded-full bg-amber-500/20 text-amber-500 flex items-center justify-center">
+                                                <Moon class="h-3.5 w-3.5" />
+                                            </div>
+                                            <span class="font-bold">Midnight</span>
+                                            <span class="text-[10px] text-muted-foreground font-normal leading-tight">Emas Tahajjud</span>
+                                        </button>
+
+                                        <!-- Warqah -->
+                                        <button
+                                            type="button"
+                                            @click="userPreferences.setAppVibe('warqah')"
+                                            class="flex flex-col items-center justify-center gap-1.5 p-3 rounded-2xl border text-xs font-semibold transition-all cursor-pointer text-center"
+                                            :class="userPreferences.preferences.appVibe === 'warqah'
+                                                ? 'bg-amber-800/10 dark:bg-amber-600/10 border-amber-800 dark:border-amber-600 text-amber-800 dark:text-amber-500 ring-2 ring-amber-800/20 shadow-xs'
+                                                : 'bg-card border-border/70 hover:bg-muted/50 text-foreground'"
+                                        >
+                                            <div class="h-6 w-6 rounded-full bg-amber-800/20 dark:bg-amber-600/20 text-amber-800 dark:text-amber-400 flex items-center justify-center">
+                                                <ScrollText class="h-3.5 w-3.5" />
+                                            </div>
+                                            <span class="font-bold">Warqah</span>
+                                            <span class="text-[10px] text-muted-foreground font-normal leading-tight">Perkamen Klasik</span>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- 5. Gaya Rasm Kaligrafi Bawaan Global -->
                                 <div class="space-y-2.5">
                                     <div class="flex items-center justify-between">
                                         <label class="block font-heading font-bold text-xs uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">

@@ -67,6 +67,16 @@ describe('useUserPreferences.js Composable', () => {
 
         setSelectedReciterId(1);
         expect(preferences.selectedReciterId).toBe(1);
+
+        const { setAppVibe } = useUserPreferences();
+        setAppVibe('midnight');
+        expect(preferences.appVibe).toBe('midnight');
+
+        setAppVibe('warqah');
+        expect(preferences.appVibe).toBe('warqah');
+
+        setAppVibe('invalid_theme');
+        expect(preferences.appVibe).toBe('noor');
     });
 
     it('resets all preferences to default values', () => {
@@ -82,5 +92,6 @@ describe('useUserPreferences.js Composable', () => {
         expect(preferences.autoScrollEnabled).toBe(true);
         expect(preferences.autoZenOnPlay).toBe(true);
         expect(preferences.selectedReciterId).toBe(7);
+        expect(preferences.appVibe).toBe('noor');
     });
 });
