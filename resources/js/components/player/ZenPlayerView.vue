@@ -112,67 +112,26 @@ const hasArabicWords = computed(() => {
     return Array.isArray(currentVerse.value?.words) && currentVerse.value.words.some(w => Boolean(w.text_uthmani || w.text_indopak || w.text));
 });
 
-// Smart Auto-Fit scaling for Zen Mode based on verse word count
-const verseWordCount = computed(() => {
-    if (Array.isArray(currentVerse.value?.words) && currentVerse.value.words.length > 0) {
-        return currentVerse.value.words.filter(w => w.char_type_name !== 'end').length;
+// Auto-center active word in the Zen Focus Window (Karaoke Streaming / Focus Window)
+watch(() => audioPlayer.currentWordIndex.value, (pos) => {
+    if (!props.open || !pos) return;
+    const wordEl = document.getElementById(`zen-word-${pos}`);
+    if (wordEl) {
+        wordEl.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center',
+            inline: 'center',
+        });
     }
-    return (currentArabicText.value || '').split(/\s+/).filter(Boolean).length;
 });
 
-const zenAutoFit = computed(() => {
-    const count = verseWordCount.value;
-    const hasSecondary = props.showTranslation || props.showTransliteration;
-    const base = props.arabicFontSize + 4;
-
-    // Short verse (<= 12 words, e.g. Al-Fatihah, Al-Ikhlas)
-    if (count <= 12) {
-        return {
-            fontSize: base,
-            leadingClass: 'leading-[2.5] sm:leading-[2.7]',
-            spaceClass: 'space-y-5 sm:space-y-7',
-            ornamentSize: 'zen',
-            transliterationClass: 'text-xs sm:text-sm',
-            translationClass: 'text-sm sm:text-base',
-        };
+// Scroll to top of Arabic viewport whenever current verse changes
+watch(() => currentVerse.value?.id, () => {
+    if (!props.open) return;
+    const container = document.getElementById('zen-arabic-viewport');
+    if (container) {
+        container.scrollTo({ top: 0, behavior: 'smooth' });
     }
-
-    // Medium verse (13 - 22 words)
-    if (count <= 22) {
-        const scale = hasSecondary ? 0.82 : 0.92;
-        return {
-            fontSize: Math.round(base * scale),
-            leadingClass: 'leading-[2.1] sm:leading-[2.3]',
-            spaceClass: 'space-y-3.5 sm:space-y-4.5',
-            ornamentSize: 'zen',
-            transliterationClass: 'text-xs sm:text-xs',
-            translationClass: 'text-xs sm:text-sm',
-        };
-    }
-
-    // Long verse (23 - 35 words, e.g. An-Nisa: 1)
-    if (count <= 35) {
-        const scale = hasSecondary ? 0.65 : 0.80;
-        return {
-            fontSize: Math.round(base * scale),
-            leadingClass: 'leading-[1.85] sm:leading-[1.95]',
-            spaceClass: 'space-y-2.5 sm:space-y-3',
-            ornamentSize: 'lg',
-            transliterationClass: 'text-[11px] sm:text-xs leading-snug',
-            translationClass: 'text-xs sm:text-xs leading-snug',
-        };
-    }
-
-    // Extra long verse (> 35 words, e.g. Ayat Kursi 2:255, Al-Baqarah 2:282)
-    const scale = hasSecondary ? 0.52 : 0.70;
-    return {
-        fontSize: Math.round(base * scale),
-        leadingClass: 'leading-[1.7] sm:leading-[1.8]',
-        spaceClass: 'space-y-2 sm:space-y-2.5',
-        ornamentSize: 'md',
-        transliterationClass: 'text-[10px] sm:text-[11px] leading-snug',
-        translationClass: 'text-[11px] sm:text-xs leading-snug',
-    };
 });
 
 const closeZenMode = () => {
@@ -323,28 +282,31 @@ const selectSpeed = (rate) => {
                     </div>
                 </header>
 
-                <!-- Center Stage: Glorious Floating Ayah Content with Smart Auto-Fit -->
-                <main class="relative z-10 flex-1 flex flex-col items-center justify-center px-4 py-2 sm:px-8 sm:py-4 overflow-y-auto scrollbar-none max-w-4xl mx-auto w-full text-center">
+                <!-- Center Stage: Glorious Floating Ayah Content with Karaoke Streaming Focus Window -->
+                <main class="relative z-10 flex-1 flex flex-col items-center justify-between px-4 py-2 sm:px-8 sm:py-4 overflow-hidden max-w-4xl mx-auto w-full text-center">
                     <Transition name="fade" mode="out-in">
                         <div 
                             v-if="currentVerse" 
                             :key="currentVerse.id" 
-                            :class="['w-full animate-fade-in transition-all duration-300', zenAutoFit.spaceClass]"
+                            class="w-full flex-1 flex flex-col justify-between items-center py-2 animate-fade-in"
                         >
                             <!-- Ayah Number Badge -->
-                            <div class="inline-flex items-center justify-center px-3 py-0.5 rounded-full bg-primary/10 border border-primary/25 text-primary text-[11px] sm:text-xs font-bold shadow-2xs">
+                            <div class="inline-flex items-center justify-center px-3.5 py-1 rounded-full bg-primary/10 border border-primary/25 text-primary text-xs font-bold shadow-2xs mb-2">
                                 <span>Ayat {{ currentVerse.verse_number }}</span>
                             </div>
 
-                            <!-- Arabic Typography (Word-by-word with Smart Dynamic Auto-Fit scaling) -->
-                            <div class="text-center py-1 sm:py-2" dir="rtl">
+                            <!-- Cinematic Karaoke Arabic Viewport with Top & Bottom Fade Mask -->
+                            <div 
+                                id="zen-arabic-viewport"
+                                class="zen-lyrics-mask flex-1 w-full max-h-[46vh] sm:max-h-[50vh] overflow-y-auto scrollbar-none py-10 px-4 flex flex-col justify-center items-center text-center transition-all duration-300" 
+                                dir="rtl"
+                            >
                                 <p 
                                     :class="[
-                                        zenAutoFit.leadingClass,
-                                        'select-text transition-all duration-200',
+                                        'leading-[2.6] sm:leading-[3.0] select-text transition-all duration-200',
                                         mushafType === 'indopak' ? 'font-indopak' : 'font-arabic'
                                     ]"
-                                    :style="{ fontSize: `${zenAutoFit.fontSize}px` }"
+                                    :style="{ fontSize: `${arabicFontSize + 6}px` }"
                                 >
                                     <template v-if="hasArabicWords">
                                     <template v-for="word in currentVerse.words" :key="word.id || word.position">
@@ -352,16 +314,19 @@ const selectSpeed = (rate) => {
                                         <AyahEndOrnament
                                             v-if="word.char_type_name === 'end'"
                                             :verse-number="currentVerse.verse_number"
-                                            :size="zenAutoFit.ornamentSize"
+                                            size="zen"
                                             :is-active="audioPlayer.isPlaying.value"
                                         />
                                         <span
                                             v-else
+                                            :id="`zen-word-${word.position}`"
                                             :class="[
-                                                'inline-block transition-all duration-150 mx-1 px-1.5 py-0.5 rounded-xl',
+                                                'inline-block transition-all duration-300 mx-1.5 px-2 py-0.5 rounded-2xl cursor-default',
                                                 audioPlayer.currentWordIndex.value === word.position && audioPlayer.isPlaying.value
-                                                    ? 'bg-primary/25 text-primary font-bold scale-110 shadow-sm ring-1 ring-primary/40'
-                                                    : 'text-foreground hover:text-primary'
+                                                    ? 'bg-primary/25 text-primary font-bold scale-110 shadow-lg ring-2 ring-primary/50 opacity-100'
+                                                    : (audioPlayer.currentWordIndex.value > word.position && audioPlayer.isPlaying.value)
+                                                        ? 'opacity-40 text-foreground/60 hover:opacity-100 hover:text-foreground'
+                                                        : 'opacity-85 text-foreground hover:opacity-100 hover:text-primary'
                                             ]"
                                         >
                                             {{ getFormattedWordText(word, mushafType) }}
@@ -375,26 +340,23 @@ const selectSpeed = (rate) => {
                                     <!-- Quranic Rosette End-of-Ayah Symbol -->
                                     <AyahEndOrnament 
                                         :verse-number="currentVerse.verse_number"
-                                        :size="zenAutoFit.ornamentSize"
+                                        size="zen"
                                         :is-active="audioPlayer.isPlaying.value"
                                     />
                                 </template>
                                 </p>
                             </div>
 
-                            <!-- Latin Transliteration & Indonesian Translation -->
+                            <!-- Latin Transliteration & Indonesian Translation Docked Container -->
                             <div 
                                 v-if="showTransliteration || showTranslation" 
-                                :class="[
-                                    'max-w-2xl mx-auto border-t border-border/50 text-center transition-all',
-                                    verseWordCount > 22 ? 'pt-2.5 space-y-2' : 'pt-4 space-y-3.5'
-                                ]" 
+                                class="w-full max-w-2xl mx-auto border-t border-border/50 text-center max-h-[22vh] overflow-y-auto scrollbar-none pt-3 px-3 space-y-2.5 transition-all mt-auto" 
                                 dir="ltr"
                             >
                                 <!-- Latin Transliteration -->
                                 <p 
                                     v-if="showTransliteration && currentTransliteration"
-                                    :class="['italic text-muted-foreground font-serif leading-relaxed', zenAutoFit.transliterationClass]"
+                                    class="text-xs sm:text-sm italic text-muted-foreground font-serif leading-relaxed"
                                 >
                                     {{ currentTransliteration }}
                                 </p>
@@ -402,7 +364,7 @@ const selectSpeed = (rate) => {
                                 <!-- Indonesian Translation (Kemenag RI) with interactive footnotes -->
                                 <p 
                                     v-if="showTranslation && currentTranslationTokens.length > 0"
-                                    :class="['leading-relaxed text-foreground font-medium', zenAutoFit.translationClass]"
+                                    class="text-xs sm:text-sm leading-relaxed text-foreground font-medium"
                                 >
                                     <template v-for="(token, idx) in currentTranslationTokens" :key="idx">
                                         <span v-if="token.type === 'text'">{{ token.content }}</span>
@@ -410,7 +372,7 @@ const selectSpeed = (rate) => {
                                             v-else-if="token.type === 'footnote'"
                                             @click.stop="openFootnote(token.id, token.number)"
                                             type="button"
-                                            class="inline-flex items-center justify-center px-1.5 py-0.5 mx-0.5 rounded-md text-xs font-bold bg-primary/15 text-primary hover:bg-primary hover:text-primary-foreground transition-colors cursor-pointer align-baseline select-none"
+                                            class="inline-flex items-center justify-center px-1.5 py-0.5 mx-0.5 rounded-md text-[10px] font-bold bg-primary/15 text-primary hover:bg-primary hover:text-primary-foreground transition-colors cursor-pointer align-baseline select-none"
                                             :title="`Klik untuk melihat Catatan Kaki [${token.number}]`"
                                         >
                                             [{{ token.number }}]

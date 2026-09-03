@@ -218,3 +218,9 @@
   display: none; /* Chrome, Safari, Opera */
 }
 
+/* Cinematic gradient fade for Zen Mode Karaoke Focus Window (Apple Music / Spotify style) */
+.zen-lyrics-mask {
+  mask-image: linear-gradient(to bottom, transparent 0%, black 12%, black 88%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 12%, black 88%, transparent 100%);
+}
+

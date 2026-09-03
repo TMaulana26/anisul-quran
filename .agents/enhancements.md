@@ -26,6 +26,7 @@
 | **E-15** | **Global User Preferences Architecture & Top Navbar Drawer Integration** | Global State & Architecture | `resources/js/composables/useUserPreferences.js`, `resources/js/Layouts/AppLayout.vue`, `HandleInertiaRequests.php` | `[x]` |
 | **E-16** | **Komponen Select shadcn-vue Berstandar Aksesibilitas (Reka UI) untuk Pemilihan Qari** | UI Components & Accessibility | `resources/js/components/ui/select/*`, `SettingsDrawer.vue`, `package.json` | `[x]` |
 | **E-17** | **Smart Dynamic Font Auto-Fit & Zero-Scrollbar Architecture pada Mode Zen** | Typography & Zen Player UX | `ZenPlayerView.vue`, `resources/css/app.css` | `[x]` |
+| **E-18** | **Cinematic Focus Window & Karaoke Streaming (Apple Music / Spotify Style) pada Mode Zen** | Immersive Player UX & Motion | `ZenPlayerView.vue`, `resources/css/app.css` | `[x]` |
 
 ---
 
