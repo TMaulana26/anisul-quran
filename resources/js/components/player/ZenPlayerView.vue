@@ -112,16 +112,42 @@ const hasArabicWords = computed(() => {
     return Array.isArray(currentVerse.value?.words) && currentVerse.value.words.some(w => Boolean(w.text_uthmani || w.text_indopak || w.text));
 });
 
-// Auto-center active word in the Zen Focus Window (Karaoke Streaming)
+// Auto-center active word across all 3 streaming rows (Row 1: Arab, Row 2: Latin, Row 3: Arti)
 const scrollToActiveWord = (pos) => {
     if (!props.open || !pos) return;
-    const wordEl = document.getElementById(`zen-word-${pos}`);
-    if (wordEl) {
-        wordEl.scrollIntoView({
+    
+    // Row 1: Arabic word
+    const arWordEl = document.getElementById(`zen-word-ar-${pos}`);
+    if (arWordEl) {
+        arWordEl.scrollIntoView({
             behavior: 'smooth',
             block: 'center',
             inline: 'center',
         });
+    }
+
+    // Row 2: Latin word
+    if (props.showTransliteration) {
+        const latWordEl = document.getElementById(`zen-word-lat-${pos}`);
+        if (latWordEl) {
+            latWordEl.scrollIntoView({
+                behavior: 'smooth',
+                block: 'center',
+                inline: 'center',
+            });
+        }
+    }
+
+    // Row 3: Indonesian translation word
+    if (props.showTranslation) {
+        const transWordEl = document.getElementById(`zen-word-trans-${pos}`);
+        if (transWordEl) {
+            transWordEl.scrollIntoView({
+                behavior: 'smooth',
+                block: 'center',
+                inline: 'center',
+            });
+        }
     }
 };
 
@@ -129,14 +155,14 @@ watch(() => audioPlayer.currentWordIndex.value, (pos) => {
     scrollToActiveWord(pos);
 });
 
-// Scroll to top of viewport whenever current verse changes or when opening Zen Mode
+// Scroll to top of all 3 viewports whenever current verse changes or when opening Zen Mode
 watch([() => currentVerse.value?.id, () => props.open], ([verseId, isOpen]) => {
     if (!isOpen) return;
     nextTick(() => {
-        const container = document.getElementById('zen-arabic-viewport');
-        if (container) {
-            container.scrollTo({ top: 0, behavior: 'instant' });
-        }
+        ['zen-arabic-viewport', 'zen-latin-viewport', 'zen-trans-viewport'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.scrollTo({ top: 0, behavior: 'instant' });
+        });
         if (audioPlayer.currentWordIndex.value) {
             scrollToActiveWord(audioPlayer.currentWordIndex.value);
         }
@@ -309,139 +335,153 @@ const selectSpeed = (rate) => {
                     </div>
                 </header>
 
-                <!-- Center Stage: Glorious Floating Ayah Content with Integrated Tri-Stream Karaoke Window -->
-                <main class="relative z-10 flex-1 flex flex-col items-center justify-between px-3 py-2 sm:px-6 sm:py-3 overflow-hidden max-w-5xl mx-auto w-full text-center">
+                <!-- Center Stage: 3 Dedicated Synchronized Streaming Rows -->
+                <main class="relative z-10 flex-1 flex flex-col items-center justify-between px-3 py-2 sm:px-6 sm:py-3 overflow-hidden max-w-5xl mx-auto w-full text-center min-h-0">
                     <Transition name="fade" mode="out-in">
                         <div 
                             v-if="currentVerse" 
                             :key="currentVerse.id" 
-                            class="w-full flex-1 flex flex-col justify-between items-center animate-fade-in min-h-0"
+                            class="w-full flex-1 flex flex-col justify-between items-center animate-fade-in min-h-0 gap-1.5 sm:gap-2.5"
                         >
                             <!-- Ayah Number Badge -->
-                            <div class="inline-flex items-center justify-center px-3.5 py-1 rounded-full bg-primary/10 border border-primary/25 text-primary text-xs font-bold shadow-2xs mb-1 shrink-0">
+                            <div class="inline-flex items-center justify-center px-3.5 py-0.5 rounded-full bg-primary/10 border border-primary/25 text-primary text-xs font-bold shadow-2xs shrink-0">
                                 <span>Ayat {{ currentVerse.verse_number }}</span>
                             </div>
 
-                            <!-- Cinematic Karaoke Viewport with Top & Bottom Fade Mask (Fixed Block Flow, No Flex Clipping) -->
+                            <!-- ROW 1: Hanya Teks Kaligrafi Arab (Streaming Viewport) -->
                             <div 
                                 id="zen-arabic-viewport"
-                                class="zen-lyrics-mask flex-1 w-full max-h-[50vh] sm:max-h-[54vh] overflow-y-auto scrollbar-none py-28 px-4 text-center transition-all duration-300" 
+                                class="zen-lyrics-mask flex-1 w-full overflow-y-auto scrollbar-none py-12 px-4 text-center transition-all duration-300 min-h-0" 
                                 dir="rtl"
                             >
-                                <div class="inline-block w-full text-center">
+                                <p 
+                                    :class="[
+                                        'leading-[2.6] sm:leading-[3.0] select-text transition-all duration-200',
+                                        mushafType === 'indopak' ? 'font-indopak' : 'font-arabic'
+                                    ]"
+                                    :style="{ fontSize: `${arabicFontSize + 6}px` }"
+                                >
                                     <template v-if="hasArabicWords">
                                         <template v-for="word in currentVerse.words" :key="word.id || word.position">
                                             <!-- Quranic Rosette End-of-Ayah Symbol -->
-                                            <div 
-                                                v-if="word.char_type_name === 'end'" 
-                                                class="inline-flex flex-col items-center justify-center mx-2 my-2 align-middle"
-                                            >
-                                                <AyahEndOrnament
-                                                    :verse-number="currentVerse.verse_number"
-                                                    size="zen"
-                                                    :is-active="audioPlayer.isPlaying.value"
-                                                />
-                                            </div>
-
-                                            <!-- Unified Tri-Stream Word Karaoke Token (Arab + Latin + Terjemahan per Kata) -->
-                                            <div
-                                                v-else
-                                                :id="`zen-word-${word.position}`"
-                                                @click="seekToWord(word.position)"
-                                                :class="[
-                                                    'inline-flex flex-col items-center justify-start mx-1.5 my-2 px-3 py-2 rounded-2xl transition-all duration-300 cursor-pointer select-none align-top',
-                                                    audioPlayer.currentWordIndex.value === word.position
-                                                        ? 'bg-primary/20 text-primary scale-110 shadow-2xl ring-2 ring-primary/60 opacity-100 z-10 -translate-y-1'
-                                                        : (audioPlayer.currentWordIndex.value && word.position < audioPlayer.currentWordIndex.value)
-                                                            ? 'opacity-35 text-foreground/50'
-                                                            : 'opacity-80 text-foreground hover:opacity-100 hover:text-primary'
-                                                ]"
-                                                :title="`Klik untuk melompat ke kata: ${word.translation?.text || word.transliteration?.text || ''}`"
-                                            >
-                                                <!-- 1. Kaligrafi Arab -->
-                                                <span 
-                                                    :class="[
-                                                        'transition-colors duration-200 select-text',
-                                                        mushafType === 'indopak' ? 'font-indopak' : 'font-arabic'
-                                                    ]"
-                                                    :style="{ fontSize: `${arabicFontSize + 4}px` }"
-                                                >
-                                                    {{ getFormattedWordText(word, mushafType) }}
-                                                </span>
-
-                                                <!-- 2. Transliterasi Latin per Kata (Efek Stream) -->
-                                                <span 
-                                                    v-if="showTransliteration && word.transliteration?.text" 
-                                                    class="text-[11px] sm:text-xs font-serif italic text-muted-foreground mt-1 tracking-normal transition-colors"
-                                                    :class="audioPlayer.currentWordIndex.value === word.position ? 'text-primary font-bold' : ''"
-                                                    dir="ltr"
-                                                >
-                                                    {{ word.transliteration.text }}
-                                                </span>
-
-                                                <!-- 3. Terjemahan Indonesia per Kata (Efek Stream) -->
-                                                <span 
-                                                    v-if="showTranslation && word.translation?.text" 
-                                                    class="text-[11px] sm:text-xs font-sans font-medium text-muted-foreground/90 mt-0.5 max-w-[130px] truncate transition-colors"
-                                                    :class="audioPlayer.currentWordIndex.value === word.position ? 'text-primary font-bold' : ''"
-                                                    dir="ltr"
-                                                >
-                                                    {{ word.translation.text }}
-                                                </span>
-                                            </div>
-                                        </template>
-                                    </template>
-                                    <template v-else>
-                                        <p 
-                                            :class="[
-                                                'leading-[2.6] sm:leading-[3.0] select-text transition-all duration-200',
-                                                mushafType === 'indopak' ? 'font-indopak' : 'font-arabic'
-                                            ]"
-                                            :style="{ fontSize: `${arabicFontSize + 6}px` }"
-                                        >
-                                            <span class="text-foreground font-semibold">
-                                                {{ currentArabicText }}
-                                            </span>
-                                            <AyahEndOrnament 
+                                            <AyahEndOrnament
+                                                v-if="word.char_type_name === 'end'"
                                                 :verse-number="currentVerse.verse_number"
                                                 size="zen"
                                                 :is-active="audioPlayer.isPlaying.value"
                                             />
-                                        </p>
+                                            <!-- Kata Arab Tunggal (Row 1) -->
+                                            <span
+                                                v-else
+                                                :id="`zen-word-ar-${word.position}`"
+                                                @click="seekToWord(word.position)"
+                                                :class="[
+                                                    'inline-block transition-all duration-300 mx-1.5 px-2.5 py-0.5 rounded-2xl cursor-pointer select-none',
+                                                    audioPlayer.currentWordIndex.value === word.position
+                                                        ? 'bg-primary/25 text-primary font-bold scale-110 shadow-xl ring-2 ring-primary/50 opacity-100'
+                                                        : (audioPlayer.currentWordIndex.value && word.position < audioPlayer.currentWordIndex.value)
+                                                            ? 'opacity-40 text-foreground/60 hover:opacity-100 hover:text-foreground'
+                                                            : 'opacity-85 text-foreground hover:opacity-100 hover:text-primary'
+                                                ]"
+                                                :title="`Klik untuk melompat: ${word.translation?.text || word.transliteration?.text || ''}`"
+                                            >
+                                                {{ getFormattedWordText(word, mushafType) }}
+                                            </span>
+                                        </template>
                                     </template>
-                                </div>
+                                    <template v-else>
+                                        <span class="text-foreground font-semibold">
+                                            {{ currentArabicText }}
+                                        </span>
+                                        <AyahEndOrnament 
+                                            :verse-number="currentVerse.verse_number"
+                                            size="zen"
+                                            :is-active="audioPlayer.isPlaying.value"
+                                        />
+                                    </template>
+                                </p>
                             </div>
 
-                            <!-- Latin Transliteration & Indonesian Translation Docked Container -->
+                            <!-- ROW 2: Transliterasi Latin (Jika Aktif) -->
                             <div 
-                                v-if="showTransliteration || showTranslation" 
-                                class="w-full max-w-3xl mx-auto border-t border-border/40 text-center max-h-[22vh] overflow-y-auto scrollbar-none pt-2.5 pb-1 px-4 space-y-2 transition-all mt-auto shrink-0" 
+                                v-if="showTransliteration"
+                                id="zen-latin-viewport"
+                                class="zen-lyrics-mask w-full max-h-[16vh] overflow-y-auto scrollbar-none py-2.5 px-4 border-t border-border/40 text-center transition-all duration-300 shrink-0" 
                                 dir="ltr"
                             >
-                                <!-- Latin Transliteration -->
-                                <p 
-                                    v-if="showTransliteration && currentTransliteration"
-                                    class="text-xs sm:text-sm italic text-muted-foreground font-serif leading-relaxed"
-                                >
-                                    {{ currentTransliteration }}
+                                <div class="text-[10px] uppercase font-bold text-muted-foreground/60 tracking-wider mb-1">
+                                    Transliterasi Latin
+                                </div>
+                                <p class="text-xs sm:text-sm font-serif italic leading-relaxed text-muted-foreground">
+                                    <template v-if="hasArabicWords">
+                                        <template v-for="word in currentVerse.words" :key="`lat-${word.id || word.position}`">
+                                            <span
+                                                v-if="word.char_type_name !== 'end' && word.transliteration?.text"
+                                                :id="`zen-word-lat-${word.position}`"
+                                                @click="seekToWord(word.position)"
+                                                :class="[
+                                                    'inline-block transition-all duration-300 mx-1 px-1.5 py-0.5 rounded-lg cursor-pointer',
+                                                    audioPlayer.currentWordIndex.value === word.position
+                                                        ? 'bg-primary/20 text-primary font-bold scale-105 shadow-sm ring-1 ring-primary/40 opacity-100'
+                                                        : (audioPlayer.currentWordIndex.value && word.position < audioPlayer.currentWordIndex.value)
+                                                            ? 'opacity-35 text-muted-foreground/60'
+                                                            : 'opacity-80 hover:opacity-100 hover:text-foreground'
+                                                ]"
+                                            >
+                                                {{ word.transliteration.text }}
+                                            </span>
+                                        </template>
+                                    </template>
+                                    <template v-else>
+                                        <span>{{ currentTransliteration }}</span>
+                                    </template>
                                 </p>
+                            </div>
 
-                                <!-- Indonesian Translation (Kemenag RI) with interactive footnotes -->
-                                <p 
-                                    v-if="showTranslation && currentTranslationTokens.length > 0"
-                                    class="text-xs sm:text-sm leading-relaxed text-foreground font-medium"
-                                >
-                                    <template v-for="(token, idx) in currentTranslationTokens" :key="idx">
-                                        <span v-if="token.type === 'text'">{{ token.content }}</span>
-                                        <button 
-                                            v-else-if="token.type === 'footnote'"
-                                            @click.stop="openFootnote(token.id, token.number)"
-                                            type="button"
-                                            class="inline-flex items-center justify-center px-1.5 py-0.5 mx-0.5 rounded-md text-[10px] font-bold bg-primary/15 text-primary hover:bg-primary hover:text-primary-foreground transition-colors cursor-pointer align-baseline select-none"
-                                            :title="`Klik untuk melihat Catatan Kaki [${token.number}]`"
-                                        >
-                                            [{{ token.number }}]
-                                        </button>
+                            <!-- ROW 3: Arti Kata dalam Bahasa Indonesia (Jika Aktif) -->
+                            <div 
+                                v-if="showTranslation"
+                                id="zen-trans-viewport"
+                                class="zen-lyrics-mask w-full max-h-[20vh] overflow-y-auto scrollbar-none py-2.5 px-4 border-t border-border/40 text-center transition-all duration-300 shrink-0" 
+                                dir="ltr"
+                            >
+                                <div class="text-[10px] uppercase font-bold text-muted-foreground/60 tracking-wider mb-1">
+                                    Arti Kata Bahasa Indonesia
+                                </div>
+                                <p class="text-xs sm:text-sm font-sans font-medium leading-relaxed text-foreground/90">
+                                    <template v-if="hasArabicWords && currentVerse.words.some(w => w.translation?.text)">
+                                        <template v-for="word in currentVerse.words" :key="`trans-${word.id || word.position}`">
+                                            <span
+                                                v-if="word.char_type_name !== 'end' && word.translation?.text"
+                                                :id="`zen-word-trans-${word.position}`"
+                                                @click="seekToWord(word.position)"
+                                                :class="[
+                                                    'inline-block transition-all duration-300 mx-1 px-1.5 py-0.5 rounded-lg cursor-pointer',
+                                                    audioPlayer.currentWordIndex.value === word.position
+                                                        ? 'bg-primary/20 text-primary font-bold scale-105 shadow-sm ring-1 ring-primary/40 opacity-100'
+                                                        : (audioPlayer.currentWordIndex.value && word.position < audioPlayer.currentWordIndex.value)
+                                                            ? 'opacity-35 text-foreground/50'
+                                                            : 'opacity-80 hover:opacity-100 hover:text-primary'
+                                                ]"
+                                            >
+                                                {{ word.translation.text }}
+                                            </span>
+                                        </template>
+                                    </template>
+                                    <template v-else>
+                                        <!-- Fallback to Kemenag full translation tokens -->
+                                        <template v-for="(token, idx) in currentTranslationTokens" :key="idx">
+                                            <span v-if="token.type === 'text'">{{ token.content }}</span>
+                                            <button 
+                                                v-else-if="token.type === 'footnote'"
+                                                @click.stop="openFootnote(token.id, token.number)"
+                                                type="button"
+                                                class="inline-flex items-center justify-center px-1.5 py-0.5 mx-0.5 rounded-md text-[10px] font-bold bg-primary/15 text-primary hover:bg-primary hover:text-primary-foreground transition-colors cursor-pointer align-baseline select-none"
+                                                :title="`Catatan Kaki [${token.number}]`"
+                                            >
+                                                [{{ token.number }}]
+                                            </button>
+                                        </template>
                                     </template>
                                 </p>
                             </div>

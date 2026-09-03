@@ -28,6 +28,7 @@
 | **E-17** | **Smart Dynamic Font Auto-Fit & Zero-Scrollbar Architecture pada Mode Zen** | Typography & Zen Player UX | `ZenPlayerView.vue`, `resources/css/app.css` | `[x]` |
 | **E-18** | **Cinematic Focus Window & Karaoke Streaming (Apple Music / Spotify Style) pada Mode Zen** | Immersive Player UX & Motion | `ZenPlayerView.vue`, `resources/css/app.css` | `[x]` |
 | **E-19** | **Tri-Stream Word Karaoke (Arab + Latin + Arti per Kata) & Fix Overflow Clipping pada Mode Zen** | Word-by-Word Sync & Layout | `ZenPlayerView.vue`, `useQuranAudioPlayer.js`, `QuranFoundationService.php` | `[x]` |
+| **E-20** | **Arsitektur 3-Row Terpisah Selaras (Row 1: Arab, Row 2: Latin, Row 3: Arti) dengan Sinkronisasi Karaoke Multi-Track** | UI/UX & Multi-Row Streaming | `ZenPlayerView.vue` | `[x]` |
 
 ---
 
