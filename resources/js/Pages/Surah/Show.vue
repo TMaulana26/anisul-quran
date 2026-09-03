@@ -347,7 +347,7 @@ const handleListenTogether = () => {
                     <!-- Settings Drawer Trigger Button -->
                     <button
                         type="button"
-                        @click="showSettingsDrawer = true"
+                        @click="userPreferences.openDrawer()"
                         class="p-2 rounded-xl border border-border bg-card hover:bg-muted text-foreground transition-colors cursor-pointer"
                         title="Buka Pengaturan Tampilan Lengkap"
                     >
