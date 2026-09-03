@@ -239,7 +239,19 @@ class QuranFoundationService
                 ]);
 
                 if ($response->successful()) {
-                    return $response->json('recitations', []);
+                    $recitations = $response->json('recitations', []);
+
+                    return array_map(function (array $r): array {
+                        $name = $r['reciter_name'] ?? $r['translated_name']['name'] ?? ($r['name'] ?? 'Qari');
+
+                        return [
+                            'id' => $r['id'],
+                            'name' => $name,
+                            'reciter_name' => $name,
+                            'style' => $r['style'] ?? 'Murattal',
+                            'translated_name' => $r['translated_name'] ?? ['name' => $name],
+                        ];
+                    }, $recitations);
                 }
 
                 return [];

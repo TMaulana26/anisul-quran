@@ -123,6 +123,10 @@ const effectiveReciters = computed(() => {
     ];
 });
 
+const getReciterName = (reciter) => {
+    return reciter?.name || reciter?.reciter_name || reciter?.translated_name?.name || 'Qari Murottal';
+};
+
 const close = () => {
     emit('update:open', false);
     userPreferences.closeDrawer();
@@ -360,7 +364,7 @@ const resetDefaults = () => {
                                                 :key="reciter.id" 
                                                 :value="reciter.id"
                                             >
-                                                {{ reciter.name }} ({{ reciter.style || 'Murattal' }})
+                                                {{ getReciterName(reciter) }} ({{ reciter.style || 'Murattal' }})
                                             </option>
                                         </select>
                                         <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-muted-foreground">
@@ -539,7 +543,7 @@ const resetDefaults = () => {
                                                 :key="reciter.id" 
                                                 :value="reciter.id"
                                             >
-                                                {{ reciter.name }} ({{ reciter.style || 'Murattal' }})
+                                                {{ getReciterName(reciter) }} ({{ reciter.style || 'Murattal' }})
                                             </option>
                                         </select>
                                         <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-muted-foreground">

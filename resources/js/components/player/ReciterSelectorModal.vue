@@ -26,8 +26,12 @@ const close = () => {
     emit('update:open', false);
 };
 
+const getReciterName = (reciter) => {
+    return reciter?.name || reciter?.reciter_name || reciter?.translated_name?.name || 'Qari Murottal';
+};
+
 const getStyleType = (reciter) => {
-    const s = `${reciter?.style || ''} ${reciter?.name || ''} ${reciter?.translated_name?.name || ''}`.toLowerCase();
+    const s = `${reciter?.style || ''} ${getReciterName(reciter)}`.toLowerCase();
     if (s.includes('mujawwad')) return 'mujawwad';
     return 'murattal';
 };
@@ -46,10 +50,9 @@ const filteredReciters = computed(() => {
     if (!q) return list;
 
     return list.filter(r => {
-        const nameMatch = (r.name || '').toLowerCase().includes(q);
-        const translatedMatch = (r.translated_name?.name || '').toLowerCase().includes(q);
+        const nameMatch = getReciterName(r).toLowerCase().includes(q);
         const styleMatch = (r.style || '').toLowerCase().includes(q);
-        return nameMatch || translatedMatch || styleMatch;
+        return nameMatch || styleMatch;
     });
 });
 
@@ -202,7 +205,7 @@ const selectReciter = (reciter) => {
                                                 ? 'bg-primary text-primary-foreground shadow-xs'
                                                 : 'bg-muted text-muted-foreground group-hover:bg-primary/20 group-hover:text-primary'"
                                         >
-                                            {{ (reciter.name || 'Q').charAt(0) }}
+                                            {{ (getReciterName(reciter)).charAt(0) }}
                                         </div>
 
                                         <!-- Murattal (Hijau) / Mujawwad (Biru) Badge -->
@@ -227,9 +230,9 @@ const selectReciter = (reciter) => {
                                 <div class="w-full">
                                     <p 
                                         class="text-sm font-bold text-foreground leading-snug line-clamp-2 group-hover:text-primary transition-colors"
-                                        :title="reciter.name"
+                                        :title="getReciterName(reciter)"
                                     >
-                                        {{ reciter.name }}
+                                        {{ getReciterName(reciter) }}
                                     </p>
                                 </div>
                             </button>
