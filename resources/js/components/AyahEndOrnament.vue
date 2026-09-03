@@ -43,7 +43,7 @@ const sizeClasses = computed(() => {
             return 'w-10 h-10 mx-2 align-middle';
         case 'khusyu':
         case 'zen':
-            return 'w-11 h-11 sm:w-13 sm:h-13 mx-2';
+            return 'w-8.5 h-8.5 sm:w-10 sm:h-10 mx-1.5 align-middle';
         case 'md':
         default:
             return 'w-8.5 h-8.5 mx-1.5 align-middle';

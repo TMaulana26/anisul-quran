@@ -300,6 +300,13 @@ const currentChunk = computed(() => {
     return verseChunks.value[idx - 1] || verseChunks.value[0];
 });
 
+// Identify the last non-end word in the active chunk so it binds with the end ornament without orphan breaks
+const lastNonEndWordId = computed(() => {
+    if (!currentChunk.value?.nonEndWords?.length) return null;
+    const lastWord = currentChunk.value.nonEndWords[currentChunk.value.nonEndWords.length - 1];
+    return lastWord.id || lastWord.position;
+});
+
 // Check if a specific word is actively being recited
 const isWordActive = (word) => {
     if (!word || !audioPlayer.isPlaying.value) return false;
@@ -678,15 +685,34 @@ const selectSpeed = (rate) => {
                                             :style="{ fontSize: `${arabicFontSize + 4}px` }"
                                         >
                                             <template v-for="word in currentChunk.words" :key="word.id || word.position">
-                                                <AyahEndOrnament
-                                                    v-if="word.char_type_name === 'end'"
-                                                    :verse-number="currentVerse.verse_number"
-                                                    size="khusyu"
-                                                    :is-active="audioPlayer.isPlaying.value"
-                                                />
-                                                <!-- Word span with calm underline when active -->
+                                                <!-- Bind the last non-end word with the AyahEndOrnament into an unbreakable group -->
+                                                <span
+                                                    v-if="(word.id || word.position) === lastNonEndWordId && currentChunk.hasEndSymbol"
+                                                    class="inline-flex items-center whitespace-nowrap align-middle"
+                                                >
+                                                    <span 
+                                                        class="inline-block mx-1 sm:mx-1.5 pb-1 border-b-2 transition-all duration-200"
+                                                        :class="[
+                                                            isWordActive(word)
+                                                                ? (currentTheme === 'midnight' 
+                                                                    ? 'border-amber-400 text-amber-200 drop-shadow-[0_0_8px_rgba(245,158,11,0.4)] font-bold' 
+                                                                    : currentTheme === 'warqah'
+                                                                        ? 'border-amber-700 dark:border-amber-400 text-[#1f1008] dark:text-[#fff5db] font-bold'
+                                                                        : 'border-primary text-primary drop-shadow-[0_0_8px_rgba(16,185,129,0.3)] font-bold')
+                                                                : 'border-transparent text-inherit'
+                                                        ]"
+                                                    >
+                                                        {{ getFormattedWordText(word, mushafType) }}
+                                                    </span>
+                                                    <AyahEndOrnament
+                                                        :verse-number="currentVerse.verse_number"
+                                                        size="khusyu"
+                                                        :is-active="audioPlayer.isPlaying.value"
+                                                    />
+                                                </span>
+                                                <!-- Regular words (skip standalone 'end' word since it is bound to the last word above) -->
                                                 <span 
-                                                    v-else 
+                                                    v-else-if="word.char_type_name !== 'end'"
                                                     class="inline-block mx-1 sm:mx-1.5 pb-1 border-b-2 transition-all duration-200"
                                                     :class="[
                                                         isWordActive(word)

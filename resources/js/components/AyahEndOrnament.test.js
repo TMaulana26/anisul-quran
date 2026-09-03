@@ -24,6 +24,6 @@ describe('AyahEndOrnament.vue', () => {
         });
 
         expect(wrapper.text()).toContain('٢٥٥');
-        expect(wrapper.classes()).toContain('w-11');
+        expect(wrapper.classes()).toContain('w-8.5');
     });
 });
