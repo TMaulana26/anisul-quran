@@ -19,7 +19,7 @@ describe('SettingsDrawer.vue', () => {
         selectedReciterId: 7,
     };
 
-    it('renders right drawer settings when open is true', () => {
+    it('renders right drawer settings when open is true in global mode', () => {
         const wrapper = mount(SettingsDrawer, {
             props: defaultProps,
             global: {
@@ -30,12 +30,38 @@ describe('SettingsDrawer.vue', () => {
             },
         });
 
-        expect(wrapper.text()).toContain('Preferensi & Pengaturan');
+        expect(wrapper.text()).toContain('Pengaturan & Preferensi');
         expect(wrapper.text()).toContain('Qari Default');
         expect(wrapper.text()).toContain('Mode Baca Default');
         expect(wrapper.text()).toContain('Mode Zen Saat Putar');
-        expect(wrapper.text()).toContain('Gaya Penulisan Rasm Arab');
-        expect(wrapper.text()).toContain('Ukuran Kaligrafi Arab');
+        expect(wrapper.text()).toContain('Gaya Rasm Bawaan');
+        expect(wrapper.text()).toContain('Ukuran Kaligrafi Bawaan');
+        expect(wrapper.text()).toContain('Global');
+    });
+
+    it('renders contextual surah indicator and tabs when chapter prop is passed', () => {
+        const wrapper = mount(SettingsDrawer, {
+            props: {
+                ...defaultProps,
+                chapter: {
+                    id: 1,
+                    name_simple: 'Al-Fatihah',
+                    name_arabic: 'الفاتحة',
+                    verses_count: 7,
+                },
+            },
+            global: {
+                stubs: {
+                    Teleport: true,
+                    Transition: false,
+                },
+            },
+        });
+
+        expect(wrapper.text()).toContain('Surah Al-Fatihah');
+        expect(wrapper.text()).toContain('Surah Aktif');
+        expect(wrapper.text()).toContain('Surah Ini');
+        expect(wrapper.text()).toContain('Preferensi Global');
     });
 
     it('emits update:autoZenOnPlay when toggle is clicked', async () => {
