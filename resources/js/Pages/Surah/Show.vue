@@ -7,6 +7,7 @@ import MushafPageView from '@/components/MushafPageView.vue';
 import AudioPlayerBar from '@/components/player/AudioPlayerBar.vue';
 import ReciterSelectorModal from '@/components/player/ReciterSelectorModal.vue';
 import KhusyuPlayerView from '@/components/player/KhusyuPlayerView.vue';
+import ListenTogetherModal from '@/components/sync/ListenTogetherModal.vue';
 import { useQuranAudioPlayer } from '@/composables/useQuranAudioPlayer';
 import { useUserPreferences } from '@/composables/useUserPreferences';
 import { 
@@ -99,8 +100,13 @@ const autoZenOnPlay = autoKhusyuOnPlay;
 
 // Modals State
 const showReciterModal = ref(false);
+const showListenTogetherModal = ref(false);
 const isKhusyuMode = ref(false);
 const isZenMode = isKhusyuMode;
+
+const handleListenTogether = () => {
+    showListenTogetherModal.value = true;
+};
 
 // Active Reciter computed based on global preferences or prop
 const currentReciter = computed(() => {
@@ -189,11 +195,6 @@ const handleSelectReciter = async (reciter) => {
     } catch (err) {
         console.error('Failed to switch reciter audio:', err);
     }
-};
-
-const handleListenTogether = () => {
-    // Phase 3 trigger
-    alert('Fitur "Listen Together" (Sinkronisasi Realtime Antar-Perangkat) akan hadir di Fase 3! Nantikan peluncurannya segera.');
 };
 </script>
 
@@ -449,6 +450,7 @@ const handleListenTogether = () => {
             v-model:arabicFontSize="arabicFontSize"
             @open-reciter-modal="showReciterModal = true"
             @open-settings="userPreferences.openDrawer()"
+            @open-listen-together="handleListenTogether"
         />
 
         <!-- Reciter Selector Modal Dialog -->
@@ -457,6 +459,11 @@ const handleListenTogether = () => {
             :reciters="reciters"
             :selected-reciter-id="currentReciter.id"
             @select-reciter="handleSelectReciter"
+        />
+
+        <!-- Listen Together (Multi-Device Sync) Modal Dialog -->
+        <ListenTogetherModal 
+            v-model:open="showListenTogetherModal"
         />
     </AppLayout>
 </template>

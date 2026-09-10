@@ -23,8 +23,10 @@ import {
     BookOpen,
     Moon,
     X,
-    ScrollText
+    ScrollText,
+    Radio
 } from '@lucide/vue';
+import { useRoomSync } from '@/composables/useRoomSync';
 
 const props = defineProps({
     open: {
@@ -64,11 +66,13 @@ const emit = defineEmits([
     'update:mushafType',
     'update:arabicFontSize',
     'open-reciter-modal',
-    'open-settings'
+    'open-settings',
+    'open-listen-together',
 ]);
 
 const audioPlayer = useQuranAudioPlayer();
 const userPreferences = useUserPreferences();
+const roomSync = useRoomSync();
 
 // Active Atmosphere Theme ('noor' | 'midnight' | 'warqah') synced with global preferences
 const currentTheme = computed(() => userPreferences.preferences.appVibe || 'noor');
@@ -901,6 +905,26 @@ const selectSpeed = (rate) => {
                                 >
                                     <Repeat1 v-if="audioPlayer.repeatMode.value === 'ayah'" class="h-4 w-4" />
                                     <Repeat v-else class="h-4 w-4" />
+                                </button>
+
+                                <!-- Listen Together Button in Khusyu Mode -->
+                                <button
+                                    type="button"
+                                    @click="emit('open-listen-together')"
+                                    :class="[
+                                        'p-2 rounded-xl border transition-colors relative cursor-pointer',
+                                        roomSync.roomCode.value 
+                                            ? (currentTheme === 'midnight' ? 'bg-emerald-500/25 border-emerald-500/50 text-emerald-300' : 'bg-emerald-500/20 border-emerald-500/40 text-emerald-700 dark:text-emerald-400')
+                                            : controlButtonClass
+                                    ]"
+                                    title="Dengar Bersama (Listen Together)"
+                                    aria-label="Dengar Bersama"
+                                >
+                                    <Radio class="h-4 w-4" :class="roomSync.roomCode.value ? 'animate-pulse' : ''" />
+                                    <span 
+                                        v-if="roomSync.roomCode.value" 
+                                        class="absolute -top-1 -right-1 flex h-2 w-2 rounded-full bg-emerald-500 animate-ping"
+                                    />
                                 </button>
                             </div>
 

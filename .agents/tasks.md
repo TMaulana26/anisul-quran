@@ -106,49 +106,49 @@
 
 ## 👥 Fase 3: Fitur Unggulan "Listen Together" (Real-time Multi-Device Sync)
 
-- [ ] **Task 3.1: Backend Room Session Engine**
+- [x] **Task 3.1: Backend Room Session Engine**
   - **Goal**: Menyimpan dan mengelola status sesi room sinkronisasi di backend.
   - **Subtasks**:
-    - [ ] Buat `App\Http\Controllers\ListenTogetherController.php`.
-    - [ ] Endpoint `POST /api/rooms` — Membuat Room baru (generate Room Code unik 6-karakter).
-    - [ ] Endpoint `GET /api/rooms/{code}` — Mengambil status sesi room saat ini.
-    - [ ] Endpoint `POST /api/rooms/{code}/sync` — Host mengirim update state (`surahId`, `ayahNumber`, `timestampMs`, `status`, `reciterId`).
-    - [ ] Endpoint `POST /api/rooms/{code}/heartbeat` — Mempertahankan masa aktif room.
-    - [ ] Caching state room di Redis/Cache Laravel dengan TTL otomatis.
-  - **File Target**: `app/Http/Controllers/ListenTogetherController.php`, `routes/api.php`, `tests/Feature/ListenTogetherTest.php`
+    - [x] Buat `App\Http\Controllers\ListenTogetherController.php`.
+    - [x] Endpoint `POST /api/rooms` — Membuat Room baru (generate Room Code unik 6-karakter).
+    - [x] Endpoint `GET /api/rooms/{code}` — Mengambil status sesi room saat ini.
+    - [x] Endpoint `POST /api/rooms/{code}/sync` — Host mengirim update state (`surahId`, `ayahNumber`, `timestampMs`, `status`, `reciterId`).
+    - [x] Endpoint `POST /api/rooms/{code}/heartbeat` — Mempertahankan masa aktif room.
+    - [x] Caching state room di Redis/Cache Laravel dengan TTL otomatis.
+  - **File Target**: `app/Http/Controllers/ListenTogetherController.php`, `routes/web.php`, `tests/Feature/ListenTogetherTest.php`
 
-- [ ] **Task 3.2: Modal "Listen Together" & QR Code Generator (Host View)**
+- [x] **Task 3.2: Modal "Listen Together" & QR Code Generator (Host View)**
   - **Goal**: Host dapat mengaktifkan sesi bersama dan menampilkan QR Code untuk di-scan perangkat lain.
   - **Subtasks**:
-    - [ ] Buat komponen `ListenTogetherModal.vue`.
-    - [ ] Integrasi generator SVG QR Code client-side (`qrcode` package).
-    - [ ] Tombol Copy Link & info Room Code yang mudah dibagikan.
-    - [ ] Indikator status live: jumlah listener terhubung & status sync aktif.
-  - **File Target**: `resources/js/components/sync/ListenTogetherModal.vue`
+    - [x] Buat komponen `ListenTogetherModal.vue`.
+    - [x] Integrasi generator SVG QR Code client-side mandiri bebas dependensi (`resources/js/lib/qrcode.js`).
+    - [x] Tombol Copy Link & info Room Code yang mudah dibagikan.
+    - [x] Indikator status live: jumlah listener terhubung & status sync aktif.
+  - **File Target**: `resources/js/components/sync/ListenTogetherModal.vue`, `resources/js/lib/qrcode.js`
 
-- [ ] **Task 3.3: Halaman & Mode Listener/Follower (`/listen/{roomCode}`)**
+- [x] **Task 3.3: Halaman & Mode Listener/Follower (`/listen/{roomCode}`)**
   - **Goal**: Halaman khusus untuk perangkat yang melakukan scan QR code.
   - **Subtasks**:
-    - [ ] Route `GET /listen/{code}` -> render `Listen/Room.vue`.
-    - [ ] Tampilan pembaca surah otomatis terkunci mengikuti surah & ayat yang sedang diputar Host.
-    - [ ] Floating Follower Banner: *"Tersinkronisasi dengan Room [Code] — Mode Pendengar"*.
-    - [ ] Sembunyikan kontrol play/pause/skip lokal pada perangkat Listener.
+    - [x] Route `GET /listen/{code}` -> render `Listen/Room.vue`.
+    - [x] Tampilan pembaca surah otomatis terkunci mengikuti surah & ayat yang sedang diputar Host.
+    - [x] Floating Follower Banner: *"Tersinkronisasi dengan Room [Code] — Mode Pendengar"*.
+    - [x] Sembunyikan kontrol play/pause/skip lokal pada perangkat Listener (read-only dengan pengatur volume lokal).
   - **File Target**: `resources/js/Pages/Listen/Room.vue`, `resources/js/components/sync/FollowerBanner.vue`
 
-- [ ] **Task 3.4: Realtime Sync Loop & Audio Drift Correction**
+- [x] **Task 3.4: Realtime Sync Loop & Audio Drift Correction**
   - **Goal**: Memastikan suara dan highlight ayat di perangkat Listener berjalan serempak dengan Host tanpa delay atau lagging.
   - **Subtasks**:
-    - [ ] Composable `useRoomSync.js` untuk polling interval cepat / SSE / WebSocket state sync.
-    - [ ] Algoritma koreksi drift: jika selisih waktu audio listener > 300ms dari Host, sesuaikan `currentTime` secara halus.
-    - [ ] Reaksi otomatis saat Host melakukan Pause, Play, Seek, atau Ganti Surah.
+    - [x] Composable `useRoomSync.js` untuk polling interval cepat & state sync.
+    - [x] Algoritma koreksi drift: jika selisih waktu audio listener > 400ms dari Host, sesuaikan `currentTime` secara halus, atau sesuaikan playback rate saat drift mikro (100-400ms).
+    - [x] Reaksi otomatis saat Host melakukan Pause, Play, Seek, atau Ganti Surah.
   - **File Target**: `resources/js/composables/useRoomSync.js`, `resources/js/composables/useRoomSync.test.js`
 
-- [ ] **Task 3.5: Uji Coba Sinkronisasi Multi-Device**
+- [x] **Task 3.5: Uji Coba Sinkronisasi Multi-Device**
   - **Goal**: Verifikasi sinkronisasi antara desktop (Host) dan HP/browser lain (Listener).
   - **Subtasks**:
-    - [ ] Pengujian skenario Play/Pause oleh Host.
-    - [ ] Pengujian skenario Ganti Surah & Seek posisi ayat oleh Host.
-    - [ ] Pengujian reconnect jika koneksi listener sempat terputus.
+    - [x] Pengujian skenario Play/Pause oleh Host.
+    - [x] Pengujian skenario Ganti Surah & Seek posisi ayat oleh Host.
+    - [x] Pengujian reconnect jika koneksi listener sempat terputus atau room kadaluarsa.
 
 ---
 

@@ -1,6 +1,7 @@
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { useQuranAudioPlayer } from '@/composables/useQuranAudioPlayer';
+import { useRoomSync } from '@/composables/useRoomSync';
 import {
     Play,
     Pause,
@@ -23,6 +24,8 @@ import {
 
 const emit = defineEmits(['open-reciter-modal', 'open-settings', 'open-listen-together', 'open-khusyu-mode', 'open-zen-mode']);
 
+const roomSync = useRoomSync();
+
 const {
     isPlaying,
     isLoading,
@@ -31,6 +34,7 @@ const {
     progressPercent,
     formattedCurrentTime,
     formattedDuration,
+    currentSurahId,
     currentSurahName,
     currentAyahNumber,
     activeReciter,
@@ -63,6 +67,15 @@ const onSeekbarChange = (event) => {
     const val = parseFloat(event.target.value);
     const targetSeconds = (val / 100) * (duration.value || 1);
     seekToTime(targetSeconds);
+    if (roomSync.isHost.value) {
+        roomSync.broadcastState({
+            surahId: currentSurahId.value,
+            ayahNumber: currentAyahNumber.value,
+            currentTime: targetSeconds,
+            isPlaying: isPlaying.value,
+            force: true,
+        });
+    }
 };
 
 const selectSpeed = (speed) => {
@@ -83,6 +96,31 @@ const handlePlayClick = () => {
     }
 };
 
+// Host synchronization watchers
+watch(isPlaying, (newVal) => {
+    if (roomSync.isHost.value) {
+        roomSync.broadcastState({
+            surahId: currentSurahId.value,
+            ayahNumber: currentAyahNumber.value,
+            currentTime: currentTime.value,
+            isPlaying: newVal,
+            statusChange: true,
+        });
+    }
+});
+
+watch(currentAyahNumber, (newVal) => {
+    if (roomSync.isHost.value) {
+        roomSync.broadcastState({
+            surahId: currentSurahId.value,
+            ayahNumber: newVal,
+            currentTime: currentTime.value,
+            isPlaying: isPlaying.value,
+            force: true,
+        });
+    }
+});
+
 // Outside click auto-close for speed menu and volume popup
 const handleDocumentClick = (e) => {
     if (showSpeedMenu.value && speedMenuRef.value && !speedMenuRef.value.contains(e.target)) {
@@ -93,12 +131,30 @@ const handleDocumentClick = (e) => {
     }
 };
 
+let hostSyncTimer = null;
+
 onMounted(() => {
     document.addEventListener('click', handleDocumentClick);
+
+    // Periodic sync broadcast while Host is playing
+    hostSyncTimer = setInterval(() => {
+        if (roomSync.isHost.value && isPlaying.value) {
+            roomSync.broadcastState({
+                surahId: currentSurahId.value,
+                ayahNumber: currentAyahNumber.value,
+                currentTime: currentTime.value,
+                isPlaying: true,
+            });
+        }
+    }, 2000);
 });
 
 onUnmounted(() => {
     document.removeEventListener('click', handleDocumentClick);
+    if (hostSyncTimer) {
+        clearInterval(hostSyncTimer);
+        hostSyncTimer = null;
+    }
 });
 </script>
 
@@ -187,11 +243,18 @@ onUnmounted(() => {
                         <button
                             type="button"
                             @click="emit('open-listen-together')"
-                            class="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-gradient-to-r from-emerald-600/15 to-teal-600/15 border border-primary/30 text-primary hover:bg-primary/20 transition-all text-[11px] font-semibold"
+                            class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl transition-all text-[11px] font-semibold relative cursor-pointer"
+                            :class="roomSync.roomCode.value 
+                                ? 'bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border border-emerald-500/40 shadow-xs' 
+                                : 'bg-gradient-to-r from-emerald-600/15 to-teal-600/15 border border-primary/30 text-primary hover:bg-primary/20'"
                             title="Dengarkan Bersama (Realtime Sync)"
                         >
-                            <Radio class="h-3.5 w-3.5 text-primary animate-pulse" />
-                            <span class="hidden sm:inline">Listen Together</span>
+                            <Radio class="h-3.5 w-3.5" :class="roomSync.roomCode.value ? 'animate-pulse text-emerald-500' : 'text-primary'" />
+                            <span class="hidden sm:inline">{{ roomSync.roomCode.value ? `Room ${roomSync.roomCode.value}` : 'Listen Together' }}</span>
+                            <span 
+                                v-if="roomSync.roomCode.value" 
+                                class="h-1.5 w-1.5 rounded-full bg-emerald-500 shrink-0 animate-ping"
+                            />
                         </button>
                     </div>
                 </div>
