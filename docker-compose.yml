@@ -7,7 +7,7 @@ services:
     container_name: anisul_quran_app
     restart: unless-stopped
     ports:
-      - "${APP_PORT:-8090}:80"
+      - "127.0.0.1:${APP_PORT:-8090}:80"
     volumes:
       - ./.env:/var/www/html/.env
       - ./database:/var/www/html/database
