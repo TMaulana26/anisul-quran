@@ -84,10 +84,10 @@
                         :chapter-id="chapter.id"
                         :is-active="audioPlayer.currentAyahNumber.value === verse.verse_number"
                         :active-word-index="audioPlayer.currentAyahNumber.value === verse.verse_number ? audioPlayer.currentWordIndex.value : null"
-                        :show-translation="userPreferences.showTranslation.value"
-                        :show-transliteration="userPreferences.showTransliteration.value"
-                        :mushaf-type="userPreferences.mushafType.value"
-                        :font-size="userPreferences.arabicFontSize.value"
+                        :show-translation="userPreferences.preferences.showTranslation"
+                        :show-transliteration="userPreferences.preferences.showTransliteration"
+                        :mushaf-type="userPreferences.preferences.mushafType"
+                        :font-size="userPreferences.preferences.arabicFontSize"
                     />
                 </div>
             </div>

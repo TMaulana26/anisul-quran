@@ -68,6 +68,10 @@
                             <Radio v-else class="h-4 w-4" />
                             <span>{{ isCreating ? 'Menyiapkan Ruang Sesi...' : 'Mulai Sesi Dengar Bersama' }}</span>
                         </button>
+
+                        <p v-if="createError" class="text-xs text-destructive text-center font-medium animate-in fade-in">
+                            {{ createError }}
+                        </p>
                     </div>
 
                     <!-- State 2: Active Host Room Session -->
@@ -185,6 +189,7 @@ const audioPlayer = useQuranAudioPlayer();
 const userPreferences = useUserPreferences();
 
 const isCreating = ref(false);
+const createError = ref(null);
 const codeCopied = ref(false);
 const linkCopied = ref(false);
 
@@ -203,17 +208,26 @@ const qrSvg = computed(() => {
 
 const handleCreateRoom = async () => {
     isCreating.value = true;
+    createError.value = null;
     try {
+        const surahId = audioPlayer.currentSurahId.value || 1;
+        const ayahNumber = audioPlayer.currentAyahNumber.value || 1;
+        const currentTime = audioPlayer.currentTime.value || 0;
+        const isPlaying = audioPlayer.isPlaying.value;
+        const reciterId = userPreferences.selectedReciterId?.value || userPreferences.preferences?.selectedReciterId || 7;
+        const mushafType = userPreferences.mushafType?.value || userPreferences.preferences?.mushafType || 'uthmani';
+
         await roomSync.createRoom({
-            surahId: audioPlayer.currentSurahId.value || 1,
-            ayahNumber: audioPlayer.currentAyahNumber.value || 1,
-            currentTime: audioPlayer.currentTime.value || 0,
-            isPlaying: audioPlayer.isPlaying.value,
-            reciterId: userPreferences.selectedReciterId.value || 7,
-            mushafType: userPreferences.mushafType.value || 'uthmani',
+            surahId,
+            ayahNumber,
+            currentTime,
+            isPlaying,
+            reciterId,
+            mushafType,
         });
     } catch (e) {
-        // Error handling handled in composable
+        console.error('Failed to create room:', e);
+        createError.value = e.message || 'Gagal menyiapkan ruang sesi. Silakan coba lagi.';
     } finally {
         isCreating.value = false;
     }

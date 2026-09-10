@@ -1,4 +1,4 @@
-import { reactive, ref } from 'vue';
+import { reactive, ref, computed } from 'vue';
 
 const DEFAULT_PREFERENCES = {
     readingMode: 'ayah', // 'ayah' | 'mushaf'
@@ -236,10 +236,29 @@ export function useUserPreferences() {
         }
     };
 
+    const readingMode = computed(() => preferences.readingMode);
+    const mushafType = computed(() => preferences.mushafType);
+    const arabicFontSize = computed(() => preferences.arabicFontSize);
+    const showTranslation = computed(() => preferences.showTranslation);
+    const showTransliteration = computed(() => preferences.showTransliteration);
+    const autoScrollEnabled = computed(() => preferences.autoScrollEnabled);
+    const autoKhusyuOnPlay = computed(() => preferences.autoKhusyuOnPlay);
+    const selectedReciterId = computed(() => preferences.selectedReciterId);
+    const appVibe = computed(() => preferences.appVibe);
+
     return {
         isDrawerOpen,
         isDark,
         preferences,
+        readingMode,
+        mushafType,
+        arabicFontSize,
+        showTranslation,
+        showTransliteration,
+        autoScrollEnabled,
+        autoKhusyuOnPlay,
+        selectedReciterId,
+        appVibe,
         openDrawer,
         closeDrawer,
         toggleDrawer,
