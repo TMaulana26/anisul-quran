@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { mount } from '@vue/test-utils';
+import { mount, flushPromises } from '@vue/test-utils';
 import ListenTogetherModal from './ListenTogetherModal.vue';
 
 describe('ListenTogetherModal.vue', () => {
@@ -39,5 +39,34 @@ describe('ListenTogetherModal.vue', () => {
 
         expect(wrapper.emitted('update:open')).toBeTruthy();
         expect(wrapper.emitted('update:open')[0]).toEqual([false]);
+    });
+
+    it('copies code and displays tooltip when room is active', async () => {
+        const { useRoomSync } = await import('@/composables/useRoomSync');
+        const sync = useRoomSync();
+        sync.roomCode.value = 'AK7F29';
+        sync.joinUrl.value = 'http://anisul-quran.test/listen/AK7F29';
+
+        document.execCommand = vi.fn().mockReturnValue(true);
+
+        const wrapper = mount(ListenTogetherModal, {
+            props: {
+                open: true,
+            },
+            global: {
+                stubs: {
+                    Teleport: true,
+                    Transition: true,
+                },
+            },
+        });
+
+        expect(wrapper.text()).toContain('AK7F29');
+        const copyBtn = wrapper.findAll('button').find(b => b.text().includes('Salin Kode'));
+        expect(copyBtn).toBeDefined();
+        await copyBtn.trigger('click');
+        await flushPromises();
+
+        expect(wrapper.text()).toContain('Kode tersalin!');
     });
 });

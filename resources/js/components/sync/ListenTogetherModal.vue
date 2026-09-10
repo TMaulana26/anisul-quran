@@ -19,6 +19,24 @@
                 <div
                     class="relative w-full max-w-md bg-card text-card-foreground border border-border/80 rounded-2xl shadow-2xl overflow-hidden p-6 space-y-5 animate-in fade-in zoom-in-95 duration-200"
                 >
+                    <!-- Floating Copy Success Toast -->
+                    <Transition
+                        enter-active-class="transition duration-200 ease-out"
+                        enter-from-class="opacity-0 -translate-y-3"
+                        enter-to-class="opacity-100 translate-y-0"
+                        leave-active-class="transition duration-150 ease-in"
+                        leave-from-class="opacity-100 translate-y-0"
+                        leave-to-class="opacity-0 -translate-y-3"
+                    >
+                        <div 
+                            v-if="toastMessage" 
+                            class="absolute top-3 left-1/2 -translate-x-1/2 z-50 px-3.5 py-1.5 rounded-xl bg-emerald-600 text-white text-xs font-semibold shadow-xl flex items-center gap-1.5 pointer-events-none"
+                        >
+                            <Check class="h-3.5 w-3.5" />
+                            <span>{{ toastMessage }}</span>
+                        </div>
+                    </Transition>
+
                     <!-- Header -->
                     <div class="flex items-start justify-between gap-4">
                         <div class="flex items-center gap-3">
@@ -112,15 +130,39 @@
                                 </span>
                             </div>
 
-                            <button
-                                type="button"
-                                @click="copyRoomCode"
-                                class="px-3 py-1.5 rounded-lg bg-card hover:bg-card/80 border border-border text-xs font-medium flex items-center gap-1.5 transition-colors cursor-pointer"
-                            >
-                                <Check v-if="codeCopied" class="h-3.5 w-3.5 text-emerald-500" />
-                                <Copy v-else class="h-3.5 w-3.5" />
-                                <span>{{ codeCopied ? 'Tersalin' : 'Salin Kode' }}</span>
-                            </button>
+                            <div class="relative">
+                                <button
+                                    type="button"
+                                    @click="copyRoomCode"
+                                    class="px-3 py-1.5 rounded-lg border text-xs font-medium flex items-center gap-1.5 transition-all cursor-pointer"
+                                    :class="codeCopied 
+                                        ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-700 dark:text-emerald-400' 
+                                        : 'bg-card hover:bg-card/80 border-border text-foreground'"
+                                >
+                                    <Check v-if="codeCopied" class="h-3.5 w-3.5 text-emerald-500" />
+                                    <Copy v-else class="h-3.5 w-3.5" />
+                                    <span>{{ codeCopied ? 'Tersalin!' : 'Salin Kode' }}</span>
+                                </button>
+
+                                <!-- Tooltip Popup -->
+                                <Transition
+                                    enter-active-class="transition duration-150 ease-out"
+                                    enter-from-class="opacity-0 -translate-y-1 scale-95"
+                                    enter-to-class="opacity-100 translate-y-0 scale-100"
+                                    leave-active-class="transition duration-100 ease-in"
+                                    leave-from-class="opacity-100 translate-y-0 scale-100"
+                                    leave-to-class="opacity-0 -translate-y-1 scale-95"
+                                >
+                                    <div
+                                        v-if="codeCopied"
+                                        class="absolute -top-8.5 right-0 z-50 px-2 py-0.5 rounded-md bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 text-[10px] font-semibold whitespace-nowrap shadow-md pointer-events-none flex items-center gap-1"
+                                    >
+                                        <Check class="h-3 w-3 text-emerald-400 dark:text-emerald-600" />
+                                        <span>Kode tersalin!</span>
+                                        <div class="absolute -bottom-1 right-5 border-4 border-transparent border-t-zinc-900 dark:border-t-zinc-100"></div>
+                                    </div>
+                                </Transition>
+                            </div>
                         </div>
 
                         <!-- Copy Link -->
@@ -131,15 +173,39 @@
                                 :value="roomSync.joinUrl.value"
                                 class="flex-1 bg-muted/50 border border-border text-xs rounded-xl px-3 py-2 font-mono text-muted-foreground focus:outline-none"
                             />
-                            <button
-                                type="button"
-                                @click="copyJoinLink"
-                                class="px-3 py-2 rounded-xl bg-secondary text-secondary-foreground hover:bg-secondary/80 text-xs font-medium flex items-center gap-1.5 transition-colors shrink-0 cursor-pointer"
-                            >
-                                <Check v-if="linkCopied" class="h-3.5 w-3.5 text-emerald-500" />
-                                <Share2 v-else class="h-3.5 w-3.5" />
-                                <span>{{ linkCopied ? 'Tersalin' : 'Salin Link' }}</span>
-                            </button>
+                            <div class="relative shrink-0">
+                                <button
+                                    type="button"
+                                    @click="copyJoinLink"
+                                    class="px-3 py-2 rounded-xl text-xs font-medium flex items-center gap-1.5 transition-all cursor-pointer"
+                                    :class="linkCopied 
+                                        ? 'bg-emerald-500/15 border border-emerald-500/40 text-emerald-700 dark:text-emerald-400' 
+                                        : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'"
+                                >
+                                    <Check v-if="linkCopied" class="h-3.5 w-3.5 text-emerald-500" />
+                                    <Share2 v-else class="h-3.5 w-3.5" />
+                                    <span>{{ linkCopied ? 'Tersalin!' : 'Salin Link' }}</span>
+                                </button>
+
+                                <!-- Tooltip Popup -->
+                                <Transition
+                                    enter-active-class="transition duration-150 ease-out"
+                                    enter-from-class="opacity-0 -translate-y-1 scale-95"
+                                    enter-to-class="opacity-100 translate-y-0 scale-100"
+                                    leave-active-class="transition duration-100 ease-in"
+                                    leave-from-class="opacity-100 translate-y-0 scale-100"
+                                    leave-to-class="opacity-0 -translate-y-1 scale-95"
+                                >
+                                    <div
+                                        v-if="linkCopied"
+                                        class="absolute -top-8.5 right-0 z-50 px-2 py-0.5 rounded-md bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 text-[10px] font-semibold whitespace-nowrap shadow-md pointer-events-none flex items-center gap-1"
+                                    >
+                                        <Check class="h-3 w-3 text-emerald-400 dark:text-emerald-600" />
+                                        <span>Tautan tersalin!</span>
+                                        <div class="absolute -bottom-1 right-5 border-4 border-transparent border-t-zinc-900 dark:border-t-zinc-100"></div>
+                                    </div>
+                                </Transition>
+                            </div>
                         </div>
 
                         <!-- Footer Controls -->
@@ -174,6 +240,7 @@ import { useRoomSync } from '@/composables/useRoomSync';
 import { useQuranAudioPlayer } from '@/composables/useQuranAudioPlayer';
 import { useUserPreferences } from '@/composables/useUserPreferences';
 import { generateQRCodeSVG } from '@/lib/qrcode';
+import { copyToClipboard } from '@/lib/utils';
 
 const props = defineProps({
     open: {
@@ -192,6 +259,16 @@ const isCreating = ref(false);
 const createError = ref(null);
 const codeCopied = ref(false);
 const linkCopied = ref(false);
+const toastMessage = ref(null);
+let toastTimer = null;
+
+const triggerToast = (msg) => {
+    toastMessage.value = msg;
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => {
+        toastMessage.value = null;
+    }, 2500);
+};
 
 const close = () => {
     emit('update:open', false);
@@ -235,20 +312,22 @@ const handleCreateRoom = async () => {
 
 const copyRoomCode = async () => {
     if (!roomSync.roomCode.value) return;
-    try {
-        await navigator.clipboard.writeText(roomSync.roomCode.value);
+    const ok = await copyToClipboard(roomSync.roomCode.value);
+    if (ok) {
         codeCopied.value = true;
-        setTimeout(() => { codeCopied.value = false; }, 2000);
-    } catch (e) {}
+        triggerToast(`Kode Room ${roomSync.roomCode.value} berhasil disalin!`);
+        setTimeout(() => { codeCopied.value = false; }, 2500);
+    }
 };
 
 const copyJoinLink = async () => {
     if (!roomSync.joinUrl.value) return;
-    try {
-        await navigator.clipboard.writeText(roomSync.joinUrl.value);
+    const ok = await copyToClipboard(roomSync.joinUrl.value);
+    if (ok) {
         linkCopied.value = true;
-        setTimeout(() => { linkCopied.value = false; }, 2000);
-    } catch (e) {}
+        triggerToast('Tautan Dengar Bersama berhasil disalin!');
+        setTimeout(() => { linkCopied.value = false; }, 2500);
+    }
 };
 
 const handleEndSession = async () => {
