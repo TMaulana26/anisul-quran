@@ -11,7 +11,7 @@
 |:---|:---|:---:|:---:|
 | **Fase 1** | Fondasi Backend Quran Service, Caching & Halaman Surah | `[x]` | 4 / 4 |
 | **Fase 2** | Karaoke Audio Player Engine & Visual Highlighting | `[x]` | 5 / 5 |
-| **Fase 3** | Fitur Unggulan "Listen Together" (Realtime Multi-Device Sync) | `[ ]` | 0 / 5 |
+| **Fase 3** | Fitur Unggulan "Listen Together" (Realtime Multi-Device Sync) | `[x]` | 5 / 5 |
 | **Fase 4** | Internationalization (i18n), UI Polish (Impeccable) & Full Testing | `[ ]` | 0 / 4 |
 
 ---
