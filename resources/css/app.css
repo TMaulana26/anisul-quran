@@ -409,4 +409,23 @@
   }
 }
 
+/* =========================================
+   INERTIA PROGRESS BAR (VIBE-AWARE THEME)
+   ========================================= */
+
+#nprogress .bar {
+  background: var(--primary) !important;
+  height: 3px !important;
+}
+
+#nprogress .peg {
+  box-shadow: 0 0 14px var(--primary), 0 0 6px var(--primary) !important;
+}
+
+#nprogress .spinner-icon {
+  border-top-color: var(--primary) !important;
+  border-left-color: var(--primary) !important;
+}
+
+
 
