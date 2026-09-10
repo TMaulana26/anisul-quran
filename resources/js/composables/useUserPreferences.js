@@ -37,6 +37,7 @@ const safeSetItem = (key, value) => {
 
 // Global singleton reactive state
 const isDrawerOpen = ref(false);
+const isDark = ref(false);
 const preferences = reactive({ ...DEFAULT_PREFERENCES });
 let isInitialized = false;
 
@@ -79,6 +80,21 @@ export function useUserPreferences() {
         }
         if (typeof document !== 'undefined') {
             document.documentElement.setAttribute('data-vibe', preferences.appVibe);
+        }
+
+        // Initialize Light / Dark Mode
+        const savedTheme = safeGetItem('anisul_theme', null);
+        const prefersDark = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+            isDark.value = true;
+            if (typeof document !== 'undefined') {
+                document.documentElement.classList.add('dark');
+            }
+        } else {
+            isDark.value = false;
+            if (typeof document !== 'undefined') {
+                document.documentElement.classList.remove('dark');
+            }
         }
     };
 
@@ -152,9 +168,30 @@ export function useUserPreferences() {
         safeSetItem('anisul_khusyu_theme', valid);
         if (typeof document !== 'undefined') {
             document.documentElement.setAttribute('data-vibe', valid);
-            if (valid === 'midnight') {
+        }
+    };
+
+    const toggleTheme = () => {
+        isDark.value = !isDark.value;
+        const themeStr = isDark.value ? 'dark' : 'light';
+        safeSetItem('anisul_theme', themeStr);
+        if (typeof document !== 'undefined') {
+            if (isDark.value) {
                 document.documentElement.classList.add('dark');
-                safeSetItem('anisul_theme', 'dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        }
+    };
+
+    const setTheme = (theme) => {
+        isDark.value = theme === 'dark';
+        safeSetItem('anisul_theme', isDark.value ? 'dark' : 'light');
+        if (typeof document !== 'undefined') {
+            if (isDark.value) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
             }
         }
     };
@@ -179,10 +216,13 @@ export function useUserPreferences() {
 
     return {
         isDrawerOpen,
+        isDark,
         preferences,
         openDrawer,
         closeDrawer,
         toggleDrawer,
+        toggleTheme,
+        setTheme,
         setReadingMode,
         setMushafType,
         setArabicFontSize,

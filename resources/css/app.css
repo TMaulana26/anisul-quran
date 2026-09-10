@@ -20,7 +20,7 @@
   font-display: swap;
 }
 
-@custom-variant dark (&:is(.dark *));
+@custom-variant dark (&:where(.dark, .dark *));
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
@@ -71,12 +71,32 @@
 }
 
 /* =========================================
-   SUASANA 2: MIDNIGHT MUSHAF (TAHAJJUD VELVET)
+   SUASANA 2: MIDNIGHT MUSHAF (TAHAJJUD GOLD)
    ========================================= */
 
-/* Midnight is inherently a nocturnal velvet atmosphere */
+/* Light Mode Midnight: Golden Dawn (Fajr Emas Luminous Ivory) */
 :root[data-vibe="midnight"],
-[data-vibe="midnight"],
+[data-vibe="midnight"]:not(.dark) {
+  --background: oklch(0.985 0.01 85);
+  --foreground: oklch(0.18 0.03 55);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.18 0.03 55);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.18 0.03 55);
+  --primary: oklch(0.55 0.16 75);
+  --primary-foreground: oklch(0.99 0 0);
+  --secondary: oklch(0.94 0.02 85);
+  --secondary-foreground: oklch(0.22 0.03 55);
+  --muted: oklch(0.94 0.015 85);
+  --muted-foreground: oklch(0.48 0.02 55);
+  --accent: oklch(0.92 0.03 75);
+  --accent-foreground: oklch(0.25 0.08 75);
+  --border: oklch(0.89 0.02 85);
+  --input: oklch(0.89 0.02 85);
+  --ring: oklch(0.55 0.16 75);
+}
+
+/* Dark Mode Midnight: Tahajjud Velvet Obsidian */
 .dark[data-vibe="midnight"],
 [data-vibe="midnight"].dark,
 [data-vibe="midnight"] .dark {

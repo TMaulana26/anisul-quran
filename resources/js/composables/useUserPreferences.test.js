@@ -94,4 +94,20 @@ describe('useUserPreferences.js Composable', () => {
         expect(preferences.selectedReciterId).toBe(7);
         expect(preferences.appVibe).toBe('noor');
     });
+
+    it('toggles and sets light/dark theme', () => {
+        const { isDark, toggleTheme, setTheme } = useUserPreferences();
+
+        setTheme('light');
+        expect(isDark.value).toBe(false);
+
+        toggleTheme();
+        expect(isDark.value).toBe(true);
+
+        toggleTheme();
+        expect(isDark.value).toBe(false);
+
+        setTheme('dark');
+        expect(isDark.value).toBe(true);
+    });
 });

@@ -27,34 +27,8 @@ defineProps({
 
 const page = usePage();
 const userPreferences = useUserPreferences();
-const { isDrawerOpen, openDrawer } = userPreferences;
+const { isDrawerOpen, openDrawer, isDark, toggleTheme } = userPreferences;
 const reciters = computed(() => page.props.reciters || []);
-
-const isDark = ref(false);
-
-const toggleTheme = () => {
-    isDark.value = !isDark.value;
-    if (isDark.value) {
-        document.documentElement.classList.add('dark');
-        localStorage.setItem('anisul_theme', 'dark');
-    } else {
-        document.documentElement.classList.remove('dark');
-        localStorage.setItem('anisul_theme', 'light');
-    }
-};
-
-onMounted(() => {
-    const savedTheme = localStorage.getItem('anisul_theme');
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    
-    if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
-        isDark.value = true;
-        document.documentElement.classList.add('dark');
-    } else {
-        isDark.value = false;
-        document.documentElement.classList.remove('dark');
-    }
-});
 </script>
 
 <template>
