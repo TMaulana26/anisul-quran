@@ -114,8 +114,9 @@ onUnmounted(() => {
             <button
                 type="button"
                 @click="isCollapsed = !isCollapsed"
-                class="inline-flex items-center gap-1.5 px-3.5 py-1 text-xs font-semibold rounded-t-xl bg-card/95 backdrop-blur-md border-t border-x border-border/80 text-foreground/80 hover:text-primary shadow-sm hover:bg-card transition-all cursor-pointer"
+                class="relative inline-flex items-center gap-1.5 px-3.5 py-1.5 sm:py-1 text-xs font-semibold rounded-t-xl bg-card/95 backdrop-blur-md border-t border-x border-border/80 text-foreground/80 hover:text-primary shadow-sm hover:bg-card transition-all cursor-pointer before:absolute before:-inset-2 before:content-['']"
                 :title="isCollapsed ? 'Tampilkan Player Bar' : 'Sembunyikan Player Bar'"
+                :aria-label="isCollapsed ? 'Tampilkan Player Bar' : 'Sembunyikan Player Bar'"
             >
                 <component :is="isCollapsed ? ChevronUp : ChevronDown" class="h-3.5 w-3.5 text-primary" />
                 <span>{{ isCollapsed ? 'Buka Player' : 'Kecilkan' }}</span>
@@ -263,9 +264,10 @@ onUnmounted(() => {
                         <button
                             type="button"
                             @click="cycleRepeatMode"
-                            class="p-2 rounded-xl transition-colors relative"
+                            class="p-2 rounded-xl transition-colors relative cursor-pointer"
                             :class="repeatMode !== 'none' ? 'bg-primary/15 text-primary' : 'text-muted-foreground hover:text-foreground hover:bg-muted/60'"
                             :title="repeatMode === 'ayah' ? 'Ulangi Ayat Ini' : repeatMode === 'surah' ? 'Ulangi Seluruh Surah' : 'Tanpa Pengulangan'"
+                            :aria-label="repeatMode === 'ayah' ? 'Ulangi Ayat Ini' : repeatMode === 'surah' ? 'Ulangi Seluruh Surah' : 'Tanpa Pengulangan'"
                         >
                             <Repeat1 v-if="repeatMode === 'ayah'" class="h-4 w-4" />
                             <Repeat v-else class="h-4 w-4" />
@@ -281,7 +283,8 @@ onUnmounted(() => {
                                 type="button"
                                 @click="showSpeedMenu = !showSpeedMenu"
                                 class="px-2 py-1 rounded-xl text-xs font-semibold font-mono text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors flex items-center gap-1 cursor-pointer"
-                                title="Kecepatan Pemutaran"
+                                :title="`Kecepatan Pemutaran ${playbackRate}x`"
+                                :aria-label="`Kecepatan Pemutaran ${playbackRate}x`"
                             >
                                 <span>{{ playbackRate }}x</span>
                             </button>
@@ -313,6 +316,7 @@ onUnmounted(() => {
                                 @mouseenter="showVolumeSlider = true"
                                 class="p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors cursor-pointer"
                                 :title="isMuted ? 'Nyalakan Suara' : 'Pengaturan Volume'"
+                                :aria-label="isMuted ? 'Nyalakan Suara' : 'Pengaturan Volume'"
                             >
                                 <VolumeX v-if="isMuted || volume === 0" class="h-4 w-4 text-destructive" />
                                 <Volume2 v-else class="h-4 w-4" />

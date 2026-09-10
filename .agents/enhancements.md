@@ -37,6 +37,7 @@
 | **E-26** | **Perbaikan Spacing Cursive Natural & Peningkatan Ukuran Ornamen Nomor Ayat pada Mode Mushaf Fisik** | Typography, Legibility & Spacing | `MushafPageView.vue`, `AyahEndOrnament.vue` | `[x]` |
 | **E-27** | **Perbaikan Kontras & Visual Bug Tombol Midnight saat dalam Mode Terang (Light Mode)** | Theming Contrast & Accessibility | `KhusyuPlayerView.vue`, `app.css`, `useUserPreferences.js` | `[x]` |
 | **E-28** | **Pelebaran Jarak & Area Nafas Chevron Navigasi (Kiri-Kanan) di Mode Khusyu'** | UI/UX Spacing & Breathing Room | `KhusyuPlayerView.vue` | `[x]` |
+| **E-29** | **Impeccable Polish Pass — Pembersihan 5 Anti-Pattern Detector, Harmonisasi Kontras Amber & Penguatan A11y WCAG AAA** | Quality Polish, Accessibility & Theme Tokens | `AppLayout.vue`, `KhusyuPlayerView.vue`, `AyahItem.vue`, `AudioPlayerBar.vue`, `app.css` | `[x]` |
 
 ---
 

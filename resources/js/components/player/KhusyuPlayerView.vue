@@ -532,7 +532,7 @@ const selectSpeed = (rate) => {
                                 :class="[
                                     'px-2.5 py-1 rounded-xl transition-all cursor-pointer flex items-center gap-1.5',
                                     currentTheme === 'midnight'
-                                        ? 'bg-amber-500 text-slate-950 font-bold shadow-xs'
+                                        ? 'bg-amber-500 text-amber-950 font-bold shadow-xs'
                                         : 'opacity-70 hover:opacity-100 hover:text-foreground'
                                 ]"
                                 title="Midnight Mushaf (Tahajjud Malam Emas)"
@@ -618,6 +618,7 @@ const selectSpeed = (rate) => {
                             currentTheme === 'warqah' ? 'bg-amber-900/5 dark:bg-white/5 hover:bg-amber-900/15 text-[#3b2416] dark:text-[#ebd8ba] border-amber-900/20 dark:border-amber-600/30' : ''
                         ]"
                         :title="activeChunkIndex > 1 ? 'Bagian Sebelumnya' : 'Ayat Sebelumnya'"
+                        :aria-label="activeChunkIndex > 1 ? 'Bagian Sebelumnya' : 'Ayat Sebelumnya'"
                     >
                         <ChevronLeft class="h-6 w-6 sm:h-7 sm:w-7" />
                     </button>
@@ -633,6 +634,7 @@ const selectSpeed = (rate) => {
                             currentTheme === 'warqah' ? 'bg-amber-900/5 dark:bg-white/5 hover:bg-amber-900/15 text-[#3b2416] dark:text-[#ebd8ba] border-amber-900/20 dark:border-amber-600/30' : ''
                         ]"
                         :title="activeChunkIndex < verseChunks.length ? 'Bagian Selanjutnya' : 'Ayat Selanjutnya'"
+                        :aria-label="activeChunkIndex < verseChunks.length ? 'Bagian Selanjutnya' : 'Ayat Selanjutnya'"
                     >
                         <ChevronRight class="h-6 w-6 sm:h-7 sm:w-7" />
                     </button>
@@ -777,9 +779,10 @@ const selectSpeed = (rate) => {
                                                 @click.stop="openFootnote(token.id, token.number)"
                                                 :class="[
                                                     'inline-flex items-center justify-center px-1.5 py-0.5 mx-0.5 rounded text-[11px] font-sans font-bold transition-colors cursor-pointer align-super select-none not-italic',
-                                                    currentTheme === 'midnight' ? 'bg-amber-500/20 text-amber-300 hover:bg-amber-500 hover:text-slate-950' : currentTheme === 'warqah' ? 'bg-amber-900/15 text-[#5a422d] dark:text-[#d3c2aa] hover:bg-amber-800 hover:text-white' : 'bg-primary/15 text-primary hover:bg-primary hover:text-primary-foreground'
+                                                    currentTheme === 'midnight' ? 'bg-amber-500/20 text-amber-300 hover:bg-amber-500 hover:text-amber-950' : currentTheme === 'warqah' ? 'bg-amber-900/15 text-[#5a422d] dark:text-[#d3c2aa] hover:bg-amber-800 hover:text-white' : 'bg-primary/15 text-primary hover:bg-primary hover:text-primary-foreground'
                                                 ]"
                                                 :title="`Buka Catatan Kaki [${token.number}]`"
+                                                :aria-label="`Buka Catatan Kaki [${token.number}]`"
                                             >[{{ token.number }}]</button></template></template><template v-else>{{ currentChunk.translation }}</template>”
                                         </p>
                                     </div>
@@ -921,10 +924,11 @@ const selectSpeed = (rate) => {
                                     :class="[
                                         'p-4 rounded-3xl active:scale-95 transition-all flex items-center justify-center cursor-pointer shadow-lg',
                                         currentTheme === 'midnight' 
-                                            ? 'bg-amber-400 text-slate-950 hover:bg-amber-300 shadow-amber-500/25' 
+                                            ? 'bg-amber-400 text-amber-950 font-bold hover:bg-amber-300 shadow-amber-500/25' 
                                             : 'bg-primary text-primary-foreground hover:bg-primary/90 shadow-primary/25'
                                     ]"
                                     :title="audioPlayer.isPlaying.value ? 'Jeda Audio' : 'Putar Audio'"
+                                    :aria-label="audioPlayer.isPlaying.value ? 'Jeda Audio' : 'Putar Audio'"
                                 >
                                     <Loader2 v-if="audioPlayer.isLoading.value" class="h-6 w-6 animate-spin" />
                                     <Pause v-else-if="audioPlayer.isPlaying.value" class="h-6 w-6 fill-current" />

@@ -99,7 +99,7 @@ onMounted(() => {
                             @click="userPreferences.setAppVibe('midnight')"
                             class="px-2 py-1 rounded-lg transition-all cursor-pointer flex items-center gap-1.5"
                             :class="userPreferences.preferences.appVibe === 'midnight'
-                                ? 'bg-amber-500 text-slate-950 shadow-xs font-bold'
+                                ? 'bg-amber-500 text-amber-950 shadow-xs font-bold'
                                 : 'text-muted-foreground hover:text-foreground'"
                             title="Suasana Midnight (Emas Tahajjud)"
                         >

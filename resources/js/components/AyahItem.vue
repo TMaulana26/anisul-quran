@@ -147,7 +147,7 @@ const hasArabicWords = computed(() => {
                         <span
                             v-else
                             :class="[
-                                'inline-block transition-all duration-150 mx-0.5 px-1 py-0.5 pb-1 border-b-2 rounded-sm',
+                                'inline-block transition-all duration-150 mx-0.5 px-1 py-0.5 pb-1 border-b-2',
                                 isActive && isPlaying && activeWordIndex === word.position
                                     ? 'border-primary text-primary font-bold drop-shadow-sm bg-primary/10'
                                     : 'border-transparent text-inherit'

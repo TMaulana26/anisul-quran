@@ -257,8 +257,13 @@
   *, ::before, ::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+
+  /* Retain gentle opacity fades and non-displacing transitions for cognitive accessibility */
+  * {
+    transition-duration: 120ms !important;
+    transform: none !important;
   }
 }
 
