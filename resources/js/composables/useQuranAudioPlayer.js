@@ -108,17 +108,29 @@ export function matchTimestampToVerseAndWord(timeMs, verseTimings = []) {
 }
 
 /**
- * Format seconds into MM:SS string
+ * Format seconds into HH:MM:SS or MM:SS string
  * 
  * @param {number} sec 
+ * @param {boolean} forceHours 
  * @returns {string}
  */
-export function formatAudioTime(sec) {
-    if (!sec || isNaN(sec) || sec < 0) return '00:00';
-    const mins = Math.floor(sec / 60);
-    const secs = Math.floor(sec % 60);
+export function formatAudioTime(sec, forceHours = false) {
+    if (!sec || isNaN(sec) || sec < 0) {
+        return forceHours ? '00:00:00' : '00:00';
+    }
+    const totalSecs = Math.floor(sec);
+    const hours = Math.floor(totalSecs / 3600);
+    const mins = Math.floor((totalSecs % 3600) / 60);
+    const secs = totalSecs % 60;
+
     const mStr = mins < 10 ? `0${mins}` : `${mins}`;
     const sStr = secs < 10 ? `0${secs}` : `${secs}`;
+
+    if (hours > 0 || forceHours) {
+        const hStr = hours < 10 ? `0${hours}` : `${hours}`;
+        return `${hStr}:${mStr}:${sStr}`;
+    }
+
     return `${mStr}:${sStr}`;
 }
 
@@ -431,8 +443,9 @@ export function useQuranAudioPlayer() {
         return Math.min(100, (currentTime.value / duration.value) * 100);
     });
 
-    const formattedCurrentTime = computed(() => formatAudioTime(currentTime.value));
-    const formattedDuration = computed(() => formatAudioTime(duration.value));
+    const hasHours = computed(() => (duration.value || 0) >= 3600 || (currentTime.value || 0) >= 3600);
+    const formattedCurrentTime = computed(() => formatAudioTime(currentTime.value, hasHours.value));
+    const formattedDuration = computed(() => formatAudioTime(duration.value, hasHours.value));
 
     return {
         // State

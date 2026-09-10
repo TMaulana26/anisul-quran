@@ -824,7 +824,7 @@ const selectSpeed = (rate) => {
                     <div class="max-w-3xl mx-auto space-y-3">
                         <!-- Seekbar Timeline Slider -->
                         <div class="flex items-center gap-3">
-                            <span class="text-xs font-mono font-medium opacity-70 tabular-nums w-12 text-right shrink-0">
+                            <span class="text-xs font-mono font-medium opacity-70 tabular-nums w-14 sm:w-16 text-right shrink-0">
                                 {{ audioPlayer.formattedCurrentTime.value }}
                             </span>
 
@@ -848,7 +848,7 @@ const selectSpeed = (rate) => {
                                 />
                             </div>
 
-                            <span class="text-xs font-mono font-medium opacity-70 tabular-nums w-12 shrink-0">
+                            <span class="text-xs font-mono font-medium opacity-70 tabular-nums w-14 sm:w-16 shrink-0">
                                 {{ audioPlayer.formattedDuration.value }}
                             </span>
                         </div>

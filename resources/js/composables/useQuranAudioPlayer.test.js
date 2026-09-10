@@ -42,13 +42,20 @@ describe('useQuranAudioPlayer - Helpers & Timestamp Matching', () => {
         },
     ];
 
-    it('formats audio seconds into clean MM:SS string', () => {
+    it('formats audio seconds into clean MM:SS or HH:MM:SS string', () => {
         expect(formatAudioTime(0)).toBe('00:00');
         expect(formatAudioTime(65)).toBe('01:05');
         expect(formatAudioTime(125)).toBe('02:05');
         expect(formatAudioTime(3599)).toBe('59:59');
+        expect(formatAudioTime(3600)).toBe('01:00:00');
+        expect(formatAudioTime(7264)).toBe('02:01:04');
         expect(formatAudioTime(null)).toBe('00:00');
         expect(formatAudioTime(-10)).toBe('00:00');
+
+        // When forceHours is true (for synchronized timeline display)
+        expect(formatAudioTime(0, true)).toBe('00:00:00');
+        expect(formatAudioTime(83, true)).toBe('00:01:23');
+        expect(formatAudioTime(7264, true)).toBe('02:01:04');
     });
 
     it('matches timestamp to correct verse and word segment', () => {

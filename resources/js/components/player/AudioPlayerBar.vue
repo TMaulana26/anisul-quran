@@ -235,7 +235,7 @@ onUnmounted(() => {
 
                     <!-- Seekbar Slider & Timers -->
                     <div class="flex items-center gap-2.5 flex-1 w-full">
-                        <span class="text-[11px] font-mono font-medium text-muted-foreground tabular-nums w-10 text-right shrink-0">
+                        <span class="text-[11px] font-mono font-medium text-muted-foreground tabular-nums w-12 sm:w-14 text-right shrink-0">
                             {{ formattedCurrentTime }}
                         </span>
 
@@ -253,7 +253,7 @@ onUnmounted(() => {
                             />
                         </div>
 
-                        <span class="text-[11px] font-mono font-medium text-muted-foreground tabular-nums w-10 shrink-0">
+                        <span class="text-[11px] font-mono font-medium text-muted-foreground tabular-nums w-12 sm:w-14 shrink-0">
                             {{ formattedDuration }}
                         </span>
                     </div>
