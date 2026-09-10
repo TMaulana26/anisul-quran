@@ -161,39 +161,61 @@ export function useUserPreferences() {
         safeSetItem('anisul_selected_reciter', num);
     };
 
-    const setAppVibe = (vibe) => {
-        const valid = ['noor', 'midnight', 'warqah'].includes(vibe) ? vibe : 'noor';
-        preferences.appVibe = valid;
-        safeSetItem('anisul_app_vibe', valid);
-        safeSetItem('anisul_khusyu_theme', valid);
-        if (typeof document !== 'undefined') {
-            document.documentElement.setAttribute('data-vibe', valid);
+    const withThemeTransition = (callback) => {
+        if (typeof document === 'undefined') {
+            callback();
+            return;
         }
+
+        const prefersReducedMotion = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (typeof document.startViewTransition === 'function' && !prefersReducedMotion) {
+            document.startViewTransition(() => {
+                callback();
+            });
+        } else {
+            callback();
+        }
+    };
+
+    const setAppVibe = (vibe) => {
+        withThemeTransition(() => {
+            const valid = ['noor', 'midnight', 'warqah'].includes(vibe) ? vibe : 'noor';
+            preferences.appVibe = valid;
+            safeSetItem('anisul_app_vibe', valid);
+            safeSetItem('anisul_khusyu_theme', valid);
+            if (typeof document !== 'undefined') {
+                document.documentElement.setAttribute('data-vibe', valid);
+            }
+        });
     };
 
     const toggleTheme = () => {
-        isDark.value = !isDark.value;
-        const themeStr = isDark.value ? 'dark' : 'light';
-        safeSetItem('anisul_theme', themeStr);
-        if (typeof document !== 'undefined') {
-            if (isDark.value) {
-                document.documentElement.classList.add('dark');
-            } else {
-                document.documentElement.classList.remove('dark');
+        withThemeTransition(() => {
+            isDark.value = !isDark.value;
+            const themeStr = isDark.value ? 'dark' : 'light';
+            safeSetItem('anisul_theme', themeStr);
+            if (typeof document !== 'undefined') {
+                if (isDark.value) {
+                    document.documentElement.classList.add('dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                }
             }
-        }
+        });
     };
 
     const setTheme = (theme) => {
-        isDark.value = theme === 'dark';
-        safeSetItem('anisul_theme', isDark.value ? 'dark' : 'light');
-        if (typeof document !== 'undefined') {
-            if (isDark.value) {
-                document.documentElement.classList.add('dark');
-            } else {
-                document.documentElement.classList.remove('dark');
+        withThemeTransition(() => {
+            isDark.value = theme === 'dark';
+            safeSetItem('anisul_theme', isDark.value ? 'dark' : 'light');
+            if (typeof document !== 'undefined') {
+                if (isDark.value) {
+                    document.documentElement.classList.add('dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                }
             }
-        }
+        });
     };
 
     const resetDefaults = () => {

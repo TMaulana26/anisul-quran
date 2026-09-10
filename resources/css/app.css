@@ -369,3 +369,44 @@
   transform: translateY(-20px);
 }
 
+/* =========================================
+   SILKY VIEW TRANSITIONS FOR THEME & VIBE
+   ========================================= */
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 380ms;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+::view-transition-old(root) {
+  animation-name: themeBlendOut;
+}
+
+::view-transition-new(root) {
+  animation-name: themeBlendIn;
+}
+
+@keyframes themeBlendOut {
+  from {
+    opacity: 1;
+    filter: brightness(1);
+  }
+  to {
+    opacity: 0;
+    filter: brightness(0.97);
+  }
+}
+
+@keyframes themeBlendIn {
+  from {
+    opacity: 0;
+    filter: brightness(1.03);
+  }
+  to {
+    opacity: 1;
+    filter: brightness(1);
+  }
+}
+
+

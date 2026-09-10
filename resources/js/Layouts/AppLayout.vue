@@ -32,7 +32,7 @@ const reciters = computed(() => page.props.reciters || []);
 </script>
 
 <template>
-    <div class="min-h-screen flex flex-col bg-background text-foreground transition-colors duration-300">
+    <div class="min-h-screen flex flex-col bg-background text-foreground">
         <Head :title="title ? `${title} - Anisul Qur'an` : 'Anisul Qur\'an - Pemutar & Pembaca Al-Qur\'an Interaktif'" />
 
         <!-- Navigation Header -->
