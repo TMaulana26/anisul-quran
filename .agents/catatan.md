@@ -5,15 +5,15 @@
 ---
 
 ## 📑 Daftar Isi
-1. [Dilema Fitur Preferensi: Per-Surah vs Global](#1-dilema-fitur-preferensi-per-surah-vs-global)
-2. [Fitur Dengar Bersama: Batasan Preferensi Host vs Listener](#2-fitur-dengar-bersama-batasan-preferensi-host-vs-listener)
-3. [Analisis Bug Perubahan Qari & Penanganan Transisi di Tengah Surah](#3-analisis-bug-perubahan-qari--penanganan-transisi-di-tengah-surah)
-4. [Next Major Feature: Mode Tadabbur Alam (Cinematic Quran Sanctuary)](#4-next-major-feature-mode-tadabbur-alam-cinematic-quran-sanctuary)
-5. [Rencana Fitur Mayor Tambahan: Surah Qari Bookmark & Override (Opsi C)](#5-rencana-fitur-mayor-tambahan-surah-qari-bookmark--override-opsi-c)
+1. ~~[Dilema Fitur Preferensi: Per-Surah vs Global](#1-dilema-fitur-preferensi-per-surah-vs-global)~~ ✅ *(Selesai - Opsi A Full Global Aktif)*
+2. ~~[Fitur Dengar Bersama: Batasan Preferensi Host vs Listener](#2-fitur-dengar-bersama-batasan-preferensi-host-vs-listener)~~ ✅ *(Selesai - Shared Playback Engine & Independent Local Display)*
+3. ~~[Analisis Bug Perubahan Qari & Penanganan Transisi di Tengah Surah](#3-analisis-bug-perubahan-qari--penanganan-transisi-di-tengah-surah)~~ ✅ *(Selesai - Bug Fix B-24 & Loadedmetadata Handshake)*
+4. [Next Major Feature: Mode Tadabbur Alam (Cinematic Quran Sanctuary)](#4-next-major-feature-mode-tadabbur-alam-cinematic-quran-sanctuary) ⏳ *(Next Major)*
+5. [Rencana Fitur Mayor Tambahan: Surah Qari Bookmark & Override (Opsi C)](#5-rencana-fitur-mayor-tambahan-surah-qari-bookmark--override-opsi-c) ⏳ *(Future Major)*
 
 ---
 
-## 1. Dilema Fitur Preferensi: Per-Surah vs Global
+## ~~1. Dilema Fitur Preferensi: Per-Surah vs Global~~ ✅ *(Selesai - Opsi A Full Global Aktif)*
 
 ### 🔍 Konteks Permasalahan
 Saat membaca atau mendengarkan Al-Qur'an, preferensi pengguna meliputi:
@@ -49,7 +49,7 @@ Berdasarkan evaluasi kepraktisan, pengalaman pengguna (*user experience*), dan k
 
 ---
 
-## 2. Fitur Dengar Bersama: Batasan Preferensi Host vs Listener
+## ~~2. Fitur Dengar Bersama: Batasan Preferensi Host vs Listener~~ ✅ *(Selesai - Shared Playback Engine & Local Display)*
 
 ### 🔍 Pertanyaan Kunci
 > *"Di fitur Dengar Bersama (Listen Together), apakah preferensinya harus sama dengan host?"*
@@ -98,7 +98,7 @@ Jawabannya adalah **TIDAK SEMUANYA SAMA**. Kita harus memisahkan secara tegas an
 
 ---
 
-## 3. Analisis Bug Perubahan Qari & Penanganan Transisi di Tengah Surah
+## ~~3. Analisis Bug Perubahan Qari & Penanganan Transisi di Tengah Surah~~ ✅ *(Selesai - Bug Fix B-24 & Seamless Switch)*
 
 ### 🐛 3.1. Akar Masalah: Mengapa Perubahan Qari Tidak Ter-apply?
 
@@ -307,10 +307,10 @@ Fitur ini akan diimplementasikan pada siklus rilis mayor mendatang setelah Mode 
 
 ## 📌 Kesimpulan Rencana Tindak Lanjut
 
-| Topik | Tindakan Nyata yang Direncanakan |
-| :--- | :--- |
-| **1. Preferensi Per-Surah vs Global** | **Opsi A (Full Global)** diterapkan saat ini sebagai solusi paling optimal, sederhana, dan mudah diprediksi. |
-| **2. Preferensi Dengar Bersama** | Pastikan Qari dan state pemutaran audio **100% mengikuti Host**. Bebaskan volume audio, tema visual, dan ukuran font sebagai **preferensi independen masing-masing Listener**. |
-| **3. Bug & Transisi Ganti Qari** | Perbaiki watcher di `Show.vue` dan hubungkan event drawer. Terapkan siklus transisi audio berbasis event `loadedmetadata` agar qari baru langsung melanjutkan dari ayat aktif yang sama. |
-| **4. Mode Tadabbur Alam** | Siapkan arsitektur `TadabburPlayerView.vue`, buat kurasi klip video alam ringan (<4MB WebM), tambahkan kontrol opasitas overlay, dan sediakan audio ambience mixer opsional. |
-| **5. Surah Qari Bookmark & Override** | Disimpan sebagai rencana fitur mayor lanjutan (Opsi C Hybrid) untuk memungkinkan pengguna mengunci qari tertentu pada surah favorit tanpa merusak keseragaman global. |
+| Topik | Tindakan Nyata yang Direncanakan | Status |
+| :--- | :--- | :---: |
+| ~~**1. Preferensi Per-Surah vs Global**~~ | ~~**Opsi A (Full Global)** diterapkan saat ini sebagai solusi paling optimal, sederhana, dan mudah diprediksi.~~ | ✅ **Selesai (Opsi A Aktif)** |
+| ~~**2. Preferensi Dengar Bersama**~~ | ~~Pastikan Qari dan state pemutaran audio **100% mengikuti Host**. Bebaskan volume audio, tema visual, dan ukuran font sebagai **preferensi independen masing-masing Listener**.~~ | ✅ **Selesai (Shared Engine + Local UI)** |
+| ~~**3. Bug & Transisi Ganti Qari**~~ | ~~Perbaiki watcher di `Show.vue` dan hubungkan event drawer. Terapkan siklus transisi audio berbasis event `loadedmetadata` agar qari baru langsung melanjutkan dari ayat aktif yang sama.~~ | ✅ **Selesai (Bug Fix B-24 & Seamless Switch)** |
+| **4. Mode Tadabbur Alam** | Siapkan arsitektur `TadabburPlayerView.vue`, buat kurasi klip video alam ringan (<4MB WebM), tambahkan kontrol opasitas overlay, dan sediakan audio ambience mixer opsional. | ⏳ **Next Major Feature** |
+| **5. Surah Qari Bookmark & Override** | Disimpan sebagai rencana fitur mayor lanjutan (Opsi C Hybrid) untuk memungkinkan pengguna mengunci qari tertentu pada surah favorit tanpa merusak keseragaman global. | ⏳ **Future Major Feature** |
