@@ -171,6 +171,7 @@
     - Mengubah `step="0.01"` untuk pergeseran volume yang halus dan presisi.
   - Di `resources/js/components/player/AudioPlayerBar.vue` & `KhusyuPlayerView.vue`:
     - Menerapkan `.volume-slider` dengan dynamic style `--slider-progress` pada popover volume dan menyelaraskan label persentase.
+    - Menerapkan `.vibe-slider` pada bilah penunjuk waktu audio (*timeline seekbar*) di Floating Player Bar dan Mode Khusyu', sehingga warna *primary* otomatis mengisi jalur slider mengikuti detik bacaan yang sedang diputar.
   - Pengujian & Verifikasi:
-    - Menambahkan pengujian di `AudioPlayerBar.test.js` dan membuat file uji `resources/js/Pages/Listen/Room.test.js`.
-    - Seluruh pengujian lulus (100% passing) dan asset terkompilasi bersih via `npm run build`.
+    - Menambahkan pengujian di `AudioPlayerBar.test.js` (slider volume & slider timeline) dan membuat file uji `resources/js/Pages/Listen/Room.test.js`.
+    - Seluruh 10/10 pengujian lulus (100% passing) dan asset terkompilasi bersih via `npm run build`.

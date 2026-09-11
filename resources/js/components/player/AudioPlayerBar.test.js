@@ -63,4 +63,19 @@ describe('AudioPlayerBar.vue', () => {
         expect(volumeSlider.attributes('style')).toContain('--slider-progress: 85%');
         expect(wrapper.text()).toContain('85%');
     });
+
+    it('renders Windows 11 style timeline seekbar with vibe-slider class and progress style', () => {
+        const player = useQuranAudioPlayer();
+        player.loadSurah(
+            { id: 1, name_simple: 'Al-Fatihah' },
+            { audio_url: 'https://example.com/1.mp3', verse_timings: [] },
+            { id: 7, name: 'Mishary Rashid Alafasy' }
+        );
+
+        const wrapper = mount(AudioPlayerBar);
+        const timelineSlider = wrapper.find('input[aria-label="Audio Timeline Progress"]');
+        expect(timelineSlider.exists()).toBe(true);
+        expect(timelineSlider.classes()).toContain('vibe-slider');
+        expect(timelineSlider.attributes('style')).toContain('--slider-progress');
+    });
 });

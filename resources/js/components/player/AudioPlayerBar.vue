@@ -311,7 +311,8 @@ onUnmounted(() => {
                                 step="0.1"
                                 :value="progressPercent"
                                 @input="onSeekbarChange"
-                                class="w-full h-2 rounded-lg bg-muted appearance-none cursor-pointer accent-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                                class="vibe-slider w-full cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                                :style="{ '--slider-progress': `${progressPercent}%` }"
                                 aria-label="Audio Timeline Progress"
                             />
                         </div>

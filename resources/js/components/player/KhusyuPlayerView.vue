@@ -890,14 +890,8 @@ const selectSpeed = (rate) => {
                                     step="0.1"
                                     :value="audioPlayer.progressPercent.value"
                                     @input="onSeekbarChange"
-                                    :class="[
-                                        'w-full h-1.5 sm:h-2 rounded-lg appearance-none cursor-pointer focus:outline-none focus-visible:ring-2',
-                                        currentTheme === 'midnight' 
-                                            ? 'bg-white/15 accent-amber-400 focus-visible:ring-amber-400/40' 
-                                            : currentTheme === 'warqah'
-                                                ? 'bg-amber-900/15 dark:bg-white/15 accent-amber-700 dark:accent-amber-500'
-                                                : 'bg-muted accent-primary focus-visible:ring-primary/40'
-                                    ]"
+                                    class="vibe-slider w-full cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                                    :style="{ '--slider-progress': `${audioPlayer.progressPercent.value}%` }"
                                     aria-label="Timeline Audio"
                                 />
                             </div>
