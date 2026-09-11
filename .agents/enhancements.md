@@ -45,6 +45,7 @@
 | **E-34** | **Integrasi Laravel Reverb (WebSocket) untuk Real-Time Audio Sync (< 50ms), Zero HTTP Polling & Auto-Fallback di Fitur Dengar Bersama** | Real-Time Architecture & Performance | `RoomSyncEvent.php`, `useRoomSync.js`, `echo.js`, `ListenTogetherController.php`, `supervisord.conf`, `nginx.conf` | `[x]` |
 | **E-35** | **Next Major: Mode Tadabbur Alam (Cinematic Video Sanctuary & Sacred Verses Background)** | Immersive Sanctuary & Nature Video | `TadabburPlayerView.vue`, `.agents/catatan.md` | `[ ]` |
 | **E-36** | **Hybrid User Preference System (Global Visuals + Optional Per-Surah Qari Override)** | State Management & Architecture | `useUserPreferences.js`, `.agents/catatan.md` | `[ ]` |
+| **E-37** | **Modal Dialog Penyelesaian Surah (Putar Surah Selanjutnya, Kembali ke Daftar, Putar Ulang & Dismissible)** | Player UX & Journey Continuity | `SurahCompletionModal.vue`, `useQuranAudioPlayer.js`, `Show.vue` | `[x]` |
 
 ---
 

@@ -186,5 +186,13 @@ describe('useQuranAudioPlayer - Helpers & Timestamp Matching', () => {
         // Target seconds for Ayah 2 of Reciter B should be 6.001
         expect(player.currentTime.value).toBe(6.001);
     });
+
+    it('manages isSurahCompleted and resetSurahCompleted properly', () => {
+        const player = useQuranAudioPlayer();
+        expect(player.isSurahCompleted.value).toBe(false);
+
+        player.resetSurahCompleted();
+        expect(player.isSurahCompleted.value).toBe(false);
+    });
 });
 

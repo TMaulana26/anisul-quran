@@ -7,6 +7,7 @@ import MushafPageView from '@/components/MushafPageView.vue';
 import AudioPlayerBar from '@/components/player/AudioPlayerBar.vue';
 import ReciterSelectorModal from '@/components/player/ReciterSelectorModal.vue';
 import KhusyuPlayerView from '@/components/player/KhusyuPlayerView.vue';
+import SurahCompletionModal from '@/components/player/SurahCompletionModal.vue';
 import ListenTogetherModal from '@/components/sync/ListenTogetherModal.vue';
 import { useQuranAudioPlayer } from '@/composables/useQuranAudioPlayer';
 import { useUserPreferences } from '@/composables/useUserPreferences';
@@ -101,6 +102,7 @@ const autoZenOnPlay = autoKhusyuOnPlay;
 // Modals State
 const showReciterModal = ref(false);
 const showListenTogetherModal = ref(false);
+const showCompletionModal = ref(false);
 const isKhusyuMode = ref(false);
 const isZenMode = isKhusyuMode;
 
@@ -116,25 +118,46 @@ const currentReciter = computed(() => {
 
 // Initialize & Load Surah into Audio Engine
 onMounted(async () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const shouldAutoplay = urlParams.get('autoplay') === 'true';
+
     const prefReciterId = userPreferences.preferences.selectedReciterId;
     if (prefReciterId && prefReciterId !== props.selectedReciterId) {
         // Preference differs from initial server-provided recitation
         const found = props.reciters.find(r => r.id === prefReciterId) || { id: prefReciterId, name: 'Qari Pilihan' };
-        await handleSelectReciter(found);
+        await handleSelectReciter(found, shouldAutoplay);
     } else if (props.chapter && props.recitation) {
-        audioPlayer.loadSurah(props.chapter, props.recitation, currentReciter.value, 1, false);
+        audioPlayer.loadSurah(props.chapter, props.recitation, currentReciter.value, 1, shouldAutoplay);
+    }
+
+    if (shouldAutoplay && autoKhusyuOnPlay.value) {
+        isKhusyuMode.value = true;
     }
 });
 
 // Watch chapter change to update audio player
 watch(() => props.chapter?.id, async (newId) => {
     if (!newId || !props.chapter) return;
+    const urlParams = new URLSearchParams(window.location.search);
+    const shouldAutoplay = urlParams.get('autoplay') === 'true';
+
     const prefReciterId = userPreferences.preferences.selectedReciterId;
     if (prefReciterId && prefReciterId !== props.selectedReciterId) {
         const found = props.reciters.find(r => r.id === prefReciterId) || { id: prefReciterId, name: 'Qari Pilihan' };
-        await handleSelectReciter(found);
+        await handleSelectReciter(found, shouldAutoplay);
     } else if (props.recitation) {
-        audioPlayer.loadSurah(props.chapter, props.recitation, currentReciter.value, 1, false);
+        audioPlayer.loadSurah(props.chapter, props.recitation, currentReciter.value, 1, shouldAutoplay);
+    }
+
+    if (shouldAutoplay && autoKhusyuOnPlay.value) {
+        isKhusyuMode.value = true;
+    }
+});
+
+// Watch for surah completion from audio engine
+watch(() => audioPlayer.isSurahCompleted?.value, (completed) => {
+    if (completed) {
+        showCompletionModal.value = true;
     }
 });
 
@@ -189,7 +212,7 @@ const handlePlayVerse = (verse) => {
 // Dynamic Reciter Switch (Opsi A: Full Global Preference)
 const isSwitchingReciter = ref(false);
 
-const handleSelectReciter = async (reciter) => {
+const handleSelectReciter = async (reciter, forceAutoPlay = null) => {
     if (!reciter || !reciter.id) return;
 
     // 1. Sync global user preference immediately
@@ -197,6 +220,9 @@ const handleSelectReciter = async (reciter) => {
 
     // 2. Prevent duplicate reload if engine is already on this reciter and chapter
     if (audioPlayer.activeReciter.value?.id === reciter.id && audioPlayer.currentSurahId.value === props.chapter?.id) {
+        if (forceAutoPlay && !audioPlayer.isPlaying.value) {
+            audioPlayer.play();
+        }
         return;
     }
 
@@ -208,7 +234,7 @@ const handleSelectReciter = async (reciter) => {
         if (res.ok) {
             const data = await res.json();
             if (data.recitation) {
-                const wasPlaying = audioPlayer.isPlaying.value;
+                const wasPlaying = forceAutoPlay !== null ? forceAutoPlay : audioPlayer.isPlaying.value;
                 const currentAyah = audioPlayer.currentAyahNumber.value || 1;
                 audioPlayer.loadSurah(props.chapter, data.recitation, reciter, currentAyah, wasPlaying);
             }
@@ -218,6 +244,31 @@ const handleSelectReciter = async (reciter) => {
     } finally {
         isSwitchingReciter.value = false;
     }
+};
+
+// Handlers for Surah Completion Modal
+const handlePlayNextSurah = (targetChapter) => {
+    showCompletionModal.value = false;
+    audioPlayer.resetSurahCompleted();
+    const targetId = targetChapter?.id || props.nextChapter?.id || 1;
+    router.visit(`/surah/${targetId}?autoplay=true`);
+};
+
+const handleBackToIndex = () => {
+    showCompletionModal.value = false;
+    audioPlayer.resetSurahCompleted();
+    router.visit('/');
+};
+
+const handleReplaySurah = () => {
+    showCompletionModal.value = false;
+    audioPlayer.resetSurahCompleted();
+    audioPlayer.seekToAyah(1, true);
+};
+
+const handleCloseCompletionModal = () => {
+    showCompletionModal.value = false;
+    audioPlayer.resetSurahCompleted();
 };
 </script>
 
@@ -490,6 +541,18 @@ const handleSelectReciter = async (reciter) => {
         <!-- Listen Together (Multi-Device Sync) Modal Dialog -->
         <ListenTogetherModal 
             v-model:open="showListenTogetherModal"
+        />
+
+        <!-- Surah Completion Modal Dialog -->
+        <SurahCompletionModal 
+            v-model:open="showCompletionModal"
+            :chapter="chapter"
+            :next-chapter="nextChapter"
+            :reciter="currentReciter"
+            @play-next="handlePlayNextSurah"
+            @back-to-index="handleBackToIndex"
+            @replay="handleReplaySurah"
+            @update:open="handleCloseCompletionModal"
         />
     </AppLayout>
 </template>

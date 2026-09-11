@@ -17,6 +17,7 @@ const repeatMode = ref('none'); // 'none', 'ayah', 'surah'
 const volume = ref(1.0);
 const isMuted = ref(false);
 const autoScrollEnabled = ref(true);
+const isSurahCompleted = ref(false);
 
 // Current recitation metadata with verse timings and segments
 const currentRecitation = ref(null);
@@ -223,6 +224,7 @@ export function useQuranAudioPlayer() {
                 isPlaying.value = false;
                 currentTime.value = 0;
                 currentWordIndex.value = null;
+                isSurahCompleted.value = true;
             }
         });
 
@@ -258,6 +260,7 @@ export function useQuranAudioPlayer() {
         const initialAyah = startAyah || 1;
         currentAyahNumber.value = initialAyah;
         currentWordIndex.value = 1;
+        isSurahCompleted.value = false;
 
         if (audioInstance) {
             const rawUrl = recitationData.audio_url || '';
@@ -307,6 +310,8 @@ export function useQuranAudioPlayer() {
             currentAyahNumber.value = 1;
         }
 
+        isSurahCompleted.value = false;
+
         try {
             isLoading.value = true;
             await audioInstance.play();
@@ -346,6 +351,7 @@ export function useQuranAudioPlayer() {
      */
     const seekToTime = (seconds) => {
         if (!audioInstance) return;
+        isSurahCompleted.value = false;
         const target = Math.max(0, seconds);
         currentTime.value = target;
 
@@ -370,6 +376,7 @@ export function useQuranAudioPlayer() {
 
         currentAyahNumber.value = targetAyah;
         currentWordIndex.value = 1;
+        isSurahCompleted.value = false;
 
         const timings = currentRecitation.value?.verse_timings;
         if (!timings || !Array.isArray(timings) || timings.length === 0) {
@@ -532,6 +539,7 @@ export function useQuranAudioPlayer() {
         volume,
         isMuted,
         autoScrollEnabled,
+        isSurahCompleted,
         currentRecitation,
         currentChapter,
 
@@ -545,6 +553,9 @@ export function useQuranAudioPlayer() {
         seekToAyah,
         nextAyah,
         prevAyah,
+        resetSurahCompleted: () => {
+            isSurahCompleted.value = false;
+        },
         loadSurahRecitation: (chapterIdOrObj, nameOrRecitation, recitationData, reciterId) => {
             const chapter = typeof chapterIdOrObj === 'object' ? chapterIdOrObj : { id: chapterIdOrObj, name_simple: nameOrRecitation };
             const recData = typeof chapterIdOrObj === 'object' ? nameOrRecitation : recitationData;
