@@ -1,10 +1,12 @@
 import { ref, computed, onUnmounted } from 'vue';
+import { getEcho } from '@/echo';
 
 // Shared singleton state for rooms
 const roomCode = ref(null);
 const isHost = ref(false);
 const isListener = ref(false);
 const isConnected = ref(false);
+const isWebSocketConnected = ref(false);
 const listenerCount = ref(1);
 const roomState = ref(null);
 const isSyncing = ref(false);
@@ -13,6 +15,7 @@ const joinUrl = ref('');
 
 let pollTimer = null;
 let heartbeatTimer = null;
+let activeChannel = null;
 let lastSyncTimestamp = 0;
 const SYNC_THROTTLE_MS = 250;
 
@@ -207,12 +210,31 @@ export function useRoomSync() {
     };
 
     /**
+     * Clean up Echo channel subscription
+     */
+    const cleanupEcho = () => {
+        if (activeChannel && roomCode.value) {
+            const echo = getEcho();
+            if (echo) {
+                try {
+                    echo.leave(`room.${roomCode.value}`);
+                } catch {
+                    // Ignore channel leave error
+                }
+            }
+            activeChannel = null;
+        }
+        isWebSocketConnected.value = false;
+    };
+
+    /**
      * Host: Close and destroy the room session
      */
     const closeRoom = async () => {
         if (!roomCode.value) return;
         const code = roomCode.value;
         stopTimers();
+        cleanupEcho();
 
         try {
             await fetch(`/api/rooms/${code}`, {
@@ -233,22 +255,69 @@ export function useRoomSync() {
     };
 
     /**
-     * Listener: Start listening to a room session
+     * Listener: Start listening to a room session via WebSocket (with HTTP fallback)
      * 
      * @param {string} code 
-     * @param {Function} onSyncUpdate - callback with (newRoomState, drift)
+     * @param {Function} onSyncUpdate - callback with (newRoomState)
      * @param {Function} onRoomClosed - callback when room ends
      */
     const startListening = (code, onSyncUpdate, onRoomClosed) => {
         stopTimers();
-        roomCode.value = code.toUpperCase().trim();
+        cleanupEcho();
+
+        const normalizedCode = code.toUpperCase().trim();
+        roomCode.value = normalizedCode;
         isHost.value = false;
         isListener.value = true;
         isConnected.value = true;
         joinUrl.value = typeof window !== 'undefined' ? window.location.href : '';
 
-        // Immediate poll
-        const poll = async () => {
+        // Fallback polling helper (runs only if WebSocket is disconnected or unavailable)
+        const startFallbackPolling = () => {
+            if (pollTimer) return;
+            pollTimer = setInterval(async () => {
+                if (!roomCode.value) return;
+                // If WebSocket is connected, suspend HTTP polling
+                if (isWebSocketConnected.value) {
+                    if (pollTimer) {
+                        clearInterval(pollTimer);
+                        pollTimer = null;
+                    }
+                    return;
+                }
+
+                try {
+                    const res = await fetch(`/api/rooms/${roomCode.value}`, {
+                        headers: { 'Accept': 'application/json' },
+                    });
+
+                    if (res.status === 404) {
+                        isConnected.value = false;
+                        stopTimers();
+                        cleanupEcho();
+                        if (onRoomClosed) onRoomClosed();
+                        return;
+                    }
+
+                    if (res.ok) {
+                        const data = await res.json();
+                        if (data.success && data.room) {
+                            isConnected.value = true;
+                            roomState.value = data.room;
+                            listenerCount.value = data.room.listenerCount || 1;
+                            if (onSyncUpdate) {
+                                onSyncUpdate(data.room);
+                            }
+                        }
+                    }
+                } catch {
+                    // Temporary network blip
+                }
+            }, 3000);
+        };
+
+        // 1. Immediate initial fetch to load current room state
+        const fetchInitialState = async () => {
             if (!roomCode.value) return;
             try {
                 const res = await fetch(`/api/rooms/${roomCode.value}`, {
@@ -258,6 +327,7 @@ export function useRoomSync() {
                 if (res.status === 404) {
                     isConnected.value = false;
                     stopTimers();
+                    cleanupEcho();
                     if (onRoomClosed) onRoomClosed();
                     return;
                 }
@@ -273,15 +343,85 @@ export function useRoomSync() {
                         }
                     }
                 }
-            } catch (err) {
-                // Temporary network blip
+            } catch {
+                // Ignore initial network fetch error
             }
         };
 
-        poll();
-        // High-frequency polling (1800ms) for responsive audio sync
-        pollTimer = setInterval(poll, 1800);
-        // Listener presence heartbeat (15s)
+        fetchInitialState();
+
+        // 2. Connect to Laravel Reverb via Echo (< 50ms broadcast)
+        const echo = getEcho();
+        if (echo) {
+            try {
+                activeChannel = echo.channel(`room.${normalizedCode}`);
+
+                // Real-time audio sync event from Host
+                activeChannel.listen('.RoomSyncEvent', (event) => {
+                    if (event && event.room) {
+                        isConnected.value = true;
+                        isWebSocketConnected.value = true;
+                        roomState.value = event.room;
+                        if (event.room.listenerCount !== undefined) {
+                            listenerCount.value = event.room.listenerCount;
+                        }
+                        if (onSyncUpdate) {
+                            onSyncUpdate(event.room);
+                        }
+                    }
+                });
+
+                // Real-time room closed event
+                activeChannel.listen('.RoomClosedEvent', () => {
+                    isConnected.value = false;
+                    stopTimers();
+                    cleanupEcho();
+                    if (onRoomClosed) {
+                        onRoomClosed();
+                    }
+                });
+
+                // Monitor Pusher connection state for auto-fallback
+                const pusher = echo.connector?.pusher;
+                if (pusher?.connection) {
+                    const connection = pusher.connection;
+                    isWebSocketConnected.value = connection.state === 'connected';
+
+                    connection.bind('connected', () => {
+                        isWebSocketConnected.value = true;
+                        if (pollTimer) {
+                            clearInterval(pollTimer);
+                            pollTimer = null;
+                        }
+                    });
+
+                    connection.bind('disconnected', () => {
+                        isWebSocketConnected.value = false;
+                        startFallbackPolling();
+                    });
+
+                    connection.bind('unavailable', () => {
+                        isWebSocketConnected.value = false;
+                        startFallbackPolling();
+                    });
+
+                    connection.bind('failed', () => {
+                        isWebSocketConnected.value = false;
+                        startFallbackPolling();
+                    });
+                }
+            } catch (err) {
+                console.warn('Echo channel error, falling back to HTTP polling:', err);
+                startFallbackPolling();
+            }
+        }
+
+        // 3. If WebSocket is not yet connected or Echo is unavailable, start fallback polling
+        if (!isWebSocketConnected.value) {
+            startFallbackPolling();
+        }
+
+        // 4. Listener presence heartbeat (15s)
         heartbeatTimer = setInterval(sendHeartbeat, 15000);
         sendHeartbeat();
     };
@@ -291,6 +431,7 @@ export function useRoomSync() {
      */
     const leaveRoom = () => {
         stopTimers();
+        cleanupEcho();
         roomCode.value = null;
         isHost.value = false;
         isListener.value = false;
@@ -305,6 +446,7 @@ export function useRoomSync() {
         isHost,
         isListener,
         isConnected,
+        isWebSocketConnected,
         listenerCount,
         roomState,
         isSyncing,

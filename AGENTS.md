@@ -13,34 +13,9 @@ Before relying on a package's API, confirm its installed version:
 - PHP packages: run `composer show --direct` to list direct dependencies with versions, or `composer show <vendor/package>` for a single package.
 - JS packages: check `package.json` for the installed versions.
 
-## Project Planning & Task Tracking
-
-- **Master Plan**: [`.agents/PLANNING.md`](.agents/PLANNING.md) — Master product vision, technical architecture, and 4-phase implementation roadmap for Anisul Qur'an (Karaoke Sync reader & Listen Together real-time multi-device sync).
-- **Task Tracker**: [`.agents/tasks.md`](.agents/tasks.md) — Granular task tracking checklist. You MUST consult `tasks.md` before executing features, update tasks in real time (`[ ]` -> `[/]` -> `[x]`), and maintain task alignment across all development phases.
-- **Enhancements & Bug Fixes Log**: [`.agents/enhancements.md`](.agents/enhancements.md) — Mandatory tracker for all user feedback, custom enhancements, edge-case modifications, and QA bug fixes outside the initial scope of `tasks.md`. You MUST log every bug fix or code modification that arises outside `tasks.md` into `enhancements.md` immediately with clear root causes, solutions, and verification status.
-
 ## Skills Activation
 
-This project has domain-specific skills available in `.agents/skills/`. You MUST activate the relevant skill whenever you work in that domain—don't wait until you're stuck:
-
-- **Quran Foundation Integration**: [`.agents/skills/quran-foundation/SKILL.md`](.agents/skills/quran-foundation/SKILL.md)
-  - Activate when working with Quran Foundation Content APIs (Chapters, Verses, Tafsir, Audio), Search API, Mushaf font rendering (QCF, IndoPak, Uthmani, Tajweed), and OAuth2/OIDC User APIs (reading sync, bookmarks, notes).
-- **Frontend Design & Craft (Impeccable)**: [`.agents/skills/impeccable/SKILL.md`](.agents/skills/impeccable/SKILL.md)
-  - Activate when designing, shaping, polishing, auditing, or refining UI/UX, typography, contrast, layout rhythm, and running anti-pattern detection.
-- **UI Components (shadcn-vue)**: [`.agents/skills/shadcn/SKILL.md`](.agents/skills/shadcn/SKILL.md)
-  - Activate when creating, modifying, or styling UI components with shadcn-vue.
-- **Client-Side Framework (Inertia + Vue 3)**: [`.agents/skills/inertia-vue-development/SKILL.md`](.agents/skills/inertia-vue-development/SKILL.md)
-  - Activate when writing Vue 3 pages, forms, `<Link>`, `useForm`, layout props, or handling client-side navigation.
-- **Backend Architecture (Laravel Best Practices)**: [`.agents/skills/laravel-best-practices/SKILL.md`](.agents/skills/laravel-best-practices/SKILL.md)
-  - Activate when writing controllers, services, queries, migrations, caching, or middleware.
-- **Styling (Tailwind CSS v4)**: [`.agents/skills/tailwindcss-development/SKILL.md`](.agents/skills/tailwindcss-development/SKILL.md)
-  - Activate when composing responsive Tailwind utility classes, dark mode variants, and theme styling.
-- **Backend Testing (Pest)**: [`.agents/skills/testing-best-practices/SKILL.md`](.agents/skills/testing-best-practices/SKILL.md)
-  - Activate when designing or reviewing backend unit and feature tests with Pest.
-- **Frontend Testing (Vitest + Vue Test Utils)**: [`.agents/skills/vue-testing-best-practices/SKILL.md`](.agents/skills/vue-testing-best-practices/SKILL.md)
-  - Activate when designing, writing, or reviewing Vue 3 component tests, composable tests, or Vitest unit tests.
-- **Project Conventions**: [`.agents/skills/infer-conventions/SKILL.md`](.agents/skills/infer-conventions/SKILL.md)
-  - Activate when analyzing, establishing, or standardizing project conventions.
+This project has domain-specific skills available in `**/skills/**`. You MUST activate the relevant skill whenever you work in that domain—don't wait until you're stuck.
 
 ## Conventions
 
@@ -48,25 +23,9 @@ This project has domain-specific skills available in `.agents/skills/`. You MUST
 - Use descriptive names for variables and methods. For example, `isRegisteredForDiscounts`, not `discount()`.
 - Check for existing components to reuse before writing a new one.
 
-## Git Workflow & Commit Guidelines
-
-- **NEVER push directly to `origin/main` or any remote repository.** Leave pushing to the user unless explicitly instructed.
-- You are encouraged to commit changes locally when a task or coherent milestone is completed.
-- Always write clear, descriptive, and detailed commit messages following the Conventional Commits format (e.g. `feat:`, `fix:`, `chore:`, `refactor:`, `docs:`) with an informative bulleted body describing all notable changes.
-
 ## Verification Scripts
 
 - Do not create verification scripts or tinker when tests cover that functionality and prove they work. Unit and feature tests are more important.
-
-## Manual Verification Guide & User QA
-
-- **Post-Task Manual Testing Guide**: After completing any task, milestone, or implementation phase, you MUST always provide a clear, step-by-step manual testing guide for the user in your response.
-- The guide must clearly present:
-  1. **How to Run**: The exact terminal commands to launch the development server (e.g., `composer run dev`).
-  2. **URLs to Visit**: Local URL paths to open in the browser (e.g., `/`, `/surah/1`).
-  3. **Step-by-Step Test Scenarios**: Actionable instructions on what to interact with (search inputs, filter chips, theme toggles, audio playback, font scale buttons, rasm switcher).
-  4. **Expected Behaviors**: Clear criteria of what should happen visually and functionally for each test case.
-  5. **Edge Cases**: Specific corner cases to test (e.g., search with non-existent query, mobile viewport layout).
 
 ## Application Structure & Architecture
 
@@ -145,6 +104,22 @@ This project has domain-specific skills available in `.agents/skills/`. You MUST
 
 - Laravel can be deployed using [Laravel Cloud](https://cloud.laravel.com/), which is the fastest way to deploy and scale production Laravel applications.
 
+=== herd rules ===
+
+# Laravel Herd
+
+- The application is served by Laravel Herd at `https?://[kebab-case-project-dir].test`. Use the `get-absolute-url` tool to generate valid URLs. Never run commands to serve the site. It is always available.
+- Use the `herd` CLI to manage services, PHP versions, and sites (e.g. `herd sites`, `herd services:start <service>`, `herd php:list`). Run `herd list` to discover all available commands.
+
+=== tests rules ===
+
+# Test Enforcement
+
+- Test every code change by adding or updating a test.
+- Run the affected tests and ensure they pass.
+- Test the changed behavior and its important failure modes, but do not add tests beyond them.
+- Read the `testing-best-practices` skill before writing tests.
+
 === inertia-laravel/core rules ===
 
 # Inertia
@@ -216,12 +191,10 @@ This project has domain-specific skills available in `.agents/skills/`. You MUST
 
 ## Running Tests
 
-- **NEVER run the entire test suite unconditionally (e.g. bare `php artisan test` or `vendor/bin/pest` without filters/paths).** As the application grows and becomes complex, running all tests causes unnecessary latency and resource usage.
-- Always run targeted tests with the narrowest scope possible:
-  - Pass a specific test file path: `php artisan test tests/Feature/SpecificTest.php --compact` or `vendor/bin/pest tests/Feature/SpecificTest.php`
-  - Or use a specific filter: `php artisan test --filter=test_name --compact` or `vendor/bin/pest --filter=test_name`
-- Rerun only the affected test after each change to it.
-- Never execute a full test suite run yourself. If a full suite run is ever needed, ask the user to execute it.
+- Run the narrowest set of tests that covers the change. Pass a file path or `--filter=testName` to `php artisan test --compact`.
+- Rerun a test after each change to it.
+- Run `vendor/bin/pest` to call the test runner directly. It accepts the same file path and `--filter=testName` arguments.
+- After the feature tests pass, ask the user to run the complete suite with `php artisan test --compact`.
 
 === inertia-vue/core rules ===
 
@@ -229,32 +202,5 @@ This project has domain-specific skills available in `.agents/skills/`. You MUST
 
 Vue components must have a single root element.
 - IMPORTANT: Activate `inertia-vue-development` when working with Inertia Vue client-side patterns.
-
-=== quran-foundation rules ===
-
-# Quran Foundation Guidelines
-
-- Safe SDK Boundary: Use `@quranjs/api/public` only for browser-safe PKCE initiation; use Laravel backend for token exchange, refresh, Content APIs, Search APIs, and signed-in User APIs.
-- Never expose `CLIENT_SECRET`, `SESSION_SECRET`, user access tokens, or refresh tokens to browser code, HTML views, or client logs.
-- Keep app-level Content/Search credentials separate from signed-in user session tokens.
-- Follow Quran Foundation font rendering standards (QCF v1/v2, IndoPak, Uthmani, Tajweed glyphs).
-- Verify integration compliance with `npx @quranjs/create-app doctor`.
-
-=== impeccable rules ===
-
-# Impeccable UI/UX Guidelines
-
-- Production-grade craft: Maintain intentional visual hierarchy, accessible contrast, harmonious typography, and responsive spacing.
-- Avoid generic AI design tropes (overused purple gradients, excessive card nesting, floating icons).
-- Use `npx impeccable detect resources/js/` for anti-pattern detection and design auditing.
-
-=== vitest/frontend-testing rules ===
-
-# Frontend Testing (Vitest + Vue Test Utils)
-
-- Use Vitest and `@vue/test-utils` for unit and component testing in `resources/js/`.
-- Test files must end in `.test.js`, `.spec.js`, `.test.ts`, or `.spec.ts`.
-- Mock or stub Inertia components (`<Link>`, `useForm`, `usePage`, `router`) to isolate frontend tests.
-- Always run targeted tests using file path (e.g. `npx vitest run resources/js/lib/utils.test.js`) or specific filter (`-t "test_name"`). Never run open-ended watch processes unattended.
 
 </laravel-boost-guidelines>

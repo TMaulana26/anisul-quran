@@ -19,11 +19,13 @@ vi.mock('@inertiajs/vue3', () => ({
     }),
 }));
 
+import { ref } from 'vue';
+
 vi.mock('@/composables/useRoomSync', () => ({
     useRoomSync: () => ({
-        isConnected: { value: true },
-        listenerCount: { value: 1 },
-        roomState: { value: null },
+        isConnected: ref(true),
+        listenerCount: ref(1),
+        roomState: ref(null),
         startListening: vi.fn(),
         leaveRoom: vi.fn(),
     }),
@@ -71,7 +73,10 @@ describe('Room.vue', () => {
                         template: '<div><slot /></div>',
                     },
                     AyahItem: true,
-                    FollowerBanner: true,
+                    FollowerBanner: {
+                        props: ['roomCode', 'isConnected', 'listenerCount', 'status', 'ayahNumber'],
+                        template: '<div class="follower-banner-stub" />',
+                    },
                 },
             },
         });
@@ -103,7 +108,10 @@ describe('Room.vue', () => {
                         template: '<div><slot /></div>',
                     },
                     AyahItem: true,
-                    FollowerBanner: true,
+                    FollowerBanner: {
+                        props: ['roomCode', 'isConnected', 'listenerCount', 'status', 'ayahNumber'],
+                        template: '<div class="follower-banner-stub" />',
+                    },
                 },
             },
         });

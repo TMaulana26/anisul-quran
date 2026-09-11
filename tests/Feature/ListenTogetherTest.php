@@ -1,6 +1,9 @@
 <?php
 
+use App\Events\RoomClosedEvent;
+use App\Events\RoomSyncEvent;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Http;
 use Inertia\Testing\AssertableInertia as Assert;
 
@@ -196,4 +199,52 @@ it('renders Inertia page with error when room code is invalid or expired', funct
             ->where('roomCode', 'INVALID')
             ->where('error', 'Sesi Listen Together tidak ditemukan atau telah ditutup oleh Host.')
         );
+});
+
+it('broadcasts RoomSyncEvent when host syncs playback', function () {
+    Event::fake([
+        RoomSyncEvent::class,
+    ]);
+
+    $create = $this->postJson('/api/rooms', [
+        'surahId' => 1,
+        'ayahNumber' => 1,
+    ]);
+    $code = $create->json('room.code');
+
+    $this->postJson("/api/rooms/{$code}/sync", [
+        'surahId' => 1,
+        'ayahNumber' => 5,
+        'timestampMs' => 20000,
+        'status' => 'playing',
+    ])->assertStatus(200);
+
+    Event::assertDispatched(RoomSyncEvent::class, function ($event) use ($code) {
+        $channels = $event->broadcastOn();
+
+        return $event->roomCode === $code
+            && $event->room['ayahNumber'] === 5
+            && $event->room['status'] === 'playing'
+            && $channels[0]->name === "room.{$code}"
+            && $event->broadcastAs() === 'RoomSyncEvent';
+    });
+});
+
+it('broadcasts RoomClosedEvent when host closes room', function () {
+    Event::fake([
+        RoomClosedEvent::class,
+    ]);
+
+    $create = $this->postJson('/api/rooms');
+    $code = $create->json('room.code');
+
+    $this->deleteJson("/api/rooms/{$code}")->assertStatus(200);
+
+    Event::assertDispatched(RoomClosedEvent::class, function ($event) use ($code) {
+        $channels = $event->broadcastOn();
+
+        return $event->roomCode === $code
+            && $channels[0]->name === "room.{$code}"
+            && $event->broadcastAs() === 'RoomClosedEvent';
+    });
 });

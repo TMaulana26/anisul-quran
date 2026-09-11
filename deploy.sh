@@ -49,7 +49,7 @@ else
     fi
 fi
 
-# 4. Check if .env exists, auto-generate APP_KEY if missing
+# 4. Check if .env exists, auto-generate APP_KEY and REVERB keys if missing
 echo -e "${BLUE}[4/5] ⚙️  Memeriksa konfigurasi environment (.env)...${NC}"
 if [ ! -f "$SCRIPT_DIR/.env" ]; then
     echo -e "${YELLOW}⚠️  File .env tidak ditemukan! Menyalin dari .env.example...${NC}"
@@ -60,6 +60,38 @@ if [ ! -f "$SCRIPT_DIR/.env" ]; then
         echo -e "${GREEN}🔑 APP_KEY otomatis digenerate untuk file .env baru.${NC}"
     fi
     echo -e "${YELLOW}👉 Harap sesuaikan konfigurasi di .env jika diperlukan!${NC}"
+fi
+
+# Ensure REVERB keys are populated for real-time WebSocket sync
+if ! grep -q "REVERB_APP_KEY=" "$SCRIPT_DIR/.env" || grep -q "^REVERB_APP_KEY=$" "$SCRIPT_DIR/.env"; then
+    REVERB_KEY=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 20 2>/dev/null || openssl rand -hex 10)
+    REVERB_SECRET=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 20 2>/dev/null || openssl rand -hex 10)
+    REVERB_ID=$(shuf -i 100000-999999 -n 1 2>/dev/null || echo "331395")
+
+    if grep -q "REVERB_APP_KEY=" "$SCRIPT_DIR/.env"; then
+        sed -i.bak "s|^REVERB_APP_ID=.*|REVERB_APP_ID=${REVERB_ID}|" "$SCRIPT_DIR/.env"
+        sed -i.bak "s|^REVERB_APP_KEY=.*|REVERB_APP_KEY=${REVERB_KEY}|" "$SCRIPT_DIR/.env"
+        sed -i.bak "s|^REVERB_APP_SECRET=.*|REVERB_APP_SECRET=${REVERB_SECRET}|" "$SCRIPT_DIR/.env"
+        sed -i.bak "s|^BROADCAST_CONNECTION=.*|BROADCAST_CONNECTION=reverb|" "$SCRIPT_DIR/.env"
+        rm -f "$SCRIPT_DIR/.env.bak"
+    else
+        cat <<EOT >> "$SCRIPT_DIR/.env"
+
+BROADCAST_CONNECTION=reverb
+REVERB_APP_ID=${REVERB_ID}
+REVERB_APP_KEY=${REVERB_KEY}
+REVERB_APP_SECRET=${REVERB_SECRET}
+REVERB_HOST="localhost"
+REVERB_PORT=8080
+REVERB_SCHEME=http
+
+VITE_REVERB_APP_KEY="\${REVERB_APP_KEY}"
+VITE_REVERB_HOST="\${REVERB_HOST}"
+VITE_REVERB_PORT="\${REVERB_PORT}"
+VITE_REVERB_SCHEME="\${REVERB_SCHEME}"
+EOT
+    fi
+    echo -e "${GREEN}⚡ Konfigurasi Laravel Reverb otomatis disiapkan di .env!${NC}"
 fi
 
 # 5. Rebuild and restart Docker containers

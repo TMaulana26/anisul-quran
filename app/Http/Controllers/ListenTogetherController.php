@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\RoomClosedEvent;
+use App\Events\RoomSyncEvent;
 use App\Services\QuranFoundationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -139,13 +141,20 @@ class ListenTogetherController extends Controller
         Cache::put("room_{$normalizedCode}", $room, self::ROOM_TTL_SECONDS);
 
         $listenerCount = $this->getCleanedListenerCount($normalizedCode);
+        $fullRoom = array_merge($room, [
+            'listenerCount' => $listenerCount,
+            'serverTime' => (int) (microtime(true) * 1000),
+        ]);
+
+        try {
+            broadcast(new RoomSyncEvent($normalizedCode, $fullRoom))->toOthers();
+        } catch (\Throwable $e) {
+            report($e);
+        }
 
         return response()->json([
             'success' => true,
-            'room' => array_merge($room, [
-                'listenerCount' => $listenerCount,
-                'serverTime' => (int) (microtime(true) * 1000),
-            ]),
+            'room' => $fullRoom,
         ]);
     }
 
@@ -191,6 +200,12 @@ class ListenTogetherController extends Controller
 
         Cache::forget("room_{$normalizedCode}");
         Cache::forget("room_{$normalizedCode}_listeners");
+
+        try {
+            broadcast(new RoomClosedEvent($normalizedCode))->toOthers();
+        } catch (\Throwable $e) {
+            report($e);
+        }
 
         return response()->json([
             'success' => true,

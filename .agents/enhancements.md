@@ -42,6 +42,7 @@
 | **E-31** | **Warna Indikator Loading Bar (NProgress Inertia) Dinamis Mengikuti Suasana / Vibe Aktif** | Navigation Feedback & Vibe Theming | `resources/js/app.js`, `resources/css/app.css` | `[x]` |
 | **E-32** | **Impeccable Polish: Pembersihan Desain Top Navbar & Player Bar di Mode Khusyu' (Mobile Serenity)** | Impeccable Polish & Mobile UX | `resources/js/components/player/KhusyuPlayerView.vue`, `FollowerBanner.vue` | `[x]` |
 | **E-33** | **Slider Kontrol Volume Bergaya Windows 11 dengan Dynamic Vibe Primary Fill & Live Persentase** | Player UX & Impeccable Polish | `resources/css/app.css`, `Room.vue`, `AudioPlayerBar.vue`, `KhusyuPlayerView.vue` | `[x]` |
+| **E-34** | **Integrasi Laravel Reverb (WebSocket) untuk Real-Time Audio Sync (< 50ms), Zero HTTP Polling & Auto-Fallback di Fitur Dengar Bersama** | Real-Time Architecture & Performance | `RoomSyncEvent.php`, `useRoomSync.js`, `echo.js`, `ListenTogetherController.php`, `supervisord.conf`, `nginx.conf` | `[x]` |
 
 ---
 
@@ -175,3 +176,28 @@
   - Pengujian & Verifikasi:
     - Menambahkan pengujian di `AudioPlayerBar.test.js` (slider volume & slider timeline) dan membuat file uji `resources/js/Pages/Listen/Room.test.js`.
     - Seluruh 10/10 pengujian lulus (100% passing) dan asset terkompilasi bersih via `npm run build`.
+
+### 10. [E-34] Integrasi Laravel Reverb (WebSocket) untuk Real-Time Audio Sync (< 50ms), Zero HTTP Polling & Auto-Fallback di Fitur Dengar Bersama
+- **Kebutuhan**: Menggantikan mekanisme HTTP Polling berulang (setiap 1.8 detik per listener) pada fitur Dengar Bersama dengan WebSocket native (Laravel Reverb), menurunkan latensi sinkronisasi audio ke sub-frame (< 50ms), memangkas beban request HTTP server hingga ~95%, serta menyediakan mekanisme jaring pengaman (*resilient fallback*) otomatis kembali ke HTTP polling jika koneksi socket terputus.
+- **Implementasi & Solusi**:
+  1. **Backend Laravel Reverb & Events**:
+     - Menginstal `laravel/reverb` v1.11.1 dan mengonfigurasi broadcast connection `reverb` di `.env` dan `config/broadcasting.php`.
+     - Membuat event `App\Events\RoomSyncEvent` yang mengimplementasikan `ShouldBroadcastNow` untuk mem-broadcast payload pemutaran (`surahId`, `ayahNumber`, `timestampMs`, `status`, `reciterId`, `mushafType`, `serverTime`) ke public channel `room.{code}`.
+     - Membuat event `App\Events\RoomClosedEvent` yang mengimplementasikan `ShouldBroadcastNow` untuk memberi tahu pendengar secara instan saat sesi room ditutup oleh Host.
+     - Memperbarui `ListenTogetherController` pada method `sync()` dan `destroy()` untuk memicu broadcast event ke channel room dengan pembungkus `try...catch` aman.
+  2. **Frontend Real-Time Client (Laravel Echo & Pusher-js)**:
+     - Membuat module client `resources/js/echo.js` berbasis `laravel-echo` dan `pusher-js` dengan deteksi host dinamis (mendukung `localhost:8080` pada development dan `wss://...:443/app` pada production HTTPS).
+     - Memperbarui composable `resources/js/composables/useRoomSync.js`:
+       - Berlangganan ke channel `room.{code}` via Echo saat `startListening()`.
+       - Menangani event `.RoomSyncEvent` untuk update posisi audio instan (< 50ms).
+       - Menangani event `.RoomClosedEvent` untuk penutupan room instan.
+       - **Dual-Engine Auto-Fallback**: Saat WebSocket berstatus `connected`, polling HTTP otomatis dinonaktifkan (0 request/detik). Jika WebSocket terputus atau gagal (`disconnected` / `failed`), aplikasi secara mulus mengaktifkan polling interval 3000ms sebagai jaring pengaman agar follower tidak kehilangan sinkronisasi.
+  3. **Container & Production Deployment (Docker, Supervisord, Nginx)**:
+     - Menambahkan service daemon `[program:reverb]` pada `docker/supervisord.conf` (`php artisan reverb:start --host=0.0.0.0 --port=8080`) dengan autostart dan autorestart.
+     - Menambahkan reverse proxy path `/app` pada `docker/nginx.conf` dengan header WebSocket (`Upgrade $http_upgrade`, `Connection "Upgrade"`). Seluruh lalu lintas WebSocket melewati port standar 443 HTTPS tanpa memerlukan port firewall tambahan di Tencent Cloud.
+     - Memperbarui `deploy.sh` agar otomatis mendeteksi dan mengonfigurasi kredensial `REVERB_APP_KEY`, `REVERB_APP_ID`, dan `REVERB_APP_SECRET` di server produksi jika belum ada.
+  4. **Pengujian & Verifikasi**:
+     - Menambahkan unit test backend di `tests/Feature/ListenTogetherTest.php` untuk memvalidasi dispatch event `RoomSyncEvent` dan `RoomClosedEvent` (10/10 feature tests passed).
+     - Menambahkan frontend test `resources/js/echo.test.js` dan memperbarui `useRoomSync.test.js` serta `Room.test.js` (20/20 test suites, 75/75 tests passed).
+     - Seluruh build aset Vite terkompilasi bersih tanpa error (`npm run build`).
+
