@@ -111,3 +111,24 @@ it('returns footnote json for interactive footnote popover', function () {
             ],
         ]);
 });
+
+it('honors the anisul_selected_reciter cookie when rendering surah show page', function () {
+    Http::fake([
+        'api.quran.com/api/v4/recitations/4/by_chapter/1*' => Http::response([
+            'audio_file' => [
+                'audio_url' => 'https://audio.qurancdn.com/Husary/001.mp3',
+                'verse_timings' => [
+                    ['verse_key' => '1:1', 'timestamp_from' => 0, 'timestamp_to' => 6000],
+                ],
+            ],
+        ], 200),
+    ]);
+
+    $response = $this->withCookie('anisul_selected_reciter', '4')->get('/surah/1');
+
+    $response->assertStatus(200);
+    $response->assertInertia(fn (Assert $page) => $page
+        ->component('Surah/Show')
+        ->where('selectedReciterId', 4)
+    );
+});

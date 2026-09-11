@@ -35,6 +35,29 @@ const safeSetItem = (key, value) => {
     }
 };
 
+const safeSetCookie = (name, value, days = 365) => {
+    try {
+        if (typeof document !== 'undefined') {
+            const expires = new Date(Date.now() + days * 864e5).toUTCString();
+            document.cookie = `${name}=${encodeURIComponent(value)}; expires=${expires}; path=/; SameSite=Lax`;
+        }
+    } catch (e) {
+        // Fallback for restricted environments
+    }
+};
+
+const safeGetCookie = (name) => {
+    try {
+        if (typeof document !== 'undefined' && document.cookie) {
+            const match = document.cookie.match(new RegExp(`(?:^|;\\s*)${name}=([^;]*)`));
+            return match ? decodeURIComponent(match[1]) : null;
+        }
+    } catch (e) {
+        // Fallback
+    }
+    return null;
+};
+
 // Global singleton reactive state
 const isDrawerOpen = ref(false);
 const isDark = ref(false);
@@ -71,8 +94,12 @@ export function useUserPreferences() {
             preferences.autoZenOnPlay = boolVal;
         }
 
-        const savedReciterId = safeGetItem('anisul_selected_reciter', null);
-        if (savedReciterId) preferences.selectedReciterId = parseInt(savedReciterId, 10) || 7;
+        const savedReciterId = safeGetItem('anisul_selected_reciter', null) || safeGetCookie('anisul_selected_reciter');
+        if (savedReciterId) {
+            const parsedReciterId = parseInt(savedReciterId, 10) || 7;
+            preferences.selectedReciterId = parsedReciterId;
+            safeSetCookie('anisul_selected_reciter', parsedReciterId);
+        }
 
         const savedVibe = safeGetItem('anisul_app_vibe', null) || safeGetItem('anisul_khusyu_theme', null);
         if (savedVibe && ['noor', 'midnight', 'warqah'].includes(savedVibe)) {
@@ -159,6 +186,7 @@ export function useUserPreferences() {
         const num = parseInt(id, 10) || 7;
         preferences.selectedReciterId = num;
         safeSetItem('anisul_selected_reciter', num);
+        safeSetCookie('anisul_selected_reciter', num);
     };
 
     const withThemeTransition = (callback) => {
@@ -229,6 +257,7 @@ export function useUserPreferences() {
         safeSetItem('anisul_auto_khusyu', DEFAULT_PREFERENCES.autoKhusyuOnPlay);
         safeSetItem('anisul_auto_zen', DEFAULT_PREFERENCES.autoZenOnPlay);
         safeSetItem('anisul_selected_reciter', DEFAULT_PREFERENCES.selectedReciterId);
+        safeSetCookie('anisul_selected_reciter', DEFAULT_PREFERENCES.selectedReciterId);
         safeSetItem('anisul_app_vibe', DEFAULT_PREFERENCES.appVibe);
         safeSetItem('anisul_khusyu_theme', DEFAULT_PREFERENCES.appVibe);
         if (typeof document !== 'undefined') {

@@ -25,6 +25,8 @@ defineProps({
     },
 });
 
+const emit = defineEmits(['select-reciter']);
+
 const page = usePage();
 const userPreferences = useUserPreferences();
 const { isDrawerOpen, openDrawer, isDark, toggleTheme } = userPreferences;
@@ -148,6 +150,6 @@ const reciters = computed(() => page.props.reciters || []);
         </footer>
 
         <!-- Global Settings & Preferences Right Drawer -->
-        <SettingsDrawer :reciters="reciters" />
+        <SettingsDrawer :reciters="reciters" @select-reciter="emit('select-reciter', $event)" />
     </div>
 </template>

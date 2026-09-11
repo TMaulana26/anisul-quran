@@ -372,7 +372,7 @@ const resetDefaults = () => {
                             <template v-if="activeTab === 'surah' && activeChapter">
                                 <div class="p-3 rounded-xl bg-muted/30 border border-border/50 text-xs text-muted-foreground leading-relaxed">
                                     <p>
-                                        💡 Pengaturan di tab ini langsung mengubah tampilan kaligrafi, audio, dan terjemahan pada <span class="font-bold text-foreground">Surah {{ activeChapter.name_simple }}</span>.
+                                        💡 Pengaturan di tab ini langsung mengubah tampilan kaligrafi, audio, dan terjemahan pada <span class="font-bold text-foreground">Surah {{ activeChapter.name_simple }}</span> dan tersimpan konsisten untuk surah berikutnya.
                                     </p>
                                 </div>
 

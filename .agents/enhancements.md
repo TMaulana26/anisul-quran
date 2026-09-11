@@ -74,7 +74,7 @@
 | **B-21** | **QR Code Fitur "Dengar Bersama" Tidak Bisa Di-scan Kamera HP** | Generator QR kode hand-rolled sebelumnya tidak mendukung spesifikasi ISO/IEC 18004 untuk multi-block Reed-Solomon interleaving pada Version 4 ke atas (URL panjang $\ge 43$ karakter seperti `https://anisulquran.mtim.my.id/listen/AK7F29`), menyebabkan parity bytes korup dan decoder HP gagal membaca kode, serta quiet zone (margin) hanya 2 modul. | Mengimplementasikan generator QR code berstandar ISO/IEC 18004 (berbasis algoritma referensi Project Nayuki berlisensi MIT) tanpa external runtime dependencies di `resources/js/lib/qrcode.js`, mendukung auto-versioning & multi-block RS interleaving presisi, serta menetapkan quiet zone margin berstandar 4 modul di `ListenTogetherModal.vue`. | `[x]` |
 | **B-22** | **Chevron Navigasi (Kiri & Kanan) Tidak Berfungsi Saat Surah Belum Diputar** | State `currentAyahNumber` diinisialisasi `null` dan hanya diisi saat audio mulai `play()`. Fungsi `nextAyah()` dan `prevAyah()` di `useQuranAudioPlayer.js` memiliki `guard if (!currentAyahNumber.value)` sehingga klik chevron langsung diabaikan (*return*) saat belum memutar surah. Selain itu, `seekToAyah()` tidak mengupdate nomor ayat jika timing audio belum siap, serta arah transisi tertimpa menjadi 'forward' saat mundur. | Menginisialisasi `currentAyahNumber = 1` saat surah dimuat (`loadSurah`), memperbarui `nextAyah` dan `prevAyah` agar selalu memperbarui nomor ayat terlepas status putar/pause dan ketersediaan timing, memelihara arah transisi slide mundur (`'backward'`) pada watcher di `KhusyuPlayerView.vue`, serta menambahkan visual disabled state pada batas awal (Ayat 1) dan akhir surah. | `[x]` |
 | **B-23** | **Audio Listener Tidak Berputar Saat Host Memulai Play di Fitur Dengar Bersama** | Dua faktor: (1) `Room.vue` memanggil nama fungsi yang salah (`loadSurahRecitation` & `seekTo`) yang memicu fatal error di `onMounted` sehingga listener sync polling tidak pernah dimulai, dan (2) Kebijakan mobile autoplay browser (Safari iOS & Chrome Android) memblokir pemutaran media otomatis dari async timer tanpa user gesture (`NotAllowedError`). | Mengoreksi pemanggilan fungsi audio ke `loadSurah` & `seekToTime`, menambahkan alias aman di composable `useQuranAudioPlayer`, mengembalikan status boolean dari `play()`, serta menambahkan floating prompt interaktif dan tombol "Mulai Dengar" / "Aktifkan Audio" saat host memutar bacaan untuk membuka audio context secara legal via user tap. | `[x]` |
-| **B-24** | **Perubahan Qari Tidak Ter-apply & Transisi Audio di Tengah Surah Reset ke Awal** | Watcher di `Show.vue` memiliki kondisi logika `newReciterId !== currentReciter.value?.id` yang selalu `false` karena `currentReciter` otomatis diperbarui lebih dulu, event drawer tidak tersambung ke player, dan penggantian `audio.src` secara asinkron memicu race condition yang mereset waktu audio ke detik 0. | Analisis lengkap dan rancangan solusi transisi audio berbasis event `loadedmetadata` serta perbaikan watcher telah didokumentasikan di `.agents/catatan.md`. | `[/]` |
+| **B-24** | **Perubahan Qari Tidak Ter-apply & Transisi Audio di Tengah Surah Reset ke Awal** | Watcher di `Show.vue` memiliki kondisi logika `newReciterId !== currentReciter.value?.id` yang selalu `false` karena `currentReciter` otomatis diperbarui lebih dulu, event drawer tidak tersambung ke player, dan penggantian `audio.src` secara asinkron memicu race condition yang mereset waktu audio ke detik 0. | Menerapkan Opsi A (Full Global), sinkronisasi cookie `anisul_selected_reciter` di backend & frontend, memperbaiki watcher `selectedReciterId` di `Show.vue` terhadap `activeReciter.id`, menghubungkan event `select-reciter` di `AppLayout.vue`, dan mengimplementasikan mekanisme pending seek & autoplay handshake di `useQuranAudioPlayer.js`. | `[x]` |
 
 ---
 
@@ -204,3 +204,38 @@
      - Menambahkan frontend test `resources/js/echo.test.js` dan memperbarui `useRoomSync.test.js` serta `Room.test.js` (20/20 test suites, 75/75 tests passed).
      - Seluruh build aset Vite terkompilasi bersih tanpa error (`npm run build`).
 
+### 11. [B-24] Konsistensi Penuh Preferensi Global (Opsi A) & Transisi Qari Mulus di Tengah Surah (*Seamless Mid-Surah Switch*)
+- **Masalah**: 
+  1. Pengguna memilih qari baru melalui `SettingsDrawer.vue` atau `ReciterSelectorModal.vue`, namun audio surah di `Show.vue` tidak bereaksi atau tetap memutar audio qari lama.
+  2. Saat pengguna mengganti qari ketika audio sedang berputar di tengah surah (misal di Ayat 5), audio qari baru melompat kembali ke detik 0:00 (Ayat 1) atau terhenti karena asynchronous reset pada `audio.src`.
+  3. Navigasi antar-surah via tautan atau reload halaman sering kali merender audio default (Mishary Alafasy) terlepas dari preferensi qari yang telah dipilih sebelumnya di `localStorage`.
+- **Akar Masalah**:
+  1. **Broken Watcher Logic di `Show.vue`**: `currentReciter` adalah `computed()` yang membaca `userPreferences.preferences.selectedReciterId`. Saat preferensi diubah, `currentReciter.value.id` otomatis sudah terupdate ke ID baru sebelum watcher callback dieksekusi. Pengecekan `if (newReciterId !== currentReciter.value?.id)` selalu menghasilkan `false`, sehingga pemanggilan audio baru tidak pernah berjalan.
+  2. **Unconnected Event di `AppLayout.vue`**: `SettingsDrawer.vue` memancarkan `emit('select-reciter', reciter)`, namun `<SettingsDrawer :reciters="reciters" />` di `AppLayout.vue` tidak memiliki listener event.
+  3. **Incomplete Setter Synchronization**: `handleSelectReciter` hanya memanggil `localStorage.setItem('anisul_selected_reciter', ...)` tanpa memanggil `userPreferences.setSelectedReciterId()`, memutus reaktivitas ke komponen lain.
+  4. **HTML5 Audio Asynchronous Loading & Seek Desync**: Ketika `audio.src` diubah ke audio URL qari baru, browser mereset `readyState` ke 0 (`HAVE_NOTHING`). Pemanggilan `seekToAyah()` atau `currentTime = target` sebelum `loadedmetadata` selesai diabaikan oleh browser, menyebabkan pemutaran reset ke awal.
+  5. **Server-Client Initial State Mismatch**: Saat server merender halaman `/surah/{id}`, server tidak mengetahui preferensi `localStorage` client, sehingga selalu mengirim audio default (reciter 7).
+- **Implementasi & Solusi**:
+  1. **Backend Cookie-Aware Reciter (`SurahController.php`)**:
+     - Memperbarui `show()` dan `recitation()` untuk membaca cookie `anisul_selected_reciter`:  
+       `$reciterId = (int) $request->query('reciter', $request->cookie('anisul_selected_reciter', 7));`.
+     - Setiap navigasi halaman otomatis menyertakan qari pilihan pengguna tanpa flash audio yang salah atau double network fetch.
+  2. **Unified Global State Persistence (`useUserPreferences.js`)**:
+     - Mengintegrasikan helper `safeSetCookie` dan `safeGetCookie` berumur 1 tahun (`SameSite=Lax`).
+     - `setSelectedReciterId()` dan `resetDefaults()` otomatis menulis ke `localStorage` dan `document.cookie`.
+  3. **Seamless Mid-Surah Transition & Pending Seek Handshake (`useQuranAudioPlayer.js`)**:
+     - Menambahkan state module `pendingSeekTime` dan `pendingAutoPlay`.
+     - Di `loadSurah()`, menghitung target timestamp awal dari `verse_timings` qari baru untuk ayat aktif saat ini (`currentAyahNumber.value`).
+     - Jika `audio.src` berubah, sistem menghentikan audio lama, menetapkan `pendingSeekTime = targetSec` & `pendingAutoPlay = autoPlay`, lalu menyetel `audio.src = newUrl`.
+     - Pada event listener `loadedmetadata` dan `canplay`, sistem menerapkan `audioInstance.currentTime = pendingSeekTime`, mereset `pendingSeekTime = null`, dan jika `pendingAutoPlay` aktif, langsung melanjutkan pemutaran (`play()`) dari ayat yang sama.
+  4. **Reactive Watcher & Event Forwarding (`Show.vue` & `AppLayout.vue`)**:
+     - Di `Show.vue`: Mengoreksi watcher agar membandingkan `newReciterId !== audioPlayer.activeReciter.value?.id`.
+     - Menambahkan flag proteksi `isSwitchingReciter` untuk mencegah balapan request (*race conditions*).
+     - Di `onMounted()` dan chapter watcher: Mengecek apakah reciter ID yang tersimpan berbeda dengan yang dirender server, dan otomatis mengambil audio qari yang sesuai jika belum sinkron.
+     - Di `AppLayout.vue`: Meneruskan event `@select-reciter="emit('select-reciter', $event)"` dan mendengarkannya di `Show.vue`.
+  5. **Pengujian & Verifikasi**:
+     - Menambahkan feature test backend di `tests/Feature/SurahControllerTest.php` untuk memvalidasi cookie `anisul_selected_reciter` (22/22 Pest tests passed).
+     - Menambahkan unit test frontend di `useQuranAudioPlayer.test.js` (transisi mulus qari di tengah surah) dan `useUserPreferences.test.js` (cookie synchronization) (20/20 test suites, 77/77 tests passed).
+     - Format kode diverifikasi bersih via `vendor/bin/pint --dirty --format agent`.
+     - Desain diverifikasi dengan `npx impeccable detect resources/js/` (0 anti-patterns).
+     - Seluruh build aset Vite terkompilasi bersih via `npm run build`.

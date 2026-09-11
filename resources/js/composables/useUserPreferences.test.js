@@ -110,4 +110,11 @@ describe('useUserPreferences.js Composable', () => {
         setTheme('dark');
         expect(isDark.value).toBe(true);
     });
+
+    it('sets cookie when reciter preference is changed', () => {
+        const { setSelectedReciterId, preferences } = useUserPreferences();
+        setSelectedReciterId(4);
+        expect(preferences.selectedReciterId).toBe(4);
+        expect(document.cookie).toContain('anisul_selected_reciter=4');
+    });
 });

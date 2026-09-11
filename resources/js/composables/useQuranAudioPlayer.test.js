@@ -154,5 +154,37 @@ describe('useQuranAudioPlayer - Helpers & Timestamp Matching', () => {
         player.prevAyah();
         expect(player.currentAyahNumber.value).toBe(1);
     });
+
+    it('seamlessly transitions reciter mid-surah preserving active ayah', () => {
+        const player = useQuranAudioPlayer();
+        const mockChapter = { id: 1, name_simple: 'Al-Fatihah', name_arabic: 'الفاتحة', verses_count: 7 };
+        const reciterA = { id: 7, name: 'Mishary Rashid Alafasy' };
+        const reciterB = { id: 4, name: 'Mahmoud Khalil Al-Husary' };
+        const recitationA = { audio_url: 'https://audio.example.com/reciterA/001.mp3', verse_timings: mockVerseTimings };
+        const recitationB = { 
+            audio_url: 'https://audio.example.com/reciterB/001.mp3', 
+            verse_timings: [
+                { verse_key: '1:1', timestamp_from: 0, timestamp_to: 6000 },
+                { verse_key: '1:2', timestamp_from: 6001, timestamp_to: 14000 },
+                { verse_key: '1:3', timestamp_from: 14001, timestamp_to: 22000 },
+            ]
+        };
+
+        // Initially load Reciter A on Ayah 1
+        player.loadSurah(mockChapter, recitationA, reciterA, 1, false);
+        expect(player.activeReciter.value.id).toBe(7);
+        expect(player.currentAyahNumber.value).toBe(1);
+
+        // Move to Ayah 2
+        player.nextAyah();
+        expect(player.currentAyahNumber.value).toBe(2);
+
+        // Switch to Reciter B mid-surah while on Ayah 2
+        player.loadSurah(mockChapter, recitationB, reciterB, 2, false);
+        expect(player.activeReciter.value.id).toBe(4);
+        expect(player.currentAyahNumber.value).toBe(2);
+        // Target seconds for Ayah 2 of Reciter B should be 6.001
+        expect(player.currentTime.value).toBe(6.001);
+    });
 });
 

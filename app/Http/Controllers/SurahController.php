@@ -45,7 +45,14 @@ class SurahController extends Controller
             abort(404, 'Surah tidak ditemukan.');
         }
 
-        $reciterId = (int) $request->query('reciter', 7); // 7: Mishary Rashid Alafasy default
+        $cookieReciter = $request->cookie('anisul_selected_reciter');
+        $defaultReciterId = ($cookieReciter && is_numeric($cookieReciter) && (int) $cookieReciter > 0)
+            ? (int) $cookieReciter
+            : 7;
+        $reciterId = (int) $request->query('reciter', $defaultReciterId);
+        if ($reciterId <= 0) {
+            $reciterId = 7;
+        }
         $versesData = $this->quran->getVersesByChapter($id, [
             'language' => $language,
             'words' => true,
@@ -85,7 +92,14 @@ class SurahController extends Controller
      */
     public function recitation(int $id, Request $request): JsonResponse
     {
-        $reciterId = (int) $request->query('reciter', 7);
+        $cookieReciter = $request->cookie('anisul_selected_reciter');
+        $defaultReciterId = ($cookieReciter && is_numeric($cookieReciter) && (int) $cookieReciter > 0)
+            ? (int) $cookieReciter
+            : 7;
+        $reciterId = (int) $request->query('reciter', $defaultReciterId);
+        if ($reciterId <= 0) {
+            $reciterId = 7;
+        }
         $recitation = $this->quran->getChapterRecitation($reciterId, $id);
 
         if (! $recitation) {

@@ -23,6 +23,8 @@ const currentRecitation = ref(null);
 const currentChapter = ref(null);
 
 let isAudioBound = false;
+let pendingSeekTime = null;
+let pendingAutoPlay = false;
 
 /**
  * Match current audio timestamp (in ms) to verse and word segment
@@ -157,10 +159,26 @@ export function useQuranAudioPlayer() {
             isPlaying.value = true;
         });
 
-        audioInstance.addEventListener('loadedmetadata', () => {
+        const handleReadyMetadata = () => {
             duration.value = audioInstance.duration || 0;
+            if (pendingSeekTime !== null) {
+                try {
+                    audioInstance.currentTime = Math.min(pendingSeekTime, duration.value || pendingSeekTime);
+                } catch (e) {
+                    console.warn('Failed to seek pending time on loadedmetadata:', e);
+                }
+                currentTime.value = pendingSeekTime;
+                pendingSeekTime = null;
+            }
+            if (pendingAutoPlay) {
+                pendingAutoPlay = false;
+                play();
+            }
             isLoading.value = false;
-        });
+        };
+
+        audioInstance.addEventListener('loadedmetadata', handleReadyMetadata);
+        audioInstance.addEventListener('canplay', handleReadyMetadata);
 
         audioInstance.addEventListener('durationchange', () => {
             duration.value = audioInstance.duration || 0;
@@ -245,20 +263,30 @@ export function useQuranAudioPlayer() {
             const rawUrl = recitationData.audio_url || '';
             const fullUrl = rawUrl.startsWith('//') ? `https:${rawUrl}` : rawUrl;
 
+            // Calculate starting timestamp for initialAyah from verse_timings
+            const timings = currentRecitation.value.verse_timings || [];
+            const targetTiming = timings.find(t => {
+                const num = parseInt((t.verse_key || '').split(':')[1], 10) || t.verse_number;
+                return num === initialAyah;
+            });
+            const targetSec = (targetTiming?.timestamp_from || 0) / 1000;
+
             if (audioInstance.src !== fullUrl) {
+                // Changing audio source (e.g. reciter change or new surah)
+                if (isPlaying.value) {
+                    audioInstance.pause();
+                }
+                isLoading.value = true;
+                pendingSeekTime = targetSec;
+                pendingAutoPlay = autoPlay;
                 audioInstance.src = fullUrl;
                 audioInstance.playbackRate = playbackRate.value;
                 audioInstance.volume = volume.value;
                 audioInstance.muted = isMuted.value;
-                isLoading.value = true;
-            }
-
-            if (startAyah && startAyah > 1) {
-                seekToAyah(startAyah, autoPlay);
-            } else if (autoPlay) {
-                play();
+                currentTime.value = targetSec;
             } else {
-                seekToAyah(initialAyah, false);
+                // Same source already loaded
+                seekToAyah(initialAyah, autoPlay);
             }
         }
     };
@@ -318,13 +346,19 @@ export function useQuranAudioPlayer() {
      */
     const seekToTime = (seconds) => {
         if (!audioInstance) return;
-        const target = Math.max(0, Math.min(seconds, duration.value || seconds));
-        try {
-            audioInstance.currentTime = target;
-        } catch {
-            // Audio metadata might not be ready yet
-        }
+        const target = Math.max(0, seconds);
         currentTime.value = target;
+
+        if (audioInstance.readyState >= 1) {
+            try {
+                audioInstance.currentTime = Math.min(target, duration.value || target);
+                pendingSeekTime = null;
+            } catch {
+                pendingSeekTime = target;
+            }
+        } else {
+            pendingSeekTime = target;
+        }
     };
 
     /**

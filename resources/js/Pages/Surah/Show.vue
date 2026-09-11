@@ -115,27 +115,34 @@ const currentReciter = computed(() => {
 });
 
 // Initialize & Load Surah into Audio Engine
-onMounted(() => {
-    // Load current surah audio into engine if not already loaded
-    if (props.chapter && props.recitation) {
+onMounted(async () => {
+    const prefReciterId = userPreferences.preferences.selectedReciterId;
+    if (prefReciterId && prefReciterId !== props.selectedReciterId) {
+        // Preference differs from initial server-provided recitation
+        const found = props.reciters.find(r => r.id === prefReciterId) || { id: prefReciterId, name: 'Qari Pilihan' };
+        await handleSelectReciter(found);
+    } else if (props.chapter && props.recitation) {
         audioPlayer.loadSurah(props.chapter, props.recitation, currentReciter.value, 1, false);
     }
 });
 
 // Watch chapter change to update audio player
-watch(() => props.chapter?.id, (newId) => {
-    if (newId && props.chapter && props.recitation) {
+watch(() => props.chapter?.id, async (newId) => {
+    if (!newId || !props.chapter) return;
+    const prefReciterId = userPreferences.preferences.selectedReciterId;
+    if (prefReciterId && prefReciterId !== props.selectedReciterId) {
+        const found = props.reciters.find(r => r.id === prefReciterId) || { id: prefReciterId, name: 'Qari Pilihan' };
+        await handleSelectReciter(found);
+    } else if (props.recitation) {
         audioPlayer.loadSurah(props.chapter, props.recitation, currentReciter.value, 1, false);
     }
 });
 
-// React to reciter preference change from global drawer
+// React to reciter preference change from global drawer or external source
 watch(() => userPreferences.preferences.selectedReciterId, async (newReciterId) => {
-    if (newReciterId && newReciterId !== currentReciter.value?.id) {
-        const found = props.reciters.find(r => r.id === newReciterId);
-        if (found) {
-            await handleSelectReciter(found);
-        }
+    if (newReciterId && newReciterId !== audioPlayer.activeReciter.value?.id) {
+        const found = props.reciters.find(r => r.id === newReciterId) || { id: newReciterId, name: 'Qari Pilihan' };
+        await handleSelectReciter(found);
     }
 });
 
@@ -179,9 +186,23 @@ const handlePlayVerse = (verse) => {
     }
 };
 
-// Dynamic Reciter Switch
+// Dynamic Reciter Switch (Opsi A: Full Global Preference)
+const isSwitchingReciter = ref(false);
+
 const handleSelectReciter = async (reciter) => {
-    localStorage.setItem('anisul_selected_reciter', reciter.id);
+    if (!reciter || !reciter.id) return;
+
+    // 1. Sync global user preference immediately
+    userPreferences.setSelectedReciterId(reciter.id);
+
+    // 2. Prevent duplicate reload if engine is already on this reciter and chapter
+    if (audioPlayer.activeReciter.value?.id === reciter.id && audioPlayer.currentSurahId.value === props.chapter?.id) {
+        return;
+    }
+
+    if (isSwitchingReciter.value) return;
+    isSwitchingReciter.value = true;
+
     try {
         const res = await fetch(`/api/recitation/${props.chapter.id}?reciter=${reciter.id}`);
         if (res.ok) {
@@ -194,12 +215,17 @@ const handleSelectReciter = async (reciter) => {
         }
     } catch (err) {
         console.error('Failed to switch reciter audio:', err);
+    } finally {
+        isSwitchingReciter.value = false;
     }
 };
 </script>
 
 <template>
-    <AppLayout :title="`Surah ${chapter.name_simple} (${chapter.name_arabic})`">
+    <AppLayout 
+        :title="`Surah ${chapter.name_simple} (${chapter.name_arabic})`"
+        @select-reciter="handleSelectReciter"
+    >
         <div class="container mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-6 space-y-8 animate-fade-in pb-28">
             <!-- Top Breadcrumb & Navigation -->
             <div class="flex items-center justify-between gap-4">
