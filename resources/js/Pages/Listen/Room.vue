@@ -118,8 +118,19 @@
                         </div>
 
                         <!-- Sync Status Badge on Mobile -->
-                        <div class="sm:hidden flex items-center gap-1 text-[11px] font-mono text-muted-foreground tabular-nums">
-                            {{ audioPlayer.formattedCurrentTime }} / {{ audioPlayer.formattedDuration }}
+                        <div class="sm:hidden flex items-center gap-2">
+                            <button
+                                v-if="needsTapToPlay"
+                                type="button"
+                                @click="unlockAudio"
+                                class="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-primary text-primary-foreground text-xs font-medium cursor-pointer shadow-sm active:scale-95 transition-transform"
+                            >
+                                <Play class="h-3 w-3 fill-current" />
+                                <span>Putar</span>
+                            </button>
+                            <div class="text-[11px] font-mono text-muted-foreground tabular-nums">
+                                {{ audioPlayer.formattedCurrentTime }} / {{ audioPlayer.formattedDuration }}
+                            </div>
                         </div>
                     </div>
 
@@ -144,6 +155,16 @@
                     <!-- Right: Local Volume Control & Mute -->
                     <div class="flex items-center gap-2 shrink-0">
                         <button
+                            v-if="needsTapToPlay"
+                            type="button"
+                            @click="unlockAudio"
+                            class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary text-primary-foreground text-xs font-semibold hover:bg-primary/90 transition-all cursor-pointer shadow-sm active:scale-95"
+                        >
+                            <Play class="h-3.5 w-3.5 fill-current" />
+                            <span>Mulai Dengar</span>
+                        </button>
+
+                        <button
                             type="button"
                             @click="audioPlayer.toggleMute"
                             class="p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/70 transition-colors cursor-pointer"
@@ -167,12 +188,49 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Autoplay Unlock Prompt (Mobile Safari & Chrome Gesture Requirement) -->
+            <transition
+                enter-active-class="transition duration-300 ease-out"
+                enter-from-class="transform translate-y-4 opacity-0"
+                enter-to-class="transform translate-y-0 opacity-100"
+                leave-active-class="transition duration-200 ease-in"
+                leave-from-class="transform translate-y-0 opacity-100"
+                leave-to-class="transform translate-y-4 opacity-0"
+            >
+                <div
+                    v-if="needsTapToPlay"
+                    class="fixed bottom-24 sm:bottom-20 left-4 right-4 max-w-md mx-auto z-50 p-4 rounded-2xl bg-primary text-primary-foreground shadow-2xl flex items-center justify-between gap-3 border border-primary-foreground/20"
+                >
+                    <div class="flex items-center gap-3 min-w-0">
+                        <div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
+                            <Volume2 class="h-5 w-5 animate-pulse" />
+                        </div>
+                        <div class="min-w-0">
+                            <p class="text-xs font-semibold leading-tight truncate">
+                                Host sedang memutar audio
+                            </p>
+                            <p class="text-[11px] opacity-90 leading-tight truncate">
+                                Ketuk untuk mendengarkan di perangkat ini
+                            </p>
+                        </div>
+                    </div>
+                    <button
+                        type="button"
+                        @click="unlockAudio"
+                        class="px-3.5 py-2 rounded-xl bg-white text-primary font-semibold text-xs shrink-0 hover:bg-white/90 active:scale-95 transition-all shadow-md cursor-pointer flex items-center gap-1.5"
+                    >
+                        <Play class="h-3.5 w-3.5 fill-current" />
+                        <span>Mulai Dengar</span>
+                    </button>
+                </div>
+            </transition>
         </div>
     </AppLayout>
 </template>
 
 <script setup>
-import { computed, onMounted, onUnmounted, watch } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { router, Link } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import AyahItem from '@/components/AyahItem.vue';
@@ -180,7 +238,7 @@ import FollowerBanner from '@/components/sync/FollowerBanner.vue';
 import { useRoomSync, calculateDrift } from '@/composables/useRoomSync';
 import { useQuranAudioPlayer } from '@/composables/useQuranAudioPlayer';
 import { useUserPreferences } from '@/composables/useUserPreferences';
-import { Radio, Lock, Volume2, VolumeX, ArrowLeft } from 'lucide-vue-next';
+import { Radio, Lock, Volume2, VolumeX, ArrowLeft, Play } from 'lucide-vue-next';
 
 const props = defineProps({
     room: {
@@ -212,6 +270,7 @@ const props = defineProps({
 const roomSync = useRoomSync();
 const audioPlayer = useQuranAudioPlayer();
 const userPreferences = useUserPreferences();
+const needsTapToPlay = ref(false);
 
 const pageTitle = computed(() => {
     if (props.error || !props.room) {
@@ -231,7 +290,18 @@ const handleRoomClosed = () => {
     router.visit('/listen/' + props.roomCode);
 };
 
-const handleSyncUpdate = (serverRoom) => {
+const unlockAudio = async () => {
+    try {
+        const ok = await audioPlayer.play();
+        if (ok || audioPlayer.isPlaying.value) {
+            needsTapToPlay.value = false;
+        }
+    } catch {
+        // Handled
+    }
+};
+
+const handleSyncUpdate = async (serverRoom) => {
     if (!serverRoom) return;
 
     // Check if Host switched Surah
@@ -242,10 +312,22 @@ const handleSyncUpdate = (serverRoom) => {
 
     // Play / Pause synchronization
     const shouldPlay = serverRoom.status === 'playing';
-    if (shouldPlay && !audioPlayer.isPlaying.value) {
-        audioPlayer.play().catch(() => {});
-    } else if (!shouldPlay && audioPlayer.isPlaying.value) {
-        audioPlayer.pause();
+    if (shouldPlay) {
+        if (!audioPlayer.isPlaying.value) {
+            const ok = await audioPlayer.play();
+            if (!ok && !audioPlayer.isPlaying.value) {
+                needsTapToPlay.value = true;
+            } else {
+                needsTapToPlay.value = false;
+            }
+        } else {
+            needsTapToPlay.value = false;
+        }
+    } else {
+        needsTapToPlay.value = false;
+        if (audioPlayer.isPlaying.value) {
+            audioPlayer.pause();
+        }
     }
 
     // Drift correction
@@ -260,7 +342,7 @@ const handleSyncUpdate = (serverRoom) => {
 
     // If drift is > 400ms, jump to sync
     if (absDriftSec > 0.4) {
-        audioPlayer.seekTo(estimatedHostSec);
+        audioPlayer.seekToTime(estimatedHostSec);
     } else if (absDriftSec > 0.1 && shouldPlay) {
         // Nudge rate slightly to close gap smoothly
         const rate = localSec < estimatedHostSec ? 1.05 : 0.95;
@@ -270,24 +352,28 @@ const handleSyncUpdate = (serverRoom) => {
     }
 };
 
-onMounted(() => {
+onMounted(async () => {
     if (props.room && props.chapter && props.recitation) {
         // Load recitation into audio player
-        audioPlayer.loadSurahRecitation(
-            props.chapter.id,
-            props.chapter.name_simple,
+        audioPlayer.loadSurah(
+            props.chapter,
             props.recitation,
-            props.room.reciterId || 7
+            props.room.reciterId ? { id: props.room.reciterId } : null,
+            1,
+            false
         );
 
         // Seek to initial host position
         const initialSec = (props.room.timestampMs || 0) / 1000;
         if (initialSec > 0) {
-            audioPlayer.seekTo(initialSec);
+            audioPlayer.seekToTime(initialSec);
         }
 
         if (props.room.status === 'playing') {
-            audioPlayer.play().catch(() => {});
+            const ok = await audioPlayer.play();
+            if (!ok && !audioPlayer.isPlaying.value) {
+                needsTapToPlay.value = true;
+            }
         }
 
         // Start real-time sync polling & heartbeat

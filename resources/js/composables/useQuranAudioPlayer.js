@@ -284,10 +284,12 @@ export function useQuranAudioPlayer() {
             await audioInstance.play();
             isPlaying.value = true;
             isLoading.value = false;
+            return true;
         } catch (error) {
             console.warn('Audio play request interrupted or prevented by browser autoplay policy:', error);
             isLoading.value = false;
             isPlaying.value = false;
+            return false;
         }
     };
 
@@ -317,7 +319,11 @@ export function useQuranAudioPlayer() {
     const seekToTime = (seconds) => {
         if (!audioInstance) return;
         const target = Math.max(0, Math.min(seconds, duration.value || seconds));
-        audioInstance.currentTime = target;
+        try {
+            audioInstance.currentTime = target;
+        } catch {
+            // Audio metadata might not be ready yet
+        }
         currentTime.value = target;
     };
 
@@ -501,9 +507,16 @@ export function useQuranAudioPlayer() {
         pause,
         togglePlay,
         seekToTime,
+        seekTo: seekToTime,
         seekToAyah,
         nextAyah,
         prevAyah,
+        loadSurahRecitation: (chapterIdOrObj, nameOrRecitation, recitationData, reciterId) => {
+            const chapter = typeof chapterIdOrObj === 'object' ? chapterIdOrObj : { id: chapterIdOrObj, name_simple: nameOrRecitation };
+            const recData = typeof chapterIdOrObj === 'object' ? nameOrRecitation : recitationData;
+            const reciter = typeof chapterIdOrObj === 'object' ? (recitationData ? { id: recitationData } : null) : (reciterId ? { id: reciterId } : null);
+            return loadSurah(chapter, recData, reciter);
+        },
         setPlaybackRate,
         setRepeatMode,
         cycleRepeatMode,
