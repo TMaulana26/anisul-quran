@@ -13,7 +13,7 @@
                         <span 
                             :class="[
                                 'absolute inline-flex h-full w-full rounded-full opacity-75',
-                                isConnected ? 'bg-emerald-400 animate-ping' : 'bg-amber-400 animate-bounce'
+                                isConnected ? 'bg-emerald-400 animate-ping' : 'bg-amber-400 animate-pulse'
                             ]"
                         />
                         <span 

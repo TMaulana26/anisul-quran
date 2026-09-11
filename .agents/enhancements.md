@@ -40,6 +40,7 @@
 | **E-29** | **Impeccable Polish Pass — Pembersihan 5 Anti-Pattern Detector, Harmonisasi Kontras Amber & Penguatan A11y WCAG AAA** | Quality Polish, Accessibility & Theme Tokens | `AppLayout.vue`, `KhusyuPlayerView.vue`, `AyahItem.vue`, `AudioPlayerBar.vue`, `app.css` | `[x]` |
 | **E-30** | **Native View Transitions API & Silky Cross-Fade pada Pergantian Suasana (Vibe) dan Mode Light/Dark** | Animation & Theme Transition UX | `useUserPreferences.js`, `app.css`, `AppLayout.vue` | `[x]` |
 | **E-31** | **Warna Indikator Loading Bar (NProgress Inertia) Dinamis Mengikuti Suasana / Vibe Aktif** | Navigation Feedback & Vibe Theming | `resources/js/app.js`, `resources/css/app.css` | `[x]` |
+| **E-32** | **Impeccable Polish: Pembersihan Desain Top Navbar & Player Bar di Mode Khusyu' (Mobile Serenity)** | Impeccable Polish & Mobile UX | `resources/js/components/player/KhusyuPlayerView.vue`, `FollowerBanner.vue` | `[x]` |
 
 ---
 

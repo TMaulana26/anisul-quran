@@ -82,6 +82,12 @@ const setTheme = (theme) => {
     userPreferences.setAppVibe(theme);
 };
 
+const cycleTheme = () => {
+    const vibes = ['noor', 'midnight', 'warqah'];
+    const nextIndex = (vibes.indexOf(currentTheme.value) + 1) % vibes.length;
+    setTheme(vibes[nextIndex]);
+};
+
 // Theme-aware button styles for footer controls
 const controlButtonClass = computed(() => {
     if (currentTheme.value === 'midnight') {
@@ -470,46 +476,46 @@ const selectSpeed = (rate) => {
                 <!-- Top Khusyu Header Bar -->
                 <header 
                     :class="[
-                        'relative z-10 flex items-center justify-between p-3.5 sm:p-5 border-b backdrop-blur-md transition-colors duration-500',
-                        currentTheme === 'noor' ? 'border-border/40 bg-background/60' : '',
-                        currentTheme === 'midnight' ? 'border-amber-500/15 bg-[#070a10]/75' : '',
-                        currentTheme === 'warqah' ? 'border-amber-900/15 dark:border-amber-700/20 bg-[#fcf7ee]/75 dark:bg-[#1a1612]/75' : ''
+                        'relative z-10 flex items-center justify-between px-3 py-2 sm:px-6 sm:py-4 border-b backdrop-blur-md transition-colors duration-500',
+                        currentTheme === 'noor' ? 'border-border/40 bg-background/70' : '',
+                        currentTheme === 'midnight' ? 'border-amber-500/15 bg-[#070a10]/80 text-[#faebd7]' : '',
+                        currentTheme === 'warqah' ? 'border-amber-900/15 dark:border-amber-700/20 bg-[#fcf7ee]/80 dark:bg-[#1a1612]/80 text-[#2c1d11] dark:text-[#f4ebd0]' : ''
                     ]"
                 >
-                    <!-- Left: Surah Info & Chunk Progress -->
-                    <div class="flex items-center gap-3">
+                    <!-- Left: Surah Info & Progress -->
+                    <div class="flex items-center gap-2 sm:gap-3 min-w-0 pr-2">
                         <div 
                             :class="[
-                                'h-2.5 w-2.5 rounded-full animate-pulse',
+                                'h-2 w-2 sm:h-2.5 sm:w-2.5 rounded-full shrink-0 animate-pulse',
                                 currentTheme === 'noor' ? 'bg-primary' : '',
                                 currentTheme === 'midnight' ? 'bg-amber-400' : '',
                                 currentTheme === 'warqah' ? 'bg-amber-700 dark:bg-amber-400' : ''
                             ]" 
                         />
-                        <div>
-                            <div class="flex items-center gap-2">
-                                <h1 class="font-heading font-extrabold text-base sm:text-lg">
+                        <div class="truncate">
+                            <div class="flex items-baseline gap-1.5 sm:gap-2">
+                                <h1 class="font-heading font-bold text-sm sm:text-base truncate">
                                     {{ chapter.name_simple }}
                                 </h1>
-                                <span class="font-arabic text-sm opacity-70">
+                                <span class="font-arabic text-xs sm:text-sm opacity-60 shrink-0">
                                     ({{ chapter.name_arabic }})
                                 </span>
                             </div>
-                            <p class="text-xs opacity-75 font-medium">
-                                Ayat <span class="font-bold">{{ audioPlayer.currentAyahNumber.value || 1 }}</span> dari {{ chapter.verses_count }}
-                                <span v-if="currentChunk && currentChunk.totalChunks > 1" class="ml-1 opacity-90 font-semibold">
-                                    • Bagian {{ currentChunk.index }} dari {{ currentChunk.totalChunks }}
+                            <p class="text-[11px] sm:text-xs opacity-70 font-medium truncate">
+                                Ayat <span class="font-semibold">{{ audioPlayer.currentAyahNumber.value || 1 }}</span>/{{ chapter.verses_count }}
+                                <span v-if="currentChunk && currentChunk.totalChunks > 1" class="ml-1 opacity-80">
+                                    • Bagian {{ currentChunk.index }}/{{ currentChunk.totalChunks }}
                                 </span>
                             </p>
                         </div>
                     </div>
 
                     <!-- Right Controls: Theme Switcher, Latin Toggle, Full Translation, Exit -->
-                    <div class="flex items-center gap-1.5 sm:gap-2">
-                        <!-- Atmosphere Theme Switcher Segmented Pills -->
+                    <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
+                        <!-- Desktop: Atmosphere Theme Switcher Segmented Pills (sm and up) -->
                         <div 
                             :class="[
-                                'flex items-center p-1 rounded-2xl border text-xs font-semibold backdrop-blur-md transition-all',
+                                'hidden sm:flex items-center p-1 rounded-2xl border text-xs font-semibold backdrop-blur-md transition-all',
                                 currentTheme === 'noor' ? 'bg-muted/40 border-border/50' : '',
                                 currentTheme === 'midnight' ? 'bg-white/5 border-amber-500/20' : '',
                                 currentTheme === 'warqah' ? 'bg-amber-900/5 dark:bg-white/5 border-amber-900/20 dark:border-amber-700/30' : ''
@@ -527,7 +533,7 @@ const selectSpeed = (rate) => {
                                 title="Noor Sanctuary (Modern Bersih)"
                             >
                                 <Sparkles class="h-3.5 w-3.5" />
-                                <span class="hidden md:inline">Noor</span>
+                                <span>Noor</span>
                             </button>
 
                             <button
@@ -542,7 +548,7 @@ const selectSpeed = (rate) => {
                                 title="Midnight Mushaf (Tahajjud Malam Emas)"
                             >
                                 <Moon class="h-3.5 w-3.5" />
-                                <span class="hidden md:inline">Midnight</span>
+                                <span>Midnight</span>
                             </button>
 
                             <button
@@ -557,16 +563,34 @@ const selectSpeed = (rate) => {
                                 title="Warqah Turath (Manuskrip Perkamen Klasik)"
                             >
                                 <ScrollText class="h-3.5 w-3.5" />
-                                <span class="hidden md:inline">Warqah</span>
+                                <span>Warqah</span>
                             </button>
                         </div>
+
+                        <!-- Mobile Only: Single Compact Cycle Atmosphere Pill -->
+                        <button
+                            type="button"
+                            @click="cycleTheme"
+                            :class="[
+                                'sm:hidden inline-flex items-center gap-1 px-2 py-1 rounded-xl border text-[11px] font-semibold transition-all cursor-pointer',
+                                currentTheme === 'noor' ? 'bg-primary/10 border-primary/30 text-primary' : '',
+                                currentTheme === 'midnight' ? 'bg-amber-500/20 border-amber-500/40 text-amber-300' : '',
+                                currentTheme === 'warqah' ? 'bg-amber-900/15 dark:bg-amber-500/20 border-amber-900/30 dark:border-amber-500/40 text-amber-800 dark:text-amber-300' : ''
+                            ]"
+                            title="Ganti Suasana / Vibe (Ketuk untuk beralih)"
+                        >
+                            <Sparkles v-if="currentTheme === 'noor'" class="h-3 w-3" />
+                            <Moon v-else-if="currentTheme === 'midnight'" class="h-3 w-3" />
+                            <ScrollText v-else class="h-3 w-3" />
+                            <span class="capitalize">{{ currentTheme }}</span>
+                        </button>
 
                         <!-- Toggle Latin -->
                         <button
                             type="button"
                             @click="emit('update:showTransliteration', !showTransliteration)"
                             :class="[
-                                'px-2.5 py-1.5 rounded-xl border text-xs font-semibold transition-all cursor-pointer',
+                                'px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-xl border text-[11px] sm:text-xs font-semibold transition-all cursor-pointer',
                                 showTransliteration 
                                     ? (currentTheme === 'midnight' ? 'bg-amber-500/25 border-amber-500/50 text-amber-300' : 'bg-primary/15 border-primary/40 text-primary')
                                     : 'opacity-70 hover:opacity-100 border-border/50'
@@ -581,7 +605,7 @@ const selectSpeed = (rate) => {
                             type="button"
                             @click="showFullTranslationDialog = true"
                             :class="[
-                                'p-2 rounded-xl border transition-all cursor-pointer',
+                                'p-1.5 sm:p-2 rounded-xl border transition-all cursor-pointer',
                                 currentTheme === 'noor' ? 'bg-muted/60 border-border/60 hover:bg-muted text-foreground' : '',
                                 currentTheme === 'midnight' ? 'bg-amber-500/10 border-amber-500/30 text-amber-300 hover:bg-amber-500/20' : '',
                                 currentTheme === 'warqah' ? 'bg-amber-900/10 dark:bg-amber-400/10 border-amber-900/25 dark:border-amber-400/25 hover:bg-amber-900/20' : ''
@@ -596,15 +620,17 @@ const selectSpeed = (rate) => {
                             type="button"
                             @click="closeKhusyuMode"
                             :class="[
-                                'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-semibold transition-all cursor-pointer ml-1',
+                                'inline-flex items-center gap-1 p-1.5 sm:px-3 sm:py-1.5 rounded-xl border text-xs font-semibold transition-all cursor-pointer',
                                 currentTheme === 'noor' ? 'bg-muted/80 hover:bg-destructive/15 hover:text-destructive hover:border-destructive/30 border-border text-foreground' : '',
                                 currentTheme === 'midnight' ? 'bg-white/10 hover:bg-destructive/20 text-[#f4efe6] hover:text-destructive hover:border-destructive/40 border-amber-500/20' : '',
                                 currentTheme === 'warqah' ? 'bg-amber-900/10 dark:bg-white/10 hover:bg-destructive/15 hover:text-destructive hover:border-destructive/30 border-amber-900/20 dark:border-amber-700/30 text-[#2c1d11] dark:text-[#f4ebd0]' : ''
                             ]"
                             title="Keluar dari Mode Khusyu' (Esc)"
+                            aria-label="Keluar dari Mode Khusyu'"
                         >
-                            <Minimize2 class="h-3.5 w-3.5" />
-                            <span class="hidden sm:inline">Keluar Khusyu'</span>
+                            <X class="h-4 w-4 sm:hidden" />
+                            <Minimize2 class="hidden sm:block h-3.5 w-3.5" />
+                            <span class="hidden sm:inline">Keluar</span>
                         </button>
                     </div>
                 </header>
@@ -819,16 +845,16 @@ const selectSpeed = (rate) => {
                 <!-- Bottom Khusyu Player Control Bar -->
                 <footer 
                     :class="[
-                        'relative z-10 p-3 sm:p-5 border-t backdrop-blur-md transition-colors duration-500',
-                        currentTheme === 'noor' ? 'border-border/40 bg-background/70' : '',
-                        currentTheme === 'midnight' ? 'border-amber-500/15 bg-[#070a10]/80 text-[#faebd7]' : '',
-                        currentTheme === 'warqah' ? 'border-amber-900/15 dark:border-amber-700/20 bg-[#fcf7ee]/80 dark:bg-[#1a1612]/80' : ''
+                        'relative z-10 px-4 py-3 sm:px-6 sm:py-4 border-t backdrop-blur-md transition-colors duration-500',
+                        currentTheme === 'noor' ? 'border-border/40 bg-background/80' : '',
+                        currentTheme === 'midnight' ? 'border-amber-500/15 bg-[#070a10]/85 text-[#faebd7]' : '',
+                        currentTheme === 'warqah' ? 'border-amber-900/15 dark:border-amber-700/20 bg-[#fcf7ee]/85 dark:bg-[#1a1612]/85 text-[#2c1d11] dark:text-[#f4ebd0]' : ''
                     ]"
                 >
-                    <div class="max-w-3xl mx-auto space-y-3">
+                    <div class="max-w-2xl mx-auto space-y-2.5 sm:space-y-3.5">
                         <!-- Seekbar Timeline Slider -->
-                        <div class="flex items-center gap-3">
-                            <span class="text-xs font-mono font-medium opacity-70 tabular-nums w-14 sm:w-16 text-right shrink-0">
+                        <div class="flex items-center gap-2.5 sm:gap-3">
+                            <span class="text-[11px] sm:text-xs font-mono font-medium opacity-70 tabular-nums w-11 sm:w-16 text-right shrink-0">
                                 {{ audioPlayer.formattedCurrentTime.value }}
                             </span>
 
@@ -841,7 +867,7 @@ const selectSpeed = (rate) => {
                                     :value="audioPlayer.progressPercent.value"
                                     @input="onSeekbarChange"
                                     :class="[
-                                        'w-full h-2 rounded-lg appearance-none cursor-pointer focus:outline-none focus-visible:ring-2',
+                                        'w-full h-1.5 sm:h-2 rounded-lg appearance-none cursor-pointer focus:outline-none focus-visible:ring-2',
                                         currentTheme === 'midnight' 
                                             ? 'bg-white/15 accent-amber-400 focus-visible:ring-amber-400/40' 
                                             : currentTheme === 'warqah'
@@ -852,21 +878,21 @@ const selectSpeed = (rate) => {
                                 />
                             </div>
 
-                            <span class="text-xs font-mono font-medium opacity-70 tabular-nums w-14 sm:w-16 shrink-0">
+                            <span class="text-[11px] sm:text-xs font-mono font-medium opacity-70 tabular-nums w-11 sm:w-16 shrink-0">
                                 {{ audioPlayer.formattedDuration.value }}
                             </span>
                         </div>
 
-                        <!-- Transport Buttons & Utilities -->
-                        <div class="flex items-center justify-between gap-4">
-                            <!-- Left: Speed & Repeat Mode -->
-                            <div class="flex items-center gap-2">
+                        <!-- Transport Buttons & Utilities: Balanced 3-Group Architecture -->
+                        <div class="flex items-center justify-between">
+                            <!-- Left: Playback Rate & Repeat Mode -->
+                            <div class="flex items-center gap-1.5 sm:gap-2">
                                 <div ref="speedMenuRef" class="relative">
                                     <button
                                         type="button"
                                         @click="showSpeedMenu = !showSpeedMenu"
                                         :class="[
-                                            'px-2.5 py-1.5 rounded-xl text-xs font-mono font-bold border transition-colors cursor-pointer',
+                                            'h-8 px-2 sm:h-9 sm:px-2.5 rounded-xl text-xs font-mono font-bold border transition-colors cursor-pointer flex items-center justify-center',
                                             controlButtonClass
                                         ]"
                                         title="Kecepatan Pemutaran"
@@ -896,57 +922,37 @@ const selectSpeed = (rate) => {
                                     type="button"
                                     @click="audioPlayer.cycleRepeatMode"
                                     :class="[
-                                        'p-2 rounded-xl border transition-colors relative cursor-pointer',
+                                        'h-8 w-8 sm:h-9 sm:w-9 rounded-xl border transition-colors relative cursor-pointer flex items-center justify-center',
                                         audioPlayer.repeatMode.value !== 'none' 
                                             ? (currentTheme === 'midnight' ? 'bg-amber-500/20 border-amber-500/40 text-amber-300' : 'bg-primary/15 border-primary/40 text-primary') 
                                             : controlButtonClass
                                     ]"
                                     :title="audioPlayer.repeatMode.value === 'ayah' ? 'Ulangi Ayat Ini' : audioPlayer.repeatMode.value === 'surah' ? 'Ulangi Surah' : 'Tanpa Pengulangan'"
                                 >
-                                    <Repeat1 v-if="audioPlayer.repeatMode.value === 'ayah'" class="h-4 w-4" />
-                                    <Repeat v-else class="h-4 w-4" />
-                                </button>
-
-                                <!-- Listen Together Button in Khusyu Mode -->
-                                <button
-                                    type="button"
-                                    @click="emit('open-listen-together')"
-                                    :class="[
-                                        'p-2 rounded-xl border transition-colors relative cursor-pointer',
-                                        roomSync.roomCode.value 
-                                            ? (currentTheme === 'midnight' ? 'bg-emerald-500/25 border-emerald-500/50 text-emerald-300' : 'bg-emerald-500/20 border-emerald-500/40 text-emerald-700 dark:text-emerald-400')
-                                            : controlButtonClass
-                                    ]"
-                                    title="Dengar Bersama (Listen Together)"
-                                    aria-label="Dengar Bersama"
-                                >
-                                    <Radio class="h-4 w-4" :class="roomSync.roomCode.value ? 'animate-pulse' : ''" />
-                                    <span 
-                                        v-if="roomSync.roomCode.value" 
-                                        class="absolute -top-1 -right-1 flex h-2 w-2 rounded-full bg-emerald-500 animate-ping"
-                                    />
+                                    <Repeat1 v-if="audioPlayer.repeatMode.value === 'ayah'" class="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                                    <Repeat v-else class="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                                 </button>
                             </div>
 
-                            <!-- Center: Prev, Play/Pause, Next Controls -->
-                            <div class="flex items-center gap-3">
+                            <!-- Center: Prev, Hero Play/Pause, Next -->
+                            <div class="flex items-center gap-2 sm:gap-4">
                                 <button
                                     type="button"
                                     @click="audioPlayer.prevAyah"
                                     :class="[
-                                        'p-2.5 rounded-2xl border active:scale-95 transition-all cursor-pointer',
+                                        'h-9 w-9 sm:h-10 sm:w-10 rounded-full border active:scale-95 transition-all cursor-pointer flex items-center justify-center',
                                         controlButtonClass
                                     ]"
                                     title="Ayat Sebelumnya"
                                 >
-                                    <SkipBack class="h-5 w-5" />
+                                    <SkipBack class="h-4 w-4 sm:h-5 sm:w-5" />
                                 </button>
 
                                 <button
                                     type="button"
                                     @click="audioPlayer.togglePlay"
                                     :class="[
-                                        'p-4 rounded-3xl active:scale-95 transition-all flex items-center justify-center cursor-pointer shadow-lg',
+                                        'h-12 w-12 sm:h-14 sm:w-14 rounded-full active:scale-95 transition-all flex items-center justify-center cursor-pointer shadow-lg',
                                         currentTheme === 'midnight' 
                                             ? 'bg-amber-400 text-amber-950 font-bold hover:bg-amber-300 shadow-amber-500/25' 
                                             : 'bg-primary text-primary-foreground hover:bg-primary/90 shadow-primary/25'
@@ -954,33 +960,54 @@ const selectSpeed = (rate) => {
                                     :title="audioPlayer.isPlaying.value ? 'Jeda Audio' : 'Putar Audio'"
                                     :aria-label="audioPlayer.isPlaying.value ? 'Jeda Audio' : 'Putar Audio'"
                                 >
-                                    <Loader2 v-if="audioPlayer.isLoading.value" class="h-6 w-6 animate-spin" />
-                                    <Pause v-else-if="audioPlayer.isPlaying.value" class="h-6 w-6 fill-current" />
-                                    <Play v-else class="h-6 w-6 fill-current ml-0.5" />
+                                    <Loader2 v-if="audioPlayer.isLoading.value" class="h-5 w-5 sm:h-6 sm:w-6 animate-spin" />
+                                    <Pause v-else-if="audioPlayer.isPlaying.value" class="h-5 w-5 sm:h-6 sm:w-6 fill-current" />
+                                    <Play v-else class="h-5 w-5 sm:h-6 sm:w-6 fill-current ml-0.5" />
                                 </button>
 
                                 <button
                                     type="button"
                                     @click="audioPlayer.nextAyah"
                                     :class="[
-                                        'p-2.5 rounded-2xl border active:scale-95 transition-all cursor-pointer',
+                                        'h-9 w-9 sm:h-10 sm:w-10 rounded-full border active:scale-95 transition-all cursor-pointer flex items-center justify-center',
                                         controlButtonClass
                                     ]"
                                     title="Ayat Selanjutnya"
                                 >
-                                    <SkipForward class="h-5 w-5" />
+                                    <SkipForward class="h-4 w-4 sm:h-5 sm:w-5" />
                                 </button>
                             </div>
 
-                            <!-- Right: Volume Popover & Settings -->
-                            <div class="flex items-center gap-2">
-                                <div ref="volumeContainerRef" class="relative flex items-center">
+                            <!-- Right: Listen Together, Volume (Desktop), Settings -->
+                            <div class="flex items-center gap-1.5 sm:gap-2">
+                                <!-- Listen Together Button in Khusyu Mode -->
+                                <button
+                                    type="button"
+                                    @click="emit('open-listen-together')"
+                                    :class="[
+                                        'h-8 w-8 sm:h-9 sm:w-9 rounded-xl border transition-colors relative cursor-pointer flex items-center justify-center',
+                                        roomSync.roomCode.value 
+                                            ? (currentTheme === 'midnight' ? 'bg-emerald-500/25 border-emerald-500/50 text-emerald-300' : 'bg-emerald-500/20 border-emerald-500/40 text-emerald-700 dark:text-emerald-400')
+                                            : controlButtonClass
+                                    ]"
+                                    title="Dengar Bersama (Listen Together)"
+                                    aria-label="Dengar Bersama"
+                                >
+                                    <Radio class="h-3.5 w-3.5 sm:h-4 sm:w-4" :class="roomSync.roomCode.value ? 'animate-pulse' : ''" />
+                                    <span 
+                                        v-if="roomSync.roomCode.value" 
+                                        class="absolute -top-0.5 -right-0.5 flex h-2 w-2 rounded-full bg-emerald-500 animate-ping"
+                                    />
+                                </button>
+
+                                <!-- Desktop Volume Control (hidden on mobile where hardware keys rule) -->
+                                <div ref="volumeContainerRef" class="hidden sm:flex relative items-center">
                                     <button
                                         type="button"
                                         @click="showVolumeSlider = !showVolumeSlider"
                                         @mouseenter="showVolumeSlider = true"
                                         :class="[
-                                            'p-2 rounded-xl border opacity-80 hover:opacity-100 transition-colors cursor-pointer',
+                                            'h-9 w-9 rounded-xl border opacity-80 hover:opacity-100 transition-colors cursor-pointer flex items-center justify-center',
                                             controlButtonClass
                                         ]"
                                         :title="audioPlayer.isMuted.value ? 'Nyalakan Suara' : 'Pengaturan Volume'"
@@ -1018,16 +1045,17 @@ const selectSpeed = (rate) => {
                                     </div>
                                 </div>
 
+                                <!-- Settings Drawer Button -->
                                 <button
                                     type="button"
                                     @click="emit('open-settings')"
                                     :class="[
-                                        'p-2 rounded-xl border opacity-80 hover:opacity-100 transition-colors cursor-pointer',
+                                        'h-8 w-8 sm:h-9 sm:w-9 rounded-xl border opacity-80 hover:opacity-100 transition-colors cursor-pointer flex items-center justify-center',
                                         controlButtonClass
                                     ]"
                                     title="Pengaturan Tampilan"
                                 >
-                                    <SlidersHorizontal class="h-4 w-4" />
+                                    <SlidersHorizontal class="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                                 </button>
                             </div>
                         </div>
