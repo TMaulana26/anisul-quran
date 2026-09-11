@@ -296,11 +296,15 @@ watch(() => audioPlayer.currentWordIndex.value, (wordPos) => {
     }
 }, { immediate: true });
 
-// Reset activeChunkIndex to 1 when verse changes
+// Reset activeChunkIndex to 1 (or last chunk if moving backward) when verse changes
 watch(() => currentVerse.value?.id, (newId, oldId) => {
     if (newId !== oldId) {
-        transitionDirection.value = 'forward';
-        activeChunkIndex.value = 1;
+        if (transitionDirection.value === 'backward') {
+            activeChunkIndex.value = verseChunks.value.length || 1;
+        } else {
+            transitionDirection.value = 'forward';
+            activeChunkIndex.value = 1;
+        }
     }
 });
 
@@ -324,7 +328,7 @@ const isWordActive = (word) => {
 };
 
 // Seek audio to word position
-const seekToWord = (wordPos) => {
+const seekToWord = (wordPos, autoPlay = false) => {
     if (!currentVerse.value || !audioPlayer.currentRecitation.value?.verse_timings) return;
     
     const verseKey = currentVerse.value.verse_key;
@@ -335,7 +339,7 @@ const seekToWord = (wordPos) => {
     if (segment) {
         const startSec = segment[1] / 1000;
         audioPlayer.seekToTime(startSec);
-        if (!audioPlayer.isPlaying.value) {
+        if (autoPlay && !audioPlayer.isPlaying.value) {
             audioPlayer.play();
         }
     }
@@ -346,8 +350,8 @@ const goToChunk = (chunkIdx) => {
     transitionDirection.value = chunkIdx > activeChunkIndex.value ? 'forward' : 'backward';
     activeChunkIndex.value = chunkIdx;
     const target = verseChunks.value[chunkIdx - 1];
-    if (target) {
-        seekToWord(target.startPosition);
+    if (target && target.startPosition) {
+        seekToWord(target.startPosition, audioPlayer.isPlaying.value);
     }
 };
 
@@ -368,6 +372,18 @@ const prevChunk = () => {
         audioPlayer.prevAyah();
     }
 };
+
+// Check boundary state for chevron navigation
+const isFirstAyahAndChunk = computed(() => {
+    const currentNum = audioPlayer.currentAyahNumber.value || 1;
+    return currentNum <= 1 && activeChunkIndex.value <= 1;
+});
+
+const isLastAyahAndChunk = computed(() => {
+    const currentNum = audioPlayer.currentAyahNumber.value || 1;
+    const totalAyahs = props.chapter?.verses_count || props.verses?.length || 1;
+    return currentNum >= totalAyahs && activeChunkIndex.value >= verseChunks.value.length;
+});
 
 const closeKhusyuMode = () => {
     emit('update:open', false);
@@ -641,8 +657,12 @@ const selectSpeed = (rate) => {
                     <button
                         type="button"
                         @click="prevChunk"
+                        :disabled="isFirstAyahAndChunk"
                         :class="[
-                            'absolute left-2 sm:left-6 md:left-8 lg:left-10 top-1/2 -translate-y-1/2 p-2.5 sm:p-3.5 rounded-full transition-all cursor-pointer z-20 backdrop-blur-md opacity-40 hover:opacity-100 hover:scale-110 active:scale-95 border',
+                            'absolute left-2 sm:left-6 md:left-8 lg:left-10 top-1/2 -translate-y-1/2 p-2.5 sm:p-3.5 rounded-full transition-all z-20 backdrop-blur-md border',
+                            isFirstAyahAndChunk
+                                ? 'opacity-20 cursor-not-allowed pointer-events-none'
+                                : 'opacity-60 sm:opacity-40 hover:opacity-100 hover:scale-110 active:scale-95 cursor-pointer',
                             currentTheme === 'noor' ? 'bg-muted/40 hover:bg-muted text-foreground border-border/40' : '',
                             currentTheme === 'midnight' ? 'bg-white/5 hover:bg-white/15 text-amber-200 border-amber-500/20' : '',
                             currentTheme === 'warqah' ? 'bg-amber-900/5 dark:bg-white/5 hover:bg-amber-900/15 text-[#3b2416] dark:text-[#ebd8ba] border-amber-900/20 dark:border-amber-600/30' : ''
@@ -657,8 +677,12 @@ const selectSpeed = (rate) => {
                     <button
                         type="button"
                         @click="nextChunk"
+                        :disabled="isLastAyahAndChunk"
                         :class="[
-                            'absolute right-2 sm:right-6 md:right-8 lg:right-10 top-1/2 -translate-y-1/2 p-2.5 sm:p-3.5 rounded-full transition-all cursor-pointer z-20 backdrop-blur-md opacity-40 hover:opacity-100 hover:scale-110 active:scale-95 border',
+                            'absolute right-2 sm:right-6 md:right-8 lg:right-10 top-1/2 -translate-y-1/2 p-2.5 sm:p-3.5 rounded-full transition-all z-20 backdrop-blur-md border',
+                            isLastAyahAndChunk
+                                ? 'opacity-20 cursor-not-allowed pointer-events-none'
+                                : 'opacity-60 sm:opacity-40 hover:opacity-100 hover:scale-110 active:scale-95 cursor-pointer',
                             currentTheme === 'noor' ? 'bg-muted/40 hover:bg-muted text-foreground border-border/40' : '',
                             currentTheme === 'midnight' ? 'bg-white/5 hover:bg-white/15 text-amber-200 border-amber-500/20' : '',
                             currentTheme === 'warqah' ? 'bg-amber-900/5 dark:bg-white/5 hover:bg-amber-900/15 text-[#3b2416] dark:text-[#ebd8ba] border-amber-900/20 dark:border-amber-600/30' : ''
@@ -939,8 +963,12 @@ const selectSpeed = (rate) => {
                                 <button
                                     type="button"
                                     @click="audioPlayer.prevAyah"
+                                    :disabled="(audioPlayer.currentAyahNumber.value || 1) <= 1"
                                     :class="[
-                                        'h-9 w-9 sm:h-10 sm:w-10 rounded-full border active:scale-95 transition-all cursor-pointer flex items-center justify-center',
+                                        'h-9 w-9 sm:h-10 sm:w-10 rounded-full border active:scale-95 transition-all flex items-center justify-center',
+                                        (audioPlayer.currentAyahNumber.value || 1) <= 1
+                                            ? 'opacity-30 cursor-not-allowed pointer-events-none'
+                                            : 'cursor-pointer',
                                         controlButtonClass
                                     ]"
                                     title="Ayat Sebelumnya"
@@ -968,8 +996,12 @@ const selectSpeed = (rate) => {
                                 <button
                                     type="button"
                                     @click="audioPlayer.nextAyah"
+                                    :disabled="(audioPlayer.currentAyahNumber.value || 1) >= (chapter.verses_count || 1)"
                                     :class="[
-                                        'h-9 w-9 sm:h-10 sm:w-10 rounded-full border active:scale-95 transition-all cursor-pointer flex items-center justify-center',
+                                        'h-9 w-9 sm:h-10 sm:w-10 rounded-full border active:scale-95 transition-all flex items-center justify-center',
+                                        (audioPlayer.currentAyahNumber.value || 1) >= (chapter.verses_count || 1)
+                                            ? 'opacity-30 cursor-not-allowed pointer-events-none'
+                                            : 'cursor-pointer',
                                         controlButtonClass
                                     ]"
                                     title="Ayat Selanjutnya"

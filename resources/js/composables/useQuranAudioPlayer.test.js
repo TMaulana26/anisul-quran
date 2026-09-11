@@ -113,7 +113,7 @@ describe('useQuranAudioPlayer - Helpers & Timestamp Matching', () => {
 
     it('loads Surah metadata correctly', () => {
         const player = useQuranAudioPlayer();
-        const mockChapter = { id: 1, name_simple: 'Al-Fatihah', name_arabic: 'الفاتحة' };
+        const mockChapter = { id: 1, name_simple: 'Al-Fatihah', name_arabic: 'الفاتحة', verses_count: 7 };
         const mockRecitation = { audio_url: 'https://audio.example.com/001.mp3', verse_timings: mockVerseTimings };
 
         player.loadSurah(mockChapter, mockRecitation, { id: 7, name: 'Mishary Rashid Alafasy' });
@@ -121,5 +121,38 @@ describe('useQuranAudioPlayer - Helpers & Timestamp Matching', () => {
         expect(player.currentSurahId.value).toBe(1);
         expect(player.currentSurahName.value).toBe('Al-Fatihah');
         expect(player.activeReciter.value.id).toBe(7);
+        expect(player.currentAyahNumber.value).toBe(1);
+    });
+
+    it('navigates nextAyah and prevAyah even when audio is not playing', () => {
+        const player = useQuranAudioPlayer();
+        const mockChapter = { id: 1, name_simple: 'Al-Fatihah', name_arabic: 'الفاتحة', verses_count: 7 };
+        const mockRecitation = { audio_url: 'https://audio.example.com/001.mp3', verse_timings: mockVerseTimings };
+
+        player.loadSurah(mockChapter, mockRecitation, null, 1, false);
+        expect(player.isPlaying.value).toBe(false);
+        expect(player.currentAyahNumber.value).toBe(1);
+
+        // Next Ayah
+        player.nextAyah();
+        expect(player.currentAyahNumber.value).toBe(2);
+        expect(player.isPlaying.value).toBe(false);
+
+        // Next Ayah again
+        player.nextAyah();
+        expect(player.currentAyahNumber.value).toBe(3);
+
+        // Previous Ayah
+        player.prevAyah();
+        expect(player.currentAyahNumber.value).toBe(2);
+
+        // Previous Ayah to first
+        player.prevAyah();
+        expect(player.currentAyahNumber.value).toBe(1);
+
+        // Cannot go below 1
+        player.prevAyah();
+        expect(player.currentAyahNumber.value).toBe(1);
     });
 });
+

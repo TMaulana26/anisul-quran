@@ -237,6 +237,10 @@ export function useQuranAudioPlayer() {
             activeReciter.value = reciter;
         }
 
+        const initialAyah = startAyah || 1;
+        currentAyahNumber.value = initialAyah;
+        currentWordIndex.value = 1;
+
         if (audioInstance) {
             const rawUrl = recitationData.audio_url || '';
             const fullUrl = rawUrl.startsWith('//') ? `https:${rawUrl}` : rawUrl;
@@ -253,6 +257,8 @@ export function useQuranAudioPlayer() {
                 seekToAyah(startAyah, autoPlay);
             } else if (autoPlay) {
                 play();
+            } else {
+                seekToAyah(initialAyah, false);
             }
         }
     };
@@ -319,57 +325,77 @@ export function useQuranAudioPlayer() {
      * Seek to specific Ayah number within current Surah
      */
     const seekToAyah = (ayahNumber, autoPlay = true) => {
-        if (!currentRecitation.value?.verse_timings) return;
+        const total = currentChapter.value?.verses_count || Infinity;
+        const targetAyah = Math.max(1, Math.min(ayahNumber, total));
 
-        const targetTiming = currentRecitation.value.verse_timings.find(t => {
+        currentAyahNumber.value = targetAyah;
+        currentWordIndex.value = 1;
+
+        const timings = currentRecitation.value?.verse_timings;
+        if (!timings || !Array.isArray(timings) || timings.length === 0) {
+            if (autoPlay && !isPlaying.value) {
+                play();
+            }
+            return;
+        }
+
+        const targetTiming = timings.find(t => {
             const num = parseInt((t.verse_key || '').split(':')[1], 10) || t.verse_number;
-            return num === ayahNumber;
+            return num === targetAyah;
         });
 
         if (targetTiming) {
             const startSec = (targetTiming.timestamp_from || 0) / 1000;
             seekToTime(startSec);
-            currentAyahNumber.value = ayahNumber;
             if (Array.isArray(targetTiming.segments) && targetTiming.segments.length > 0) {
                 currentWordIndex.value = targetTiming.segments[0][0] || 1;
-            } else {
-                currentWordIndex.value = 1;
             }
             if (autoPlay && !isPlaying.value) {
                 play();
             }
+        } else if (autoPlay && !isPlaying.value) {
+            play();
         }
     };
 
     /**
      * Next Ayah in current Surah
      */
-    const nextAyah = () => {
-        if (!currentAyahNumber.value || !currentRecitation.value?.verse_timings) return;
-        const nextNum = currentAyahNumber.value + 1;
-        seekToAyah(nextNum, isPlaying.value);
+    const nextAyah = (autoPlay = null) => {
+        const current = currentAyahNumber.value || 1;
+        const total = currentChapter.value?.verses_count || Infinity;
+        if (current >= total) return;
+
+        const shouldPlay = autoPlay !== null ? autoPlay : isPlaying.value;
+        seekToAyah(current + 1, shouldPlay);
     };
 
     /**
      * Previous Ayah in current Surah
      */
-    const prevAyah = () => {
-        if (!currentAyahNumber.value || !currentRecitation.value?.verse_timings) return;
-        
-        // If more than 2 seconds into current ayah, restart current ayah
-        const currentTiming = currentRecitation.value.verse_timings.find(t => {
-            const num = parseInt((t.verse_key || '').split(':')[1], 10);
-            return num === currentAyahNumber.value;
-        });
+    const prevAyah = (autoPlay = null) => {
+        const current = currentAyahNumber.value || 1;
+        const shouldPlay = autoPlay !== null ? autoPlay : isPlaying.value;
 
-        const startSec = (currentTiming?.timestamp_from || 0) / 1000;
-        if (currentTime.value - startSec > 2.5) {
-            seekToTime(startSec);
+        if (current <= 1) {
+            seekToAyah(1, shouldPlay);
             return;
         }
 
-        const prevNum = Math.max(1, currentAyahNumber.value - 1);
-        seekToAyah(prevNum, isPlaying.value);
+        // If audio is actively playing and more than 2.5s into current ayah, restart current ayah
+        if (isPlaying.value && currentRecitation.value?.verse_timings) {
+            const currentTiming = currentRecitation.value.verse_timings.find(t => {
+                const num = parseInt((t.verse_key || '').split(':')[1], 10) || t.verse_number;
+                return num === current;
+            });
+            const startSec = (currentTiming?.timestamp_from || 0) / 1000;
+            if (currentTime.value - startSec > 2.5) {
+                seekToTime(startSec);
+                return;
+            }
+        }
+
+        seekToAyah(current - 1, shouldPlay);
     };
 
     /**

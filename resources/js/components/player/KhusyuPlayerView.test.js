@@ -62,4 +62,50 @@ describe('KhusyuPlayerView.vue', () => {
         expect(wrapper.emitted('update:open')).toBeTruthy();
         expect(wrapper.emitted('update:open')[0][0]).toBe(false);
     });
+
+    it('navigates to next ayah when right chevron is clicked while paused', async () => {
+        const player = useQuranAudioPlayer();
+        const mockVersesMultiple = [
+            ...mockVerses,
+            {
+                id: 2,
+                verse_number: 2,
+                verse_key: '1:2',
+                text_uthmani: 'ٱلْحَمْدُ لِلَّهِ رَبِّ ٱلْعَٰلَمِينَ',
+                translations: [{ id: 2, text: 'Segala puji bagi Allah, Tuhan seluruh alam.' }],
+                words: [
+                    { id: 3, position: 1, text_uthmani: 'ٱلْحَمْدُ', transliteration: { text: 'al-hamdu' } },
+                ],
+            },
+        ];
+
+        player.loadSurah(mockChapter, { audio_url: 'https://example.com/1.mp3', verse_timings: [] }, null, 1, false);
+
+        const wrapper = mount(KhusyuPlayerView, {
+            props: {
+                open: true,
+                chapter: mockChapter,
+                verses: mockVersesMultiple,
+            },
+            global: {
+                stubs: {
+                    Teleport: true,
+                },
+            },
+        });
+
+        expect(player.currentAyahNumber.value).toBe(1);
+
+        const nextBtn = wrapper.find('button[aria-label="Ayat Selanjutnya"]');
+        expect(nextBtn.exists()).toBe(true);
+
+        await nextBtn.trigger('click');
+        expect(player.currentAyahNumber.value).toBe(2);
+
+        const prevBtn = wrapper.find('button[aria-label="Ayat Sebelumnya"]');
+        expect(prevBtn.exists()).toBe(true);
+
+        await prevBtn.trigger('click');
+        expect(player.currentAyahNumber.value).toBe(1);
+    });
 });
