@@ -41,6 +41,7 @@
 | **E-30** | **Native View Transitions API & Silky Cross-Fade pada Pergantian Suasana (Vibe) dan Mode Light/Dark** | Animation & Theme Transition UX | `useUserPreferences.js`, `app.css`, `AppLayout.vue` | `[x]` |
 | **E-31** | **Warna Indikator Loading Bar (NProgress Inertia) Dinamis Mengikuti Suasana / Vibe Aktif** | Navigation Feedback & Vibe Theming | `resources/js/app.js`, `resources/css/app.css` | `[x]` |
 | **E-32** | **Impeccable Polish: Pembersihan Desain Top Navbar & Player Bar di Mode Khusyu' (Mobile Serenity)** | Impeccable Polish & Mobile UX | `resources/js/components/player/KhusyuPlayerView.vue`, `FollowerBanner.vue` | `[x]` |
+| **E-33** | **Slider Kontrol Volume Bergaya Windows 11 dengan Dynamic Vibe Primary Fill & Live Persentase** | Player UX & Impeccable Polish | `resources/css/app.css`, `Room.vue`, `AudioPlayerBar.vue`, `KhusyuPlayerView.vue` | `[x]` |
 
 ---
 
@@ -157,5 +158,19 @@
     - Menangani klik/tap tersebut via method `unlockAudio()` yang memanggil `audioPlayer.play()`, sehingga browser mobile membuka izin audio context secara legal dan sinkronisasi otomatis berjalan lancar seterusnya.
   - Memverifikasi kelulusan seluruh 68 unit test Vitest dan kelulusan Vite build tanpa error.
 
-
-
+### 9. [E-33] Slider Kontrol Volume Bergaya Windows 11 dengan Dynamic Vibe Primary Fill & Live Persentase
+- **Kebutuhan Pengguna**: Pada bilah audio player (terutama di layar room Dengar Bersama `Room.vue`, `AudioPlayerBar.vue`, dan `KhusyuPlayerView.vue`), kontrol volume sebelumnya hanya menampilkan track datar dengan bulatan thumb tanpa indikator persentase angka dan tanpa pengisian warna progres. Pengguna menginginkan tampilan persentase (misal `80%`) dan warna slider yang terisi warna `primary` dinamis sesuai suasana / vibe aktif (Noor = Emerald, Midnight = Tahajjud Gold, Warqah = Terracotta Sepia) persis seperti slider volume di Windows 11.
+- **Implementasi & Solusi**:
+  - Di `resources/css/app.css`:
+    - Membuat class utilitas `.volume-slider` berbasis CSS variable `--slider-progress` yang menerapkan `background: linear-gradient(to right, var(--primary) 0%, var(--primary) var(--slider-progress), var(--muted) var(--slider-progress), var(--muted) 100%)`.
+    - Merancang thumb slider bergaya Windows 11: lingkaran `var(--primary)` dengan border `2px solid var(--background)`, ring halus dan drop shadow, serta efek scale saat hover/drag.
+    - Menyesuaikan styling lintas browser untuk WebKit/Blink (Chromium, Edge, Safari, Android WebKit) dan Gecko (Firefox `::-moz-range-track`, `::-moz-range-thumb`, `::-moz-range-progress`).
+  - Di `resources/js/Pages/Listen/Room.vue`:
+    - Mengganti input volume menjadi `.volume-slider` dengan binding dinamis `:style="{ '--slider-progress': `${...}%` }"`.
+    - Menambahkan label persentase volume monospace tabular (`{{ audioPlayer.isMuted.value ? 0 : Math.round(audioPlayer.volume.value * 100) }}%`).
+    - Mengubah `step="0.01"` untuk pergeseran volume yang halus dan presisi.
+  - Di `resources/js/components/player/AudioPlayerBar.vue` & `KhusyuPlayerView.vue`:
+    - Menerapkan `.volume-slider` dengan dynamic style `--slider-progress` pada popover volume dan menyelaraskan label persentase.
+  - Pengujian & Verifikasi:
+    - Menambahkan pengujian di `AudioPlayerBar.test.js` dan membuat file uji `resources/js/Pages/Listen/Room.test.js`.
+    - Seluruh pengujian lulus (100% passing) dan asset terkompilasi bersih via `npm run build`.

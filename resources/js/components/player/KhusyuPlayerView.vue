@@ -1050,7 +1050,7 @@ const selectSpeed = (rate) => {
 
                                     <div 
                                         v-if="showVolumeSlider" 
-                                        class="absolute bottom-full right-0 mb-3 p-3 rounded-2xl border border-border/80 bg-popover/95 backdrop-blur-xl shadow-2xl z-50 flex items-center gap-2.5 animate-scale-in w-40"
+                                        class="absolute bottom-full right-0 mb-3 p-3 rounded-2xl border border-border/80 bg-popover/95 backdrop-blur-xl shadow-2xl z-50 flex items-center gap-2.5 animate-scale-in w-44"
                                     >
                                         <button
                                             type="button"
@@ -1065,13 +1065,14 @@ const selectSpeed = (rate) => {
                                             type="range"
                                             min="0"
                                             max="1"
-                                            step="0.05"
+                                            step="0.01"
                                             :value="audioPlayer.isMuted.value ? 0 : audioPlayer.volume.value"
                                             @input="(e) => audioPlayer.setVolume(parseFloat(e.target.value))"
-                                            class="w-full h-1.5 rounded-lg bg-muted appearance-none cursor-pointer accent-primary"
+                                            class="volume-slider w-full cursor-pointer"
+                                            :style="{ '--slider-progress': `${(audioPlayer.isMuted.value ? 0 : audioPlayer.volume.value) * 100}%` }"
                                             aria-label="Volume Slider"
                                         />
-                                        <span class="text-[10px] font-mono opacity-75 tabular-nums w-7 text-right">
+                                        <span class="text-[11px] font-mono font-medium opacity-80 tabular-nums w-8 text-right shrink-0">
                                             {{ audioPlayer.isMuted.value ? 0 : Math.round(audioPlayer.volume.value * 100) }}%
                                         </span>
                                     </div>

@@ -178,13 +178,18 @@
                             type="range"
                             min="0"
                             max="1"
-                            step="0.05"
+                            step="0.01"
                             :value="audioPlayer.isMuted.value ? 0 : audioPlayer.volume.value"
                             @input="e => audioPlayer.setVolume(parseFloat(e.target.value))"
-                            class="w-20 h-1.5 rounded-lg bg-muted appearance-none cursor-pointer accent-primary"
+                            class="volume-slider w-24 sm:w-28 cursor-pointer"
+                            :style="{ '--slider-progress': `${(audioPlayer.isMuted.value ? 0 : audioPlayer.volume.value) * 100}%` }"
                             aria-label="Volume Lokal"
                             title="Atur Volume Perangkat Anda"
                         />
+
+                        <span class="text-[11px] sm:text-xs font-mono font-medium text-muted-foreground tabular-nums w-8 text-right shrink-0">
+                            {{ audioPlayer.isMuted.value ? 0 : Math.round(audioPlayer.volume.value * 100) }}%
+                        </span>
                     </div>
                 </div>
             </div>

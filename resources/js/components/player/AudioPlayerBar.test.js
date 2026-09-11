@@ -41,4 +41,26 @@ describe('AudioPlayerBar.vue', () => {
         await listenTogetherBtn.trigger('click');
         expect(wrapper.emitted('open-listen-together')).toBeTruthy();
     });
+
+    it('renders Windows 11 style volume slider and percentage in volume popover', async () => {
+        const player = useQuranAudioPlayer();
+        player.loadSurah(
+            { id: 1, name_simple: 'Al-Fatihah' },
+            { audio_url: 'https://example.com/1.mp3', verse_timings: [] },
+            { id: 7, name: 'Mishary Rashid Alafasy' }
+        );
+        player.setVolume(0.85);
+
+        const wrapper = mount(AudioPlayerBar);
+        const volumeTrigger = wrapper.find('button[title*="Volume"]');
+        expect(volumeTrigger.exists()).toBe(true);
+
+        // Open volume popover
+        await volumeTrigger.trigger('click');
+
+        const volumeSlider = wrapper.find('input.volume-slider');
+        expect(volumeSlider.exists()).toBe(true);
+        expect(volumeSlider.attributes('style')).toContain('--slider-progress: 85%');
+        expect(wrapper.text()).toContain('85%');
+    });
 });
