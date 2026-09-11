@@ -125,7 +125,7 @@ onMounted(async () => {
     if (prefReciterId && prefReciterId !== props.selectedReciterId) {
         // Preference differs from initial server-provided recitation
         const found = props.reciters.find(r => r.id === prefReciterId) || { id: prefReciterId, name: 'Qari Pilihan' };
-        await handleSelectReciter(found, shouldAutoplay);
+        await handleSelectReciter(found, shouldAutoplay, 1);
     } else if (props.chapter && props.recitation) {
         audioPlayer.loadSurah(props.chapter, props.recitation, currentReciter.value, 1, shouldAutoplay);
     }
@@ -144,7 +144,7 @@ watch(() => props.chapter?.id, async (newId) => {
     const prefReciterId = userPreferences.preferences.selectedReciterId;
     if (prefReciterId && prefReciterId !== props.selectedReciterId) {
         const found = props.reciters.find(r => r.id === prefReciterId) || { id: prefReciterId, name: 'Qari Pilihan' };
-        await handleSelectReciter(found, shouldAutoplay);
+        await handleSelectReciter(found, shouldAutoplay, 1);
     } else if (props.recitation) {
         audioPlayer.loadSurah(props.chapter, props.recitation, currentReciter.value, 1, shouldAutoplay);
     }
@@ -212,7 +212,7 @@ const handlePlayVerse = (verse) => {
 // Dynamic Reciter Switch (Opsi A: Full Global Preference)
 const isSwitchingReciter = ref(false);
 
-const handleSelectReciter = async (reciter, forceAutoPlay = null) => {
+const handleSelectReciter = async (reciter, forceAutoPlay = null, targetAyah = null) => {
     if (!reciter || !reciter.id) return;
 
     // 1. Sync global user preference immediately
@@ -235,8 +235,9 @@ const handleSelectReciter = async (reciter, forceAutoPlay = null) => {
             const data = await res.json();
             if (data.recitation) {
                 const wasPlaying = forceAutoPlay !== null ? forceAutoPlay : audioPlayer.isPlaying.value;
-                const currentAyah = audioPlayer.currentAyahNumber.value || 1;
-                audioPlayer.loadSurah(props.chapter, data.recitation, reciter, currentAyah, wasPlaying);
+                const isSameSurah = audioPlayer.currentSurahId.value === props.chapter?.id;
+                const startAyah = targetAyah !== null ? targetAyah : (isSameSurah ? (audioPlayer.currentAyahNumber.value || 1) : 1);
+                audioPlayer.loadSurah(props.chapter, data.recitation, reciter, startAyah, wasPlaying);
             }
         }
     } catch (err) {
@@ -251,7 +252,8 @@ const handlePlayNextSurah = (targetChapter) => {
     showCompletionModal.value = false;
     audioPlayer.resetSurahCompleted();
     const targetId = targetChapter?.id || props.nextChapter?.id || 1;
-    router.visit(`/surah/${targetId}?autoplay=true`);
+    const reciterId = currentReciter.value?.id || userPreferences.preferences.selectedReciterId || 7;
+    router.visit(`/surah/${targetId}?reciter=${reciterId}&autoplay=true`);
 };
 
 const handleBackToIndex = () => {
@@ -488,7 +490,7 @@ const handleCloseCompletionModal = () => {
             <div class="flex items-center justify-between gap-4 pt-8 border-t border-border">
                 <Link 
                     v-if="prevChapter"
-                    :href="`/surah/${prevChapter.id}`"
+                    :href="`/surah/${prevChapter.id}?reciter=${currentReciter.id}`"
                     class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-border bg-card text-sm font-medium text-foreground hover:bg-muted transition-colors shadow-xs"
                 >
                     <ChevronLeft class="h-4 w-4" />
@@ -498,7 +500,7 @@ const handleCloseCompletionModal = () => {
 
                 <Link 
                     v-if="nextChapter"
-                    :href="`/surah/${nextChapter.id}`"
+                    :href="`/surah/${nextChapter.id}?reciter=${currentReciter.id}`"
                     class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-border bg-card text-sm font-medium text-foreground hover:bg-muted transition-colors shadow-xs"
                 >
                     <span>Surah Berikutnya: {{ nextChapter.name_simple }}</span>

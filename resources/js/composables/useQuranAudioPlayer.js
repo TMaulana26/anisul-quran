@@ -224,6 +224,7 @@ export function useQuranAudioPlayer() {
                 isPlaying.value = false;
                 currentTime.value = 0;
                 currentWordIndex.value = null;
+                currentAyahNumber.value = 1;
                 isSurahCompleted.value = true;
             }
         });
