@@ -29,4 +29,23 @@ describe('QR Code Generator (SVG)', () => {
         expect(svg).toContain('fill="#ffffff"');
         expect(svg).toContain('<rect width="100%" height="100%"');
     });
+
+    it('encodes production length room URLs requiring Version 4 or higher with multi-block interleaving', () => {
+        const prodUrl = 'https://anisulquran.mtim.my.id/listen/AK7F29';
+        const svg = generateQRCodeSVG(prodUrl, { margin: 4 });
+
+        // Version 4 is 33 modules. With margin 4, viewBox should be 41x41 (33 + 8 = 41)
+        expect(svg).toContain('viewBox="0 0 41 41"');
+        expect(svg).toContain('<svg');
+        expect(svg).toContain('</svg>');
+    });
+
+    it('handles custom ECC options without throwing', () => {
+        const url = 'https://anisulquran.mtim.my.id/listen/AK7F29';
+        const svgLow = generateQRCodeSVG(url, { ecc: 'low' });
+        const svgHigh = generateQRCodeSVG(url, { ecc: 'high' });
+
+        expect(svgLow).toContain('<svg');
+        expect(svgHigh).toContain('<svg');
+    });
 });

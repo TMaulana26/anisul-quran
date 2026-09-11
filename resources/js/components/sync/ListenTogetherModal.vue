@@ -279,7 +279,7 @@ const qrSvg = computed(() => {
     return generateQRCodeSVG(roomSync.joinUrl.value, {
         foreground: '#09090b',
         background: '#ffffff',
-        margin: 2,
+        margin: 4,
     });
 });
 
