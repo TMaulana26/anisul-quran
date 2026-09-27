@@ -333,6 +333,9 @@ const unlockAudio = async () => {
         const ok = await audioPlayer.play();
         if (ok || audioPlayer.isPlaying.value) {
             needsTapToPlay.value = false;
+            if (roomSync.roomState.value) {
+                await handleSyncUpdate(roomSync.roomState.value);
+            }
         }
     } catch {
         // Handled
@@ -391,11 +394,12 @@ const handleSyncUpdate = async (serverRoom) => {
     const shouldPlay = serverRoom.status === 'playing';
     if (shouldPlay) {
         if (!audioPlayer.isPlaying.value) {
-            const ok = await audioPlayer.play();
-            if (!ok && !audioPlayer.isPlaying.value) {
-                needsTapToPlay.value = true;
-            } else {
-                needsTapToPlay.value = false;
+            // Only attempt play if user hasn't already been blocked by mobile autoplay policy
+            if (!needsTapToPlay.value) {
+                const ok = await audioPlayer.play();
+                if (!ok && !audioPlayer.isPlaying.value) {
+                    needsTapToPlay.value = true;
+                }
             }
         } else {
             needsTapToPlay.value = false;
@@ -405,6 +409,11 @@ const handleSyncUpdate = async (serverRoom) => {
         if (audioPlayer.isPlaying.value) {
             audioPlayer.pause();
         }
+    }
+
+    // Autoplay Guard: If waiting for user tap on mobile, do not perform range-request seeks
+    if (needsTapToPlay.value) {
+        return;
     }
 
     // Calculate drift with clock offset calibration
@@ -428,10 +437,8 @@ const handleSyncUpdate = async (serverRoom) => {
     // The follower's audio will cross the verse boundary naturally without cutting off or buffering.
     const isIntentionalAyahJump = Boolean(
         hostAyah && localAyah && hostAyah !== localAyah && (
-            !shouldPlay ||
-            hostAyah < localAyah ||
-            Math.abs(hostAyah - localAyah) > 1 ||
-            absDriftSec > 2.0
+            (shouldPlay && (hostAyah < localAyah || Math.abs(hostAyah - localAyah) > 1 || absDriftSec > 2.0)) ||
+            (!shouldPlay && hostAyah !== localAyah)
         )
     );
 
@@ -444,8 +451,9 @@ const handleSyncUpdate = async (serverRoom) => {
 
     // 2. Playback State Synchronization:
     if (!shouldPlay) {
-        // When paused: mirror host scrubbing position if drift is noticeable (> 0.5s)
-        if (absDriftSec > 0.5 && now - lastSeekTimestamp > 600) {
+        // When host is paused, only seek if host explicitly scrubbed (massive drift > 3.0s),
+        // with a 2-second cooldown to eliminate audio stutter/looping ping-pong on mobile.
+        if (absDriftSec > 3.0 && now - lastSeekTimestamp > 2000) {
             audioPlayer.seekToTime(estimatedHostSec);
             lastSeekTimestamp = now;
         }
@@ -472,6 +480,9 @@ onMounted(async () => {
         } else if (props.room.readingMode === 'khusyu') {
             isKhusyuMode.value = true;
         }
+
+        // Ensure repeat mode is disabled in Listen Together mode (prevent listener local ayah loop)
+        audioPlayer.setRepeatMode('none');
 
         // Load recitation into audio player
         audioPlayer.loadSurah(

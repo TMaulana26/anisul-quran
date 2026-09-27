@@ -172,7 +172,9 @@ export function useRoomSync() {
             isConnected.value = true;
             listenerCount.value = room.listenerCount || 1;
             roomState.value = room;
-            joinUrl.value = room.joinUrl || `${window.location.origin}/listen/${room.code}`;
+            // Prioritize active browser origin to ensure HTTPS and real public domain for QR code
+            const origin = typeof window !== 'undefined' ? window.location.origin : '';
+            joinUrl.value = origin ? `${origin}/listen/${room.code}` : (room.joinUrl || '');
 
             // Start host heartbeat (every 15s)
             heartbeatTimer = setInterval(sendHeartbeat, 15000);

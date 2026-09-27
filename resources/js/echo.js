@@ -4,7 +4,9 @@ import Pusher from 'pusher-js';
 let echoInstance = null;
 
 export function isEchoConfigured() {
-    return Boolean(import.meta.env.VITE_REVERB_APP_KEY);
+    const windowKey = typeof window !== 'undefined' ? window.__REVERB_CONFIG__?.key : null;
+    const viteKey = import.meta.env.VITE_REVERB_APP_KEY;
+    return Boolean(windowKey || viteKey);
 }
 
 export function getEcho() {
@@ -20,16 +22,20 @@ export function getEcho() {
 
     window.Pusher = Pusher;
 
+    const windowConfig = window.__REVERB_CONFIG__ || {};
+    const key = windowConfig.key || import.meta.env.VITE_REVERB_APP_KEY;
     const isHttps = window.location.protocol === 'https:';
-    const envHost = import.meta.env.VITE_REVERB_HOST;
+    const envHost = windowConfig.host || import.meta.env.VITE_REVERB_HOST;
     const host = window.location.hostname || envHost || 'localhost';
-    const port = isHttps ? 443 : parseInt(import.meta.env.VITE_REVERB_PORT || '8080', 10);
-    const forceTLS = isHttps || import.meta.env.VITE_REVERB_SCHEME === 'https';
+    const rawPort = windowConfig.port || import.meta.env.VITE_REVERB_PORT;
+    const port = isHttps ? 443 : parseInt(rawPort || '8080', 10);
+    const rawScheme = windowConfig.scheme || import.meta.env.VITE_REVERB_SCHEME;
+    const forceTLS = isHttps || rawScheme === 'https';
 
     try {
         echoInstance = new Echo({
             broadcaster: 'reverb',
-            key: import.meta.env.VITE_REVERB_APP_KEY,
+            key: key,
             wsHost: host,
             wsPort: port,
             wssPort: port,

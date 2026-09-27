@@ -9,7 +9,21 @@
         <!-- Google Fonts: Fraunces, Nunito Sans & Arabic Fonts (Amiri, Scheherazade New, Noto Naskh Arabic, Gulzar) -->
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400;1,700&family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,100..900,0..100,0..1;1,9..144,100..900,0..100,0..1&family=Gulzar&family=Noto+Naskh+Arabic:wght@400;500;600;700&family=Nunito+Sans:ital,opsz,wght@0,6..12,300..900;1,6..12,300..900&family=Scheherazade+New:wght@400;500;600;700&display=swap" rel="stylesheet">
+        <!-- Runtime Reverb Configuration for real-time WebSocket sync -->
+        @php
+            $reverbKey = config('reverb.apps.apps.0.key') ?: env('VITE_REVERB_APP_KEY') ?: env('REVERB_APP_KEY');
+            $reverbHost = config('reverb.apps.apps.0.options.host') ?: env('VITE_REVERB_HOST') ?: env('REVERB_HOST');
+            $reverbPort = config('reverb.apps.apps.0.options.port') ?: env('VITE_REVERB_PORT') ?: env('REVERB_PORT');
+            $reverbScheme = config('reverb.apps.apps.0.options.scheme') ?: env('VITE_REVERB_SCHEME') ?: env('REVERB_SCHEME', 'https');
+        @endphp
+        <script>
+            window.__REVERB_CONFIG__ = {
+                key: @json($reverbKey),
+                host: @json($reverbHost),
+                port: @json($reverbPort),
+                scheme: @json($reverbScheme),
+            };
+        </script>
 
         @vite(['resources/css/app.css', 'resources/js/app.js'])
         <script>

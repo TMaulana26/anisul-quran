@@ -47,6 +47,7 @@
 | **E-36** | **Hybrid User Preference System (Global Visuals + Optional Per-Surah Qari Override)** | State Management & Architecture | `useUserPreferences.js`, `.agents/catatan.md` | `[ ]` |
 | **E-37** | **Modal Dialog Penyelesaian Surah (Putar Surah Selanjutnya, Kembali ke Daftar, Putar Ulang & Dismissible)** | Player UX & Journey Continuity | `SurahCompletionModal.vue`, `useQuranAudioPlayer.js`, `Show.vue` | `[x]` |
 | **E-38** | **Sinkronisasi Otomatis Mode Khusyu' (خُشُوع), Word-by-Word Highlight & Anti-Delay Dengar Bersama Lintas Perangkat (Tablet & Laptop)** | Real-Time Sync & Karaoke Mode | `Room.vue`, `Show.vue`, `KhusyuPlayerView.vue`, `ListenTogetherController.php`, `useRoomSync.js`, `echo.js` | `[x]` |
+| **E-39** | **Resolusi Komprehensif VPS: Trusted Proxies (HTTPS/Mixed Content Fix), Reverb Runtime Hydration, FastCGI Buffers, & Anti-Looping Paused Audio** | Production Architecture & Mobile Stability | `bootstrap/app.php`, `AppServiceProvider.php`, `app.blade.php`, `echo.js`, `Room.vue`, `nginx.conf`, `Dockerfile` | `[x]` |
 
 ---
 
@@ -285,3 +286,34 @@
      - **Seek Cooldown Guard**: Lonjakan besar (> 1.5 detik) dibatasi oleh cooldown minimal 3 detik agar polling berurutan tidak memicu seek loop.
      - **Daemon Reverb Aktif**: Service `php artisan reverb:start --host=0.0.0.0 --port=8080` aktif mendengarkan koneksi WebSocket LAN pada port 8080.
      - **Natural Verse Progression Pass-Through & Zero-Rate Flutter**: Memperbaiki false-trigger pada pergantian ayat bertetangga (Math.abs(hostAyah - localAyah) <= 1). Audio dibiarkan menyeberang secara alami tanpa memotong suku kata terakhir ayat. Menghilangkan modulasi playbackRate dan menguncinya di 1.0x murni untuk mencegah flutter audio di tablet.
+
+
+### 13. [E-39] Resolusi Komprehensif VPS: Trusted Proxies (HTTPS/Mixed Content Fix), Reverb Runtime Hydration, FastCGI Buffers, & Anti-Looping Paused Audio
+- **Masalah & Laporan Investigasi VPS**:
+  1. **Insecure Scheme & Active Mixed Content**: Nilai joinUrl pada QR Code dan asset link @vite ter-render dengan skema http:// karena Laravel 11 (bootstrap/app.php) belum mempercayai proxy Nginx/Cloudflare (trustProxies), sehingga header X-Forwarded-Proto: https diabaikan. Browser mobile (Chrome/Safari) memblokir asset script HTTP pada halaman HTTPS (Active Mixed Content violation), menyebabkan tampilan blank di HP listener.
+  2. **WebSocket Reverb Mati Total (isEchoConfigured = false)**: Pada Dockerfile Stage 1, npm run build dijalankan tanpa .env, sehingga import.meta.env.VITE_REVERB_APP_KEY dievaluasi menjadi undefined dan dieliminasi oleh Vite menjadi return false. Listener terdegradasi ke fallback HTTP polling setiap 1.2s.
+  3. **Audio Buffer Thrashing & Looping Stutter**: Saat audio di-pause oleh host atau tertahan kebijakan autoplay mobile (needsTapToPlay), kalkulasi drift berulang memicu seekToTime dan seekToAyah setiap siklus polling pada file MP3 29MB (Surah 8), menyebabkan browser mobile terus me-request range data audio dan memutar fragmen audio berulang-ulang seperti kaset rusak (audio loop stutter).
+  4. **Nginx FastCGI Buffer Overflow**: Surah 8 memiliki 75 ayat dengan timestamps word-by-word (~250 KB payload JSON) yang melampaui buffer default Nginx, memaksa Nginx menulis ke buffer disk sementara (/var/lib/nginx/tmp/fastcgi/).
+- **Implementasi & Solusi**:
+  1. **Trusted Proxies & Force Scheme**:
+     - Menambahkan $middleware->trustProxies(at: '*'); pada bootstrap/app.php.
+     - Menambahkan URL::forceScheme('https'); pada AppServiceProvider::boot() jika dalam environment production atau APP_URL menggunakan https.
+  2. **Reverb Runtime Hydration Architecture**:
+     - Di resources/views/app.blade.php: Menginjeksi window.__REVERB_CONFIG__ langsung dari konfigurasi Laravel runtime.
+     - Di resources/js/echo.js: Memperbarui isEchoConfigured() dan getEcho() untuk memprioritaskan window.__REVERB_CONFIG__ sebelum fallback ke import.meta.env. Dengan ini, koneksi Echo ke Reverb 100% tahan terhadap Docker cache dan build-time env vacancy.
+     - Di Dockerfile: Menambahkan COPY .env* ./ pada build stage frontend.
+  3. **QR Code Origin Guarantee**:
+     - Di resources/js/composables/useRoomSync.js: Memprioritaskan window.location.origin pada pembuatan joinUrl agar terjamin menggunakan protokol dan domain yang sedang diakses di browser Host.
+  4. **Anti-Looping & Mobile Autoplay Guard**:
+     - Di resources/js/Pages/Listen/Room.vue:
+       - Menambahkan guard if (needsTapToPlay.value) return; agar tidak melakukan seek range request saat audio belum di-unlock via user gesture.
+       - Pada unlockAudio(), memicu sinkronisasi langsung ke roomState setelah audio berhasil di-play.
+       - Meredam seeking saat host paused: hanya seek jika drift ekstrem (> 3.0s) dengan cooldown 2s agar tidak terjadi loop stutter.
+       - Memaksa audioPlayer.setRepeatMode('none') pada listener di onMounted() agar tidak mengulang ayat secara lokal.
+  5. **Nginx FastCGI Buffer Optimization**:
+     - Di docker/nginx.conf: Menambahkan fastcgi_buffer_size 128k; fastcgi_buffers 4 256k; fastcgi_busy_buffers_size 256k; pada blok location ~ \.php$ untuk mengeliminasi disk buffering pada surah-surah panjang.
+- **Hasil Verifikasi**:
+  - Backend feature tests: 11/11 tests pass (55 assertions).
+  - Frontend Vitest suite: 21/21 test files pass (87/87 tests).
+  - Vite production build: terkompilasi bersih dalam 13.9s tanpa error.
+  - Linter Pint: lolos dan terformat sesuai standar Laravel.

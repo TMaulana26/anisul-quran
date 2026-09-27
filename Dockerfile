@@ -10,6 +10,7 @@ RUN npm ci
 COPY resources/ ./resources/
 COPY public/ ./public/
 COPY vite.config.js ./
+COPY .env* ./
 RUN npm run build
 
 # ==============================================================================
