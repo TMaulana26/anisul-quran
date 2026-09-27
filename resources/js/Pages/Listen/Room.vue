@@ -366,6 +366,8 @@ watch(() => isKhusyuMode.value, (isOpen) => {
     }
 });
 
+let lastSeekTimestamp = 0;
+
 const handleSyncUpdate = async (serverRoom) => {
     if (!serverRoom) return;
 
@@ -405,25 +407,51 @@ const handleSyncUpdate = async (serverRoom) => {
         }
     }
 
-    // Drift correction
+    // 1. Explicit Ayah Jump: If Host switched to a different Ayah, immediately seek cleanly to that Ayah!
+    const hostAyah = serverRoom.ayahNumber;
+    const localAyah = audioPlayer.currentAyahNumber.value;
+    if (hostAyah && localAyah && hostAyah !== localAyah) {
+        audioPlayer.seekToAyah(hostAyah, shouldPlay);
+        lastSeekTimestamp = Date.now();
+        audioPlayer.setPlaybackRate(1.0);
+        return;
+    }
+
+    // 2. Continuous Within-Ayah Playback: Smart Micro-Pitch Sync (Anti-Stutter & Clock-Offset Aware)
     const localSec = audioPlayer.currentTime.value;
+    const now = Date.now();
     const { estimatedHostSec, absDriftSec } = calculateDrift(
         localSec,
         serverRoom.timestampMs,
         serverRoom.updatedAt,
-        Date.now(),
-        shouldPlay
+        now,
+        shouldPlay,
+        roomSync.clockOffset?.value || 0
     );
 
-    // If drift is > 400ms, jump to sync
-    if (absDriftSec > 0.4) {
-        audioPlayer.seekToTime(estimatedHostSec);
-    } else if (absDriftSec > 0.1 && shouldPlay) {
-        // Nudge rate slightly to close gap smoothly
-        const rate = localSec < estimatedHostSec ? 1.05 : 0.95;
-        audioPlayer.setPlaybackRate(rate);
-    } else {
+    if (!shouldPlay) {
+        // When paused, only seek if noticeable (> 0.5s) with a 1.5s debounce
+        if (absDriftSec > 0.5 && now - lastSeekTimestamp > 1500) {
+            audioPlayer.seekToTime(estimatedHostSec);
+            lastSeekTimestamp = now;
+        }
         audioPlayer.setPlaybackRate(1.0);
+    } else {
+        // When playing: NEVER seek for small drift (< 1.2s)! Seeking flushes buffer and stutters.
+        // Instead, use imperceptible micro-rate pitch adjustment (1.03x / 0.97x) to glide smoothly!
+        if (absDriftSec > 1.5 && now - lastSeekTimestamp > 3000) {
+            // True large jump (e.g. host scrubbed timeline by > 1.5s)
+            audioPlayer.seekToTime(estimatedHostSec);
+            lastSeekTimestamp = now;
+            audioPlayer.setPlaybackRate(1.0);
+        } else if (absDriftSec > 0.25) {
+            // Smooth micro-pitch catchup (audio plays seamlessly without ANY interruption)
+            const rate = localSec < estimatedHostSec ? 1.03 : 0.97;
+            audioPlayer.setPlaybackRate(rate);
+        } else {
+            // Within 250ms perception threshold: perfectly synchronized
+            audioPlayer.setPlaybackRate(1.0);
+        }
     }
 };
 

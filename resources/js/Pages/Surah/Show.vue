@@ -221,7 +221,9 @@ watch(() => audioPlayer.isPlaying.value, () => {
 });
 
 watch(() => audioPlayer.currentAyahNumber.value, () => {
-    broadcastHostState(true);
+    nextTick(() => {
+        broadcastHostState(true);
+    });
 });
 
 watch(() => isKhusyuMode.value, () => {

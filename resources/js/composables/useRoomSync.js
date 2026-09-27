@@ -12,12 +12,30 @@ const roomState = ref(null);
 const isSyncing = ref(false);
 const lastSyncError = ref(null);
 const joinUrl = ref('');
+const clockOffset = ref(0);
 
 let pollTimer = null;
 let heartbeatTimer = null;
 let activeChannel = null;
 let lastSyncTimestamp = 0;
 const SYNC_THROTTLE_MS = 250;
+
+/**
+ * Filter and update estimated clock offset between client and server
+ * 
+ * @param {number} serverTime - Server timestamp in ms
+ */
+export function updateClockOffset(serverTime) {
+    if (typeof serverTime === 'number' && serverTime > 0) {
+        const measured = serverTime - Date.now();
+        if (clockOffset.value === 0) {
+            clockOffset.value = measured;
+        } else {
+            // Smoothly adapt clock offset using an exponential moving average
+            clockOffset.value = Math.round(clockOffset.value * 0.75 + measured * 0.25);
+        }
+    }
+}
 
 /**
  * Get or generate persistent device identifier
@@ -52,10 +70,13 @@ export function getDeviceId() {
  * @param {number} hostTimestampMs - Host recorded position in milliseconds
  * @param {number} hostUpdatedAtMs - Time Host sent the update in milliseconds
  * @param {number} nowMs - Current time in milliseconds
+ * @param {boolean} isPlaying - Whether playback is active
+ * @param {number} offsetMs - Estimated clock offset (serverTime - clientTime)
  * @returns {{ estimatedHostSec: number, driftSec: number, absDriftSec: number }}
  */
-export function calculateDrift(localSec, hostTimestampMs, hostUpdatedAtMs, nowMs = Date.now(), isPlaying = true) {
-    const elapsedMs = isPlaying ? Math.max(0, nowMs - hostUpdatedAtMs) : 0;
+export function calculateDrift(localSec, hostTimestampMs, hostUpdatedAtMs, nowMs = Date.now(), isPlaying = true, offsetMs = 0) {
+    const adjustedNow = nowMs + offsetMs;
+    const elapsedMs = isPlaying ? Math.max(0, adjustedNow - hostUpdatedAtMs) : 0;
     const estimatedHostSec = Math.max(0, (hostTimestampMs + elapsedMs) / 1000);
     const driftSec = localSec - estimatedHostSec;
     return {
@@ -306,6 +327,9 @@ export function useRoomSync() {
                     if (res.ok) {
                         const data = await res.json();
                         if (data.success && data.room) {
+                            if (data.room.serverTime) {
+                                updateClockOffset(data.room.serverTime);
+                            }
                             isConnected.value = true;
                             roomState.value = data.room;
                             listenerCount.value = data.room.listenerCount || 1;
@@ -339,6 +363,9 @@ export function useRoomSync() {
                 if (res.ok) {
                     const data = await res.json();
                     if (data.success && data.room) {
+                        if (data.room.serverTime) {
+                            updateClockOffset(data.room.serverTime);
+                        }
                         isConnected.value = true;
                         roomState.value = data.room;
                         listenerCount.value = data.room.listenerCount || 1;
@@ -363,6 +390,9 @@ export function useRoomSync() {
                 // Real-time audio sync event from Host
                 activeChannel.listen('.RoomSyncEvent', (event) => {
                     if (event && event.room) {
+                        if (event.room.serverTime) {
+                            updateClockOffset(event.room.serverTime);
+                        }
                         isConnected.value = true;
                         isWebSocketConnected.value = true;
                         roomState.value = event.room;
@@ -457,6 +487,7 @@ export function useRoomSync() {
         lastSyncError,
         joinUrl,
         deviceId,
+        clockOffset,
 
         // Actions
         createRoom,

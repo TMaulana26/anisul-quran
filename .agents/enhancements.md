@@ -278,3 +278,9 @@
      - Frontend Vitest Tests (`Room.test.js`, `KhusyuPlayerView.test.js`, `useRoomSync.test.js`, `echo.test.js`): Seluruh 13/13 unit & component tests passing bersih.
      - Linter & Formatter: Kode PHP diformat sesuai standar dengan `vendor/bin/pint --dirty --format agent`.
      - Production Bundling: Seluruh aset frontend terkompilasi sempurna melalui `npm run build` (0 warning, 0 error).
+  6. **Penyempurnaan Anti-Stutter & Transisi Pindah Ayat (Follow-up Fix)**:
+     - **Kalibrasi Clock Offset**: Menambahkan `clockOffset` di `useRoomSync.js` yang secara dinamis menghitung selisih jam perangkat tablet vs laptop (`serverTime - Date.now()`). Drift audio kini dihitung berdasarkan waktu yang terkalibrasi, mencegah perhitungan bias akibat clock skew.
+     - **Transisi Pindah Ayat Eksplisit**: Di `Room.vue`, sistem kini mendeteksi pergantian ayat (`serverRoom.ayahNumber !== localAyah`) dan langsung memanggil `audioPlayer.seekToAyah(hostAyah)` sekali secara presisi, alih-alih terjebak dalam kalkulasi drift berulang.
+     - **Smart Micro-Pitch Smoothing**: Pada audio yang berjalan normal, aplikasi tidak lagi memanggil `seekToTime()` untuk drift kecil (< 1.2 detik). Sistem menerapkan *micro-pitch rate adjustment* (1.03x / 0.97x) yang sama sekali tidak memutus aliran buffer audio (0% tersendat).
+     - **Seek Cooldown Guard**: Lonjakan besar (> 1.5 detik) dibatasi oleh cooldown minimal 3 detik agar polling berurutan tidak memicu seek loop.
+     - **Daemon Reverb Aktif**: Service `php artisan reverb:start --host=0.0.0.0 --port=8080` aktif mendengarkan koneksi WebSocket LAN pada port 8080.

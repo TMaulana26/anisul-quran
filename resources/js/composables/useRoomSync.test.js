@@ -55,5 +55,21 @@ describe('useRoomSync - Drift Correction & Room State', () => {
         expect(typeof sync.createRoom).toBe('function');
         expect(typeof sync.broadcastState).toBe('function');
         expect(typeof sync.startListening).toBe('function');
+        expect(sync.clockOffset).toBeDefined();
+    });
+
+    it('accounts for clock offset between client and server', () => {
+        // Tablet clock is 2000ms ahead of server (client time: 10000ms, server time: 8000ms, offset: -2000ms)
+        const clientNowMs = 10000;
+        const clockOffsetMs = -2000;
+        const hostUpdatedAtMs = 7000; // 1s before server current time
+        const hostTimestampMs = 15000; // 15s
+
+        // Adjusted client time = 10000 + (-2000) = 8000ms
+        // Elapsed = 8000 - 7000 = 1000ms = 1.0s
+        // Estimated host = 15s + 1s = 16s
+        const result = calculateDrift(16, hostTimestampMs, hostUpdatedAtMs, clientNowMs, true, clockOffsetMs);
+        expect(result.estimatedHostSec).toBeCloseTo(16, 1);
+        expect(result.absDriftSec).toBeCloseTo(0, 1);
     });
 });
