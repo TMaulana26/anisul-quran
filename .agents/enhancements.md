@@ -284,3 +284,4 @@
      - **Smart Micro-Pitch Smoothing**: Pada audio yang berjalan normal, aplikasi tidak lagi memanggil `seekToTime()` untuk drift kecil (< 1.2 detik). Sistem menerapkan *micro-pitch rate adjustment* (1.03x / 0.97x) yang sama sekali tidak memutus aliran buffer audio (0% tersendat).
      - **Seek Cooldown Guard**: Lonjakan besar (> 1.5 detik) dibatasi oleh cooldown minimal 3 detik agar polling berurutan tidak memicu seek loop.
      - **Daemon Reverb Aktif**: Service `php artisan reverb:start --host=0.0.0.0 --port=8080` aktif mendengarkan koneksi WebSocket LAN pada port 8080.
+     - **Natural Verse Progression Pass-Through & Zero-Rate Flutter**: Memperbaiki false-trigger pada pergantian ayat bertetangga (Math.abs(hostAyah - localAyah) <= 1). Audio dibiarkan menyeberang secara alami tanpa memotong suku kata terakhir ayat. Menghilangkan modulasi playbackRate dan menguncinya di 1.0x murni untuk mencegah flutter audio di tablet.

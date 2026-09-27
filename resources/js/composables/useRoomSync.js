@@ -420,6 +420,10 @@ export function useRoomSync() {
                 if (pusher?.connection) {
                     const connection = pusher.connection;
                     isWebSocketConnected.value = connection.state === 'connected';
+                    if (isWebSocketConnected.value && pollTimer) {
+                        clearInterval(pollTimer);
+                        pollTimer = null;
+                    }
 
                     connection.bind('connected', () => {
                         isWebSocketConnected.value = true;

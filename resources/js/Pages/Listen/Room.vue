@@ -407,17 +407,7 @@ const handleSyncUpdate = async (serverRoom) => {
         }
     }
 
-    // 1. Explicit Ayah Jump: If Host switched to a different Ayah, immediately seek cleanly to that Ayah!
-    const hostAyah = serverRoom.ayahNumber;
-    const localAyah = audioPlayer.currentAyahNumber.value;
-    if (hostAyah && localAyah && hostAyah !== localAyah) {
-        audioPlayer.seekToAyah(hostAyah, shouldPlay);
-        lastSeekTimestamp = Date.now();
-        audioPlayer.setPlaybackRate(1.0);
-        return;
-    }
-
-    // 2. Continuous Within-Ayah Playback: Smart Micro-Pitch Sync (Anti-Stutter & Clock-Offset Aware)
+    // Calculate drift with clock offset calibration
     const localSec = audioPlayer.currentTime.value;
     const now = Date.now();
     const { estimatedHostSec, absDriftSec } = calculateDrift(
@@ -429,29 +419,45 @@ const handleSyncUpdate = async (serverRoom) => {
         roomSync.clockOffset?.value || 0
     );
 
+    const hostAyah = serverRoom.ayahNumber;
+    const localAyah = audioPlayer.currentAyahNumber.value;
+
+    // 1. Distinguish between Natural Verse Progression vs Intentional Host Ayah Jump:
+    // When playing continuously, the single MP3 audio stream naturally progresses across verses.
+    // If the difference is just 1 adjacent verse and drift is small (< 2s), DO NOT SEEK!
+    // The follower's audio will cross the verse boundary naturally without cutting off or buffering.
+    const isIntentionalAyahJump = Boolean(
+        hostAyah && localAyah && hostAyah !== localAyah && (
+            !shouldPlay ||
+            hostAyah < localAyah ||
+            Math.abs(hostAyah - localAyah) > 1 ||
+            absDriftSec > 2.0
+        )
+    );
+
+    if (isIntentionalAyahJump) {
+        audioPlayer.seekToAyah(hostAyah, shouldPlay);
+        lastSeekTimestamp = now;
+        audioPlayer.setPlaybackRate(1.0);
+        return;
+    }
+
+    // 2. Playback State Synchronization:
     if (!shouldPlay) {
-        // When paused, only seek if noticeable (> 0.5s) with a 1.5s debounce
-        if (absDriftSec > 0.5 && now - lastSeekTimestamp > 1500) {
+        // When paused: mirror host scrubbing position if drift is noticeable (> 0.5s)
+        if (absDriftSec > 0.5 && now - lastSeekTimestamp > 600) {
             audioPlayer.seekToTime(estimatedHostSec);
             lastSeekTimestamp = now;
         }
         audioPlayer.setPlaybackRate(1.0);
     } else {
-        // When playing: NEVER seek for small drift (< 1.2s)! Seeking flushes buffer and stutters.
-        // Instead, use imperceptible micro-rate pitch adjustment (1.03x / 0.97x) to glide smoothly!
-        if (absDriftSec > 1.5 && now - lastSeekTimestamp > 3000) {
-            // True large jump (e.g. host scrubbed timeline by > 1.5s)
+        // When playing: Keep playbackRate strictly at 1.0x (zero audio resampling flutter/warble).
+        // Only seek if there is a severe desync (> 2.5s, e.g. network stall), protected by a 3s cooldown guard.
+        if (absDriftSec > 2.5 && now - lastSeekTimestamp > 3000) {
             audioPlayer.seekToTime(estimatedHostSec);
             lastSeekTimestamp = now;
-            audioPlayer.setPlaybackRate(1.0);
-        } else if (absDriftSec > 0.25) {
-            // Smooth micro-pitch catchup (audio plays seamlessly without ANY interruption)
-            const rate = localSec < estimatedHostSec ? 1.03 : 0.97;
-            audioPlayer.setPlaybackRate(rate);
-        } else {
-            // Within 250ms perception threshold: perfectly synchronized
-            audioPlayer.setPlaybackRate(1.0);
         }
+        audioPlayer.setPlaybackRate(1.0);
     }
 };
 
