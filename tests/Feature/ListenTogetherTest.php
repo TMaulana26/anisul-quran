@@ -248,3 +248,49 @@ it('broadcasts RoomClosedEvent when host closes room', function () {
             && $event->broadcastAs() === 'RoomClosedEvent';
     });
 });
+
+it('persists and broadcasts readingMode and isKhusyuMode state', function () {
+    Event::fake([
+        RoomSyncEvent::class,
+    ]);
+
+    $create = $this->postJson('/api/rooms', [
+        'surahId' => 1,
+        'ayahNumber' => 1,
+        'readingMode' => 'khusyu',
+        'isKhusyuMode' => true,
+    ]);
+
+    $create->assertStatus(201)
+        ->assertJson([
+            'success' => true,
+            'room' => [
+                'readingMode' => 'khusyu',
+                'isKhusyuMode' => true,
+            ],
+        ]);
+
+    $code = $create->json('room.code');
+
+    $syncResponse = $this->postJson("/api/rooms/{$code}/sync", [
+        'surahId' => 1,
+        'ayahNumber' => 2,
+        'readingMode' => 'mushaf',
+        'isKhusyuMode' => false,
+    ]);
+
+    $syncResponse->assertStatus(200)
+        ->assertJson([
+            'success' => true,
+            'room' => [
+                'readingMode' => 'mushaf',
+                'isKhusyuMode' => false,
+            ],
+        ]);
+
+    Event::assertDispatched(RoomSyncEvent::class, function ($event) use ($code) {
+        return $event->roomCode === $code
+            && $event->room['readingMode'] === 'mushaf'
+            && $event->room['isKhusyuMode'] === false;
+    });
+});

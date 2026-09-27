@@ -247,6 +247,10 @@ const props = defineProps({
         type: Boolean,
         default: false,
     },
+    isKhusyuMode: {
+        type: Boolean,
+        default: false,
+    },
 });
 
 const emit = defineEmits(['update:open']);
@@ -293,6 +297,8 @@ const handleCreateRoom = async () => {
         const isPlaying = audioPlayer.isPlaying.value;
         const reciterId = userPreferences.selectedReciterId?.value || userPreferences.preferences?.selectedReciterId || 7;
         const mushafType = userPreferences.mushafType?.value || userPreferences.preferences?.mushafType || 'uthmani';
+        const isKhusyu = Boolean(props.isKhusyuMode);
+        const readingMode = isKhusyu ? 'khusyu' : (userPreferences.readingMode?.value || userPreferences.preferences?.readingMode || 'ayah');
 
         await roomSync.createRoom({
             surahId,
@@ -301,6 +307,8 @@ const handleCreateRoom = async () => {
             isPlaying,
             reciterId,
             mushafType,
+            readingMode,
+            isKhusyuMode: isKhusyu,
         });
     } catch (e) {
         console.error('Failed to create room:', e);

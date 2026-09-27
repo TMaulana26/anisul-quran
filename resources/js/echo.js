@@ -22,7 +22,7 @@ export function getEcho() {
 
     const isHttps = window.location.protocol === 'https:';
     const envHost = import.meta.env.VITE_REVERB_HOST;
-    const host = isHttps ? window.location.hostname : (envHost || window.location.hostname || 'localhost');
+    const host = window.location.hostname || envHost || 'localhost';
     const port = isHttps ? 443 : parseInt(import.meta.env.VITE_REVERB_PORT || '8080', 10);
     const forceTLS = isHttps || import.meta.env.VITE_REVERB_SCHEME === 'https';
 

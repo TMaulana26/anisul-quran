@@ -57,6 +57,14 @@ const props = defineProps({
         type: Number,
         default: 32,
     },
+    isListener: {
+        type: Boolean,
+        default: false,
+    },
+    needsTapToPlay: {
+        type: Boolean,
+        default: false,
+    },
 });
 
 const emit = defineEmits([
@@ -68,11 +76,16 @@ const emit = defineEmits([
     'open-reciter-modal',
     'open-settings',
     'open-listen-together',
+    'unlock-audio',
+    'leave-room',
 ]);
 
 const audioPlayer = useQuranAudioPlayer();
 const userPreferences = useUserPreferences();
 const roomSync = useRoomSync();
+
+// True if device is Follower/Listener in Listen Together
+const effectiveIsListener = computed(() => props.isListener || roomSync.isListener.value);
 
 // Active Atmosphere Theme ('noor' | 'midnight' | 'warqah') synced with global preferences
 const currentTheme = computed(() => userPreferences.preferences.appVibe || 'noor');
@@ -386,7 +399,11 @@ const isLastAyahAndChunk = computed(() => {
 });
 
 const closeKhusyuMode = () => {
-    emit('update:open', false);
+    if (effectiveIsListener.value) {
+        emit('leave-room');
+    } else {
+        emit('update:open', false);
+    }
 };
 const closeZenMode = closeKhusyuMode;
 
@@ -399,6 +416,9 @@ const handleKeyDown = (e) => {
         } else {
             closeKhusyuMode();
         }
+    } else if (effectiveIsListener.value) {
+        // Listener mode playback is locked to the host
+        return;
     } else if (e.key === ' ' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'BUTTON') {
         e.preventDefault();
         audioPlayer.togglePlay();
@@ -641,12 +661,12 @@ const selectSpeed = (rate) => {
                                 currentTheme === 'midnight' ? 'bg-white/10 hover:bg-destructive/20 text-[#f4efe6] hover:text-destructive hover:border-destructive/40 border-amber-500/20' : '',
                                 currentTheme === 'warqah' ? 'bg-amber-900/10 dark:bg-white/10 hover:bg-destructive/15 hover:text-destructive hover:border-destructive/30 border-amber-900/20 dark:border-amber-700/30 text-[#2c1d11] dark:text-[#f4ebd0]' : ''
                             ]"
-                            title="Keluar dari Mode Khusyu' (Esc)"
-                            aria-label="Keluar dari Mode Khusyu'"
+                            :title="effectiveIsListener ? 'Tinggalkan Sesi Dengar Bersama' : 'Keluar dari Mode Khusyu\' (Esc)'"
+                            :aria-label="effectiveIsListener ? 'Tinggalkan Sesi Dengar Bersama' : 'Keluar dari Mode Khusyu\''"
                         >
                             <X class="h-4 w-4 sm:hidden" />
-                            <Minimize2 class="hidden sm:block h-3.5 w-3.5" />
-                            <span class="hidden sm:inline">Keluar</span>
+                            <Minimize2 v-if="!effectiveIsListener" class="hidden sm:block h-3.5 w-3.5" />
+                            <span class="hidden sm:inline">{{ effectiveIsListener ? 'Keluar Sesi' : 'Keluar' }}</span>
                         </button>
                     </div>
                 </header>
@@ -657,18 +677,18 @@ const selectSpeed = (rate) => {
                     <button
                         type="button"
                         @click="prevChunk"
-                        :disabled="isFirstAyahAndChunk"
+                        :disabled="effectiveIsListener || isFirstAyahAndChunk"
                         :class="[
                             'absolute left-2 sm:left-6 md:left-8 lg:left-10 top-1/2 -translate-y-1/2 p-2.5 sm:p-3.5 rounded-full transition-all z-20 backdrop-blur-md border',
-                            isFirstAyahAndChunk
+                            effectiveIsListener || isFirstAyahAndChunk
                                 ? 'opacity-20 cursor-not-allowed pointer-events-none'
                                 : 'opacity-60 sm:opacity-40 hover:opacity-100 hover:scale-110 active:scale-95 cursor-pointer',
                             currentTheme === 'noor' ? 'bg-muted/40 hover:bg-muted text-foreground border-border/40' : '',
                             currentTheme === 'midnight' ? 'bg-white/5 hover:bg-white/15 text-amber-200 border-amber-500/20' : '',
                             currentTheme === 'warqah' ? 'bg-amber-900/5 dark:bg-white/5 hover:bg-amber-900/15 text-[#3b2416] dark:text-[#ebd8ba] border-amber-900/20 dark:border-amber-600/30' : ''
                         ]"
-                        :title="activeChunkIndex > 1 ? 'Bagian Sebelumnya' : 'Ayat Sebelumnya'"
-                        :aria-label="activeChunkIndex > 1 ? 'Bagian Sebelumnya' : 'Ayat Sebelumnya'"
+                        :title="effectiveIsListener ? 'Mengikuti Host' : (activeChunkIndex > 1 ? 'Bagian Sebelumnya' : 'Ayat Sebelumnya')"
+                        :aria-label="effectiveIsListener ? 'Mengikuti Host' : (activeChunkIndex > 1 ? 'Bagian Sebelumnya' : 'Ayat Sebelumnya')"
                     >
                         <ChevronLeft class="h-6 w-6 sm:h-7 sm:w-7" />
                     </button>
@@ -677,18 +697,18 @@ const selectSpeed = (rate) => {
                     <button
                         type="button"
                         @click="nextChunk"
-                        :disabled="isLastAyahAndChunk"
+                        :disabled="effectiveIsListener || isLastAyahAndChunk"
                         :class="[
                             'absolute right-2 sm:right-6 md:right-8 lg:right-10 top-1/2 -translate-y-1/2 p-2.5 sm:p-3.5 rounded-full transition-all z-20 backdrop-blur-md border',
-                            isLastAyahAndChunk
+                            effectiveIsListener || isLastAyahAndChunk
                                 ? 'opacity-20 cursor-not-allowed pointer-events-none'
                                 : 'opacity-60 sm:opacity-40 hover:opacity-100 hover:scale-110 active:scale-95 cursor-pointer',
                             currentTheme === 'noor' ? 'bg-muted/40 hover:bg-muted text-foreground border-border/40' : '',
                             currentTheme === 'midnight' ? 'bg-white/5 hover:bg-white/15 text-amber-200 border-amber-500/20' : '',
                             currentTheme === 'warqah' ? 'bg-amber-900/5 dark:bg-white/5 hover:bg-amber-900/15 text-[#3b2416] dark:text-[#ebd8ba] border-amber-900/20 dark:border-amber-600/30' : ''
                         ]"
-                        :title="activeChunkIndex < verseChunks.length ? 'Bagian Selanjutnya' : 'Ayat Selanjutnya'"
-                        :aria-label="activeChunkIndex < verseChunks.length ? 'Bagian Selanjutnya' : 'Ayat Selanjutnya'"
+                        :title="effectiveIsListener ? 'Mengikuti Host' : (activeChunkIndex < verseChunks.length ? 'Bagian Selanjutnya' : 'Ayat Selanjutnya')"
+                        :aria-label="effectiveIsListener ? 'Mengikuti Host' : (activeChunkIndex < verseChunks.length ? 'Bagian Selanjutnya' : 'Ayat Selanjutnya')"
                     >
                         <ChevronRight class="h-6 w-6 sm:h-7 sm:w-7" />
                     </button>
@@ -890,7 +910,9 @@ const selectSpeed = (rate) => {
                                     step="0.1"
                                     :value="audioPlayer.progressPercent.value"
                                     @input="onSeekbarChange"
-                                    class="vibe-slider w-full cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                                    :disabled="effectiveIsListener"
+                                    class="vibe-slider w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                                    :class="effectiveIsListener ? 'cursor-default pointer-events-none' : 'cursor-pointer'"
                                     :style="{ '--slider-progress': `${audioPlayer.progressPercent.value}%` }"
                                     aria-label="Timeline Audio"
                                 />
@@ -903,8 +925,8 @@ const selectSpeed = (rate) => {
 
                         <!-- Transport Buttons & Utilities: Balanced 3-Group Architecture -->
                         <div class="flex items-center justify-between">
-                            <!-- Left: Playback Rate & Repeat Mode -->
-                            <div class="flex items-center gap-1.5 sm:gap-2">
+                            <!-- Left: Playback Rate & Repeat Mode (Host Only) -->
+                            <div v-if="!effectiveIsListener" class="flex items-center gap-1.5 sm:gap-2">
                                 <div ref="speedMenuRef" class="relative">
                                     <button
                                         type="button"
@@ -951,9 +973,10 @@ const selectSpeed = (rate) => {
                                     <Repeat v-else class="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                                 </button>
                             </div>
+                            <div v-else class="w-12 sm:w-20"></div>
 
-                            <!-- Center: Prev, Hero Play/Pause, Next -->
-                            <div class="flex items-center gap-2 sm:gap-4">
+                            <!-- Center: Prev, Hero Play/Pause, Next (Host) OR Follower Lock Info (Listener) -->
+                            <div v-if="!effectiveIsListener" class="flex items-center gap-2 sm:gap-4">
                                 <button
                                     type="button"
                                     @click="audioPlayer.prevAyah"
@@ -1003,11 +1026,27 @@ const selectSpeed = (rate) => {
                                     <SkipForward class="h-4 w-4 sm:h-5 sm:w-5" />
                                 </button>
                             </div>
-
-                            <!-- Right: Listen Together, Volume (Desktop), Settings -->
-                            <div class="flex items-center gap-1.5 sm:gap-2">
-                                <!-- Listen Together Button in Khusyu Mode -->
+                            <div v-else class="flex items-center gap-2 sm:gap-3">
                                 <button
+                                    v-if="needsTapToPlay"
+                                    type="button"
+                                    @click="emit('unlock-audio')"
+                                    class="px-4 py-2 rounded-2xl bg-primary text-primary-foreground font-semibold text-xs flex items-center gap-2 shadow-lg active:scale-95 transition-all cursor-pointer"
+                                >
+                                    <Play class="h-4 w-4 fill-current" />
+                                    <span>Mulai Dengar</span>
+                                </button>
+                                <div v-else class="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-primary/10 border border-primary/25 text-primary text-xs font-semibold">
+                                    <Radio class="h-3.5 w-3.5 animate-pulse" />
+                                    <span>Terkunci ke Host</span>
+                                </div>
+                            </div>
+
+                            <!-- Right: Listen Together (Host), Volume (Desktop), Settings -->
+                            <div class="flex items-center gap-1.5 sm:gap-2">
+                                <!-- Listen Together Button in Khusyu Mode (Host Only) -->
+                                <button
+                                    v-if="!effectiveIsListener"
                                     type="button"
                                     @click="emit('open-listen-together')"
                                     :class="[

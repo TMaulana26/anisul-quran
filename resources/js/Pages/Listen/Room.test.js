@@ -124,4 +124,41 @@ describe('Room.vue', () => {
         // Restore mute state
         player.toggleMute();
     });
+
+    it('activates KhusyuPlayerView when room is created or updated in Khusyu mode', async () => {
+        const wrapper = mount(Room, {
+            props: {
+                room: {
+                    ...mockRoom,
+                    isKhusyuMode: true,
+                    readingMode: 'khusyu',
+                },
+                roomCode: 'X2FXJ8',
+                chapter: mockChapter,
+                verses: [{ id: 1, verse_number: 1, verse_key: '1:1', words: [] }],
+                recitation: mockRecitation,
+            },
+            global: {
+                stubs: {
+                    AppLayout: { template: '<div><slot /></div>' },
+                    AyahItem: true,
+                    MushafPageView: true,
+                    FollowerBanner: {
+                        props: ['roomCode', 'isConnected', 'listenerCount', 'status', 'ayahNumber'],
+                        template: '<div class="follower-banner-stub" />',
+                    },
+                    KhusyuPlayerView: {
+                        props: ['open', 'isListener'],
+                        template: '<div class="khusyu-player-stub" :data-open="open" :data-listener="isListener" />',
+                    },
+                },
+            },
+        });
+
+        const khusyuStub = wrapper.find('.khusyu-player-stub');
+        expect(khusyuStub.exists()).toBe(true);
+        expect(khusyuStub.attributes('data-open')).toBe('true');
+        expect(khusyuStub.attributes('data-listener')).toBe('true');
+    });
 });
+

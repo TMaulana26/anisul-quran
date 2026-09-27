@@ -46,6 +46,7 @@
 | **E-35** | **Next Major: Mode Tadabbur Alam (Cinematic Video Sanctuary & Sacred Verses Background)** | Immersive Sanctuary & Nature Video | `TadabburPlayerView.vue`, `.agents/catatan.md` | `[ ]` |
 | **E-36** | **Hybrid User Preference System (Global Visuals + Optional Per-Surah Qari Override)** | State Management & Architecture | `useUserPreferences.js`, `.agents/catatan.md` | `[ ]` |
 | **E-37** | **Modal Dialog Penyelesaian Surah (Putar Surah Selanjutnya, Kembali ke Daftar, Putar Ulang & Dismissible)** | Player UX & Journey Continuity | `SurahCompletionModal.vue`, `useQuranAudioPlayer.js`, `Show.vue` | `[x]` |
+| **E-38** | **Sinkronisasi Otomatis Mode Khusyu' (خُشُوع), Word-by-Word Highlight & Anti-Delay Dengar Bersama Lintas Perangkat (Tablet & Laptop)** | Real-Time Sync & Karaoke Mode | `Room.vue`, `Show.vue`, `KhusyuPlayerView.vue`, `ListenTogetherController.php`, `useRoomSync.js`, `echo.js` | `[x]` |
 
 ---
 
@@ -241,3 +242,39 @@
      - Format kode diverifikasi bersih via `vendor/bin/pint --dirty --format agent`.
      - Desain diverifikasi dengan `npx impeccable detect resources/js/` (0 anti-patterns).
      - Seluruh build aset Vite terkompilasi bersih via `npm run build`.
+
+### 12. [E-38] Sinkronisasi Otomatis Mode Khusyu' (خُشُوع), Word-by-Word Karaoke Highlight & Anti-Delay Dengar Bersama Lintas Perangkat (Tablet & Laptop)
+- **Masalah & Temuan Pengujian Riil (Tablet vs Laptop)**:
+  1. **Delay / Desync pada Tablet**: Tablet yang memindai QR code mengalami lag/delay sinkronisasi terhadap Host (Laptop). Penyebabnya adalah `echo.js` menginisialisasi Reverb host menggunakan `localhost` pada koneksi HTTP dev, sehingga perangkat tablet di jaringan lokal mencoba membuka WebSocket ke dirinya sendiri lalu gagal, dan terdegradasi ke fallback HTTP polling berinterval lambat (3 detik). Selain itu, Host di `Show.vue` tidak mem-broadcast state saat audio berjalan atau saat beralih mode.
+  2. **Mode Khusyu' Tidak Mengikuti Host**: Ketika Host mengaktifkan Mode Khusyu' (خُشُوع), perangkat follower (Tablet) tetap berada di mode tampilan ayat biasa, padahal dalam mode karaoke bersama, follower harus secara otomatis mengikuti mode Host.
+  3. **Highlight Bacaan Qari Tidak Aktif di Tablet**: Kata-per-kata yang sedang dibaca qari tidak menyala (*karaoke highlight inactive*) di perangkat pengikut karena prop `:is-playing` terlewat pada komponen `<AyahItem>` di `Room.vue`, sehingga kondisi `isActive && isPlaying && activeWordIndex === word.position` tidak terpenuhi.
+- **Implementasi & Solusi**:
+  1. **Backend Payload & Event Extension (`ListenTogetherController.php` & `RoomSyncEvent.php`)**:
+     - Menambahkan validasi dan persistensi `readingMode` (`ayah`, `mushaf`, `khusyu`) dan `isKhusyuMode` (boolean) pada method `store()` dan `sync()`.
+     - Memastikan status mode bacaan tersimpan di cache room dan disiarkan secara instan melalui `RoomSyncEvent`.
+  2. **WebSocket LAN Discovery & Resilient Polling (`echo.js` & `useRoomSync.js`)**:
+     - Memperbaiki resolusi host pada `echo.js` dengan mengutamakan `window.location.hostname` dibanding fallback env `localhost`, sehingga tablet/ponsel di LAN otomatis terhubung ke IP mesin Host yang menjalankan Reverb WebSocket (< 50ms latensi).
+     - Memperketat interval fallback HTTP polling dari 3000ms menjadi 1200ms untuk responsivitas instan jika koneksi WebSocket terganggu.
+     - Menyertakan payload `readingMode` dan `isKhusyuMode` pada composable `createRoom()` dan `broadcastState()`.
+  3. **Host Continuous Broadcast Engine (`Surah/Show.vue` & `ListenTogetherModal.vue`)**:
+     - Mengintegrasikan composable `useRoomSync` di `Show.vue` dan membuat helper `broadcastHostState(force)`.
+     - Menambahkan reactive watcher pada perubahan `audioPlayer.isPlaying`, `audioPlayer.currentAyahNumber`, `isKhusyuMode`, `readingMode`, `currentReciter`, dan `chapter.id`.
+     - Menambahkan timer broadcast berkala 1.5 detik saat audio sedang berputar untuk *drift correction* otomatis pada seluruh listener.
+     - Meneruskan prop `:is-khusyu-mode="isKhusyuMode"` dari `Show.vue` ke `ListenTogetherModal.vue` agar saat pembuatan room pertama kali, mode Khusyu' langsung tercatat.
+  4. **Follower Fullscreen Khusyu Sanctuary (`KhusyuPlayerView.vue` & `Room.vue`)**:
+     - Di `KhusyuPlayerView.vue`:
+       - Menambahkan prop `isListener` dan `needsTapToPlay`, emit `'unlock-audio'` dan `'leave-room'`, serta komputasi `effectiveIsListener`.
+       - Menonaktifkan seekbar scrubbing dan tombol navigasi panah kiri/kanan bagi follower agar tidak merusak sinkronisasi Host.
+       - Menjaga footer kontrol follower: menyembunyikan kontrol pemutaran host (Play/Pause, Prev/Next, Repeat, Speed), menampilkan badge "Terkunci ke Host" atau tombol "Mulai Dengar" (untuk mengatasi kebijakan autoplay browser mobile), serta mempertahankan slider volume lokal dan pemilihan suasana (Noor/Midnight/Warqah).
+       - Menambahkan proteksi keyboard listener pada event Space/Arrow agar tidak membajak pemutaran Host, serta tombol "Keluar Sesi" yang terarah.
+     - Di `Room.vue`:
+       - Mengintegrasikan `<KhusyuPlayerView>` fullscreen yang reaktif mengikuti `isKhusyuMode` dan `hostReadingMode` dari Host.
+       - Mengintegrasikan `<MushafPageView>` ketika Host berada dalam Mode Mushaf.
+       - Memperbaiki word karaoke highlight pada `<AyahItem>` dengan menyematkan `:is-playing="audioPlayer.isPlaying.value"` dan `:arabic-font-size`.
+       - Menambahkan auto-scroll watcher halus ke ayat aktif saat berada di mode list dan saat keluar dari Mode Khusyu'.
+       - Menangani event browser autoplay restrictions dengan banner dan tombol "Mulai Dengar" yang elegan.
+  5. **Pengujian & Verifikasi**:
+     - Backend Feature Tests (`tests/Feature/ListenTogetherTest.php`): Menambahkan pengujian pembuatan room dengan Mode Khusyu', persistensi state, dan dispatch `RoomSyncEvent` (11/11 tests passing, 55 assertions).
+     - Frontend Vitest Tests (`Room.test.js`, `KhusyuPlayerView.test.js`, `useRoomSync.test.js`, `echo.test.js`): Seluruh 13/13 unit & component tests passing bersih.
+     - Linter & Formatter: Kode PHP diformat sesuai standar dengan `vendor/bin/pint --dirty --format agent`.
+     - Production Bundling: Seluruh aset frontend terkompilasi sempurna melalui `npm run build` (0 warning, 0 error).

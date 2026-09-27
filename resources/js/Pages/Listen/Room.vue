@@ -75,19 +75,31 @@
                     </p>
                 </div>
 
-                <!-- Verses Stream -->
-                <div class="space-y-4">
+                <!-- Reading View: Either Mode Ayat OR Mode Mushaf -->
+                <div v-if="hostReadingMode === 'mushaf'" class="space-y-6">
+                    <MushafPageView 
+                        :verses="verses" 
+                        :chapter="chapter"
+                        :mushaf-type="userPreferences.preferences.mushafType"
+                        :arabic-font-size="userPreferences.preferences.arabicFontSize"
+                        :active-ayah-number="audioPlayer.currentAyahNumber.value"
+                        :active-word-index="audioPlayer.currentWordIndex.value"
+                        :is-playing="audioPlayer.isPlaying.value"
+                    />
+                </div>
+                <div v-else class="space-y-4">
                     <AyahItem
                         v-for="verse in verses"
                         :key="verse.id"
                         :verse="verse"
                         :chapter-id="chapter.id"
                         :is-active="audioPlayer.currentAyahNumber.value === verse.verse_number"
+                        :is-playing="audioPlayer.isPlaying.value"
                         :active-word-index="audioPlayer.currentAyahNumber.value === verse.verse_number ? audioPlayer.currentWordIndex.value : null"
                         :show-translation="userPreferences.preferences.showTranslation"
                         :show-transliteration="userPreferences.preferences.showTransliteration"
                         :mushaf-type="userPreferences.preferences.mushafType"
-                        :font-size="userPreferences.preferences.arabicFontSize"
+                        :arabic-font-size="userPreferences.preferences.arabicFontSize"
                     />
                 </div>
             </div>
@@ -230,15 +242,33 @@
                     </button>
                 </div>
             </transition>
+
+            <!-- Follower Fullscreen Khusyu Focus Reading View -->
+            <KhusyuPlayerView
+                v-if="chapter && verses && verses.length > 0"
+                v-model:open="isKhusyuMode"
+                :chapter="chapter"
+                :verses="verses"
+                v-model:mushafType="userPreferences.preferences.mushafType"
+                v-model:showTranslation="userPreferences.preferences.showTranslation"
+                v-model:showTransliteration="userPreferences.preferences.showTransliteration"
+                v-model:arabicFontSize="userPreferences.preferences.arabicFontSize"
+                :is-listener="true"
+                :needs-tap-to-play="needsTapToPlay"
+                @unlock-audio="unlockAudio"
+                @leave-room="handleLeave"
+            />
         </div>
     </AppLayout>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue';
 import { router, Link } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import AyahItem from '@/components/AyahItem.vue';
+import MushafPageView from '@/components/MushafPageView.vue';
+import KhusyuPlayerView from '@/components/player/KhusyuPlayerView.vue';
 import FollowerBanner from '@/components/sync/FollowerBanner.vue';
 import { useRoomSync, calculateDrift } from '@/composables/useRoomSync';
 import { useQuranAudioPlayer } from '@/composables/useQuranAudioPlayer';
@@ -277,6 +307,9 @@ const audioPlayer = useQuranAudioPlayer();
 const userPreferences = useUserPreferences();
 const needsTapToPlay = ref(false);
 
+const hostReadingMode = ref(props.room?.readingMode || 'ayah');
+const isKhusyuMode = ref(Boolean(props.room?.isKhusyuMode || props.room?.readingMode === 'khusyu'));
+
 const pageTitle = computed(() => {
     if (props.error || !props.room) {
         return 'Sesi Dengar Bersama Tidak Ditemukan';
@@ -306,6 +339,33 @@ const unlockAudio = async () => {
     }
 };
 
+// Smooth Auto-Scroll to Active Ayah (Follower view)
+watch(() => audioPlayer.currentAyahNumber.value, (ayahNum) => {
+    if (!ayahNum || !audioPlayer.autoScrollEnabled.value || isKhusyuMode.value) return;
+
+    nextTick(() => {
+        const elId = hostReadingMode.value === 'mushaf' ? `mushaf-ayah-${ayahNum}` : `ayah-${ayahNum}`;
+        const el = document.getElementById(elId);
+        if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    });
+});
+
+// When exiting Khusyu Mode, smoothly scroll back to the currently playing ayah
+watch(() => isKhusyuMode.value, (isOpen) => {
+    if (!isOpen) {
+        nextTick(() => {
+            const ayahNum = audioPlayer.currentAyahNumber.value || 1;
+            const elId = hostReadingMode.value === 'mushaf' ? `mushaf-ayah-${ayahNum}` : `ayah-${ayahNum}`;
+            const el = document.getElementById(elId);
+            if (el) {
+                el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        });
+    }
+});
+
 const handleSyncUpdate = async (serverRoom) => {
     if (!serverRoom) return;
 
@@ -313,6 +373,16 @@ const handleSyncUpdate = async (serverRoom) => {
     if (serverRoom.surahId && props.chapter && serverRoom.surahId !== props.chapter.id) {
         router.visit(`/listen/${props.roomCode}`, { preserveScroll: false });
         return;
+    }
+
+    // Synchronize Host Reading Mode & Khusyu Mode
+    if (serverRoom.readingMode) {
+        hostReadingMode.value = serverRoom.readingMode;
+    }
+    if (serverRoom.isKhusyuMode !== undefined) {
+        isKhusyuMode.value = Boolean(serverRoom.isKhusyuMode || serverRoom.readingMode === 'khusyu');
+    } else if (serverRoom.readingMode) {
+        isKhusyuMode.value = serverRoom.readingMode === 'khusyu';
     }
 
     // Play / Pause synchronization
@@ -359,12 +429,22 @@ const handleSyncUpdate = async (serverRoom) => {
 
 onMounted(async () => {
     if (props.room && props.chapter && props.recitation) {
+        // Synchronize initial mode
+        if (props.room.readingMode) {
+            hostReadingMode.value = props.room.readingMode;
+        }
+        if (props.room.isKhusyuMode !== undefined) {
+            isKhusyuMode.value = Boolean(props.room.isKhusyuMode || props.room.readingMode === 'khusyu');
+        } else if (props.room.readingMode === 'khusyu') {
+            isKhusyuMode.value = true;
+        }
+
         // Load recitation into audio player
         audioPlayer.loadSurah(
             props.chapter,
             props.recitation,
             props.room.reciterId ? { id: props.room.reciterId } : null,
-            1,
+            props.room.ayahNumber || 1,
             false
         );
 

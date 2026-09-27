@@ -40,12 +40,19 @@ class ListenTogetherController extends Controller
             'status' => ['nullable', 'in:playing,paused'],
             'reciterId' => ['nullable', 'integer'],
             'mushafType' => ['nullable', 'in:uthmani,indopak'],
+            'readingMode' => ['nullable', 'string', 'in:ayah,mushaf,khusyu'],
+            'isKhusyuMode' => ['nullable', 'boolean'],
             'hostDeviceId' => ['nullable', 'string', 'max:100'],
         ]);
 
         $code = $this->generateUniqueRoomCode();
         $hostDeviceId = $validated['hostDeviceId'] ?? (string) Str::uuid();
         $now = (int) (microtime(true) * 1000);
+
+        $isKhusyu = isset($validated['isKhusyuMode'])
+            ? (bool) $validated['isKhusyuMode']
+            : (($validated['readingMode'] ?? '') === 'khusyu');
+        $readingMode = $validated['readingMode'] ?? ($isKhusyu ? 'khusyu' : 'ayah');
 
         $roomData = [
             'code' => $code,
@@ -56,6 +63,8 @@ class ListenTogetherController extends Controller
             'status' => $validated['status'] ?? 'paused',
             'reciterId' => (int) ($validated['reciterId'] ?? 7),
             'mushafType' => $validated['mushafType'] ?? 'uthmani',
+            'readingMode' => $readingMode,
+            'isKhusyuMode' => $isKhusyu,
             'createdAt' => $now,
             'updatedAt' => $now,
         ];
@@ -127,6 +136,8 @@ class ListenTogetherController extends Controller
             'status' => ['nullable', 'in:playing,paused'],
             'reciterId' => ['nullable', 'integer'],
             'mushafType' => ['nullable', 'in:uthmani,indopak'],
+            'readingMode' => ['nullable', 'string', 'in:ayah,mushaf,khusyu'],
+            'isKhusyuMode' => ['nullable', 'boolean'],
             'hostDeviceId' => ['nullable', 'string', 'max:100'],
         ]);
 
@@ -134,6 +145,15 @@ class ListenTogetherController extends Controller
             if ($val !== null) {
                 $room[$key] = $val;
             }
+        }
+
+        if (array_key_exists('isKhusyuMode', $validated) && $validated['isKhusyuMode'] !== null) {
+            $room['isKhusyuMode'] = (bool) $validated['isKhusyuMode'];
+            if (! isset($validated['readingMode'])) {
+                $room['readingMode'] = $room['isKhusyuMode'] ? 'khusyu' : ($room['readingMode'] === 'khusyu' ? 'ayah' : ($room['readingMode'] ?? 'ayah'));
+            }
+        } elseif (array_key_exists('readingMode', $validated) && $validated['readingMode'] !== null) {
+            $room['isKhusyuMode'] = ($validated['readingMode'] === 'khusyu');
         }
 
         $room['updatedAt'] = (int) (microtime(true) * 1000);

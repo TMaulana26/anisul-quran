@@ -11,6 +11,7 @@ import SurahCompletionModal from '@/components/player/SurahCompletionModal.vue';
 import ListenTogetherModal from '@/components/sync/ListenTogetherModal.vue';
 import { useQuranAudioPlayer } from '@/composables/useQuranAudioPlayer';
 import { useUserPreferences } from '@/composables/useUserPreferences';
+import { useRoomSync } from '@/composables/useRoomSync';
 import { 
     ChevronLeft, 
     ChevronRight, 
@@ -71,6 +72,9 @@ const audioPlayer = useQuranAudioPlayer();
 
 // Global User Preferences Composable
 const userPreferences = useUserPreferences();
+
+// Room Sync Composable (Host Broadcast)
+const roomSync = useRoomSync();
 
 // View & Customization States synced with global preferences
 const readingMode = computed({
@@ -191,6 +195,69 @@ watch(() => isKhusyuMode.value, (isOpen) => {
                 el.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }
         });
+    }
+});
+
+// Broadcast Host Playback & Mode State in Listen Together
+const broadcastHostState = (force = false) => {
+    if (!roomSync.isHost.value || !roomSync.roomCode.value) return;
+
+    roomSync.broadcastState({
+        surahId: props.chapter?.id || 1,
+        ayahNumber: audioPlayer.currentAyahNumber.value || 1,
+        currentTime: audioPlayer.currentTime.value || 0,
+        isPlaying: audioPlayer.isPlaying.value,
+        reciterId: currentReciter.value?.id || 7,
+        mushafType: mushafType.value || 'uthmani',
+        readingMode: isKhusyuMode.value ? 'khusyu' : readingMode.value,
+        isKhusyuMode: isKhusyuMode.value,
+        force,
+    });
+};
+
+// Immediate Host Broadcast on critical state changes
+watch(() => audioPlayer.isPlaying.value, () => {
+    broadcastHostState(true);
+});
+
+watch(() => audioPlayer.currentAyahNumber.value, () => {
+    broadcastHostState(true);
+});
+
+watch(() => isKhusyuMode.value, () => {
+    broadcastHostState(true);
+});
+
+watch(() => readingMode.value, () => {
+    broadcastHostState(true);
+});
+
+watch(() => currentReciter.value?.id, () => {
+    broadcastHostState(true);
+});
+
+watch(() => props.chapter?.id, () => {
+    broadcastHostState(true);
+});
+
+// Periodic host sync for drift correction during audio playback (every 1.5s)
+let hostBroadcastTimer = null;
+watch([() => audioPlayer.isPlaying.value, () => roomSync.isHost.value], ([playing, host]) => {
+    if (hostBroadcastTimer) {
+        clearInterval(hostBroadcastTimer);
+        hostBroadcastTimer = null;
+    }
+    if (playing && host) {
+        hostBroadcastTimer = setInterval(() => {
+            broadcastHostState(false);
+        }, 1500);
+    }
+}, { immediate: true });
+
+onUnmounted(() => {
+    if (hostBroadcastTimer) {
+        clearInterval(hostBroadcastTimer);
+        hostBroadcastTimer = null;
     }
 });
 
@@ -543,6 +610,7 @@ const handleCloseCompletionModal = () => {
         <!-- Listen Together (Multi-Device Sync) Modal Dialog -->
         <ListenTogetherModal 
             v-model:open="showListenTogetherModal"
+            :is-khusyu-mode="isKhusyuMode"
         />
 
         <!-- Surah Completion Modal Dialog -->

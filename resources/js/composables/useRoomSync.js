@@ -133,6 +133,8 @@ export function useRoomSync() {
                     status: initialState.isPlaying ? 'playing' : 'paused',
                     reciterId: initialState.reciterId ?? 7,
                     mushafType: initialState.mushafType ?? 'uthmani',
+                    readingMode: initialState.readingMode ?? (initialState.isKhusyuMode ? 'khusyu' : 'ayah'),
+                    isKhusyuMode: initialState.isKhusyuMode !== undefined ? Boolean(initialState.isKhusyuMode) : undefined,
                 }),
             });
 
@@ -185,6 +187,8 @@ export function useRoomSync() {
             status: state.isPlaying ? 'playing' : 'paused',
             reciterId: state.reciterId,
             mushafType: state.mushafType,
+            readingMode: state.readingMode,
+            isKhusyuMode: state.isKhusyuMode !== undefined ? Boolean(state.isKhusyuMode) : undefined,
         };
 
         try {
@@ -313,7 +317,7 @@ export function useRoomSync() {
                 } catch {
                     // Temporary network blip
                 }
-            }, 3000);
+            }, 1200);
         };
 
         // 1. Immediate initial fetch to load current room state
