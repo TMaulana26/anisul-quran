@@ -195,23 +195,95 @@ const toggleAutoKhusyu = () => {
 };
 const toggleAutoZen = toggleAutoKhusyu;
 
-const selectedReciterLabel = computed(() => {
-    const found = effectiveReciters.value.find(r => r.id === currentReciterId.value);
+const isChapterOverridden = computed(() => {
+    return activeChapter.value ? userPreferences.hasSurahReciterOverride(activeChapter.value.id) : false;
+});
+
+const chapterReciterId = computed(() => {
+    if (!activeChapter.value) return userPreferences.preferences.selectedReciterId;
+    return userPreferences.getReciterIdForSurah(activeChapter.value.id);
+});
+
+const globalReciterId = computed(() => userPreferences.preferences.selectedReciterId);
+
+const selectedChapterReciterLabel = computed(() => {
+    const found = effectiveReciters.value.find(r => r.id === chapterReciterId.value);
     if (found) {
         return `${getReciterName(found)} (${found.style || 'Murattal'})`;
     }
     return 'Pilih Qari...';
 });
 
-const onReciterSelectChange = (val) => {
+const selectedGlobalReciterLabel = computed(() => {
+    const found = effectiveReciters.value.find(r => r.id === globalReciterId.value);
+    if (found) {
+        return `${getReciterName(found)} (${found.style || 'Murattal'})`;
+    }
+    return 'Pilih Qari...';
+});
+
+// Backward compatibility alias
+const selectedReciterLabel = computed(() => {
+    if (activeTab.value === 'surah' && activeChapter.value) {
+        return selectedChapterReciterLabel.value;
+    }
+    return selectedGlobalReciterLabel.value;
+});
+
+const totalOverridesCount = computed(() => {
+    return Object.keys(userPreferences.surahReciterOverrides.value || {}).length;
+});
+
+const onChapterReciterSelectChange = (val) => {
+    if (!activeChapter.value) return;
+    const rawId = typeof val === 'object' && val?.target ? val.target.value : val;
+    const reciterId = parseInt(rawId, 10);
+    if (!isNaN(reciterId)) {
+        userPreferences.setSurahReciterOverride(activeChapter.value.id, reciterId);
+        const reciter = effectiveReciters.value.find(r => r.id === reciterId);
+        if (reciter) {
+            emit('select-reciter', { ...reciter, isOverride: true });
+        }
+    }
+};
+
+const revertChapterToGlobalDefault = () => {
+    if (!activeChapter.value) return;
+    userPreferences.clearSurahReciterOverride(activeChapter.value.id);
+    const globalId = userPreferences.preferences.selectedReciterId;
+    const reciter = effectiveReciters.value.find(r => r.id === globalId) || effectiveReciters.value[0];
+    if (reciter) {
+        emit('select-reciter', { ...reciter, isOverride: false, isRevert: true });
+    }
+};
+
+const onGlobalReciterSelectChange = (val) => {
     const rawId = typeof val === 'object' && val?.target ? val.target.value : val;
     const reciterId = parseInt(rawId, 10);
     if (!isNaN(reciterId)) {
         userPreferences.setSelectedReciterId(reciterId);
         const reciter = effectiveReciters.value.find(r => r.id === reciterId);
         if (reciter) {
-            emit('select-reciter', reciter);
+            emit('select-reciter', { ...reciter, isOverride: false });
         }
+    }
+};
+
+const clearAllOverrides = () => {
+    userPreferences.clearAllSurahReciterOverrides();
+    const globalId = userPreferences.preferences.selectedReciterId;
+    const reciter = effectiveReciters.value.find(r => r.id === globalId) || effectiveReciters.value[0];
+    if (reciter) {
+        emit('select-reciter', { ...reciter, isOverride: false, isRevert: true });
+    }
+};
+
+// Backward compatibility alias for generic select calls
+const onReciterSelectChange = (val) => {
+    if (activeTab.value === 'surah' && activeChapter.value) {
+        onChapterReciterSelectChange(val);
+    } else {
+        onGlobalReciterSelectChange(val);
     }
 };
 
@@ -347,7 +419,11 @@ const resetDefaults = () => {
                                 >
                                     <BookOpen class="h-3.5 w-3.5 text-primary" />
                                     <span>Surah Ini</span>
-                                    <span class="h-1.5 w-1.5 rounded-full bg-primary" />
+                                    <span 
+                                        class="h-1.5 w-1.5 rounded-full" 
+                                        :class="isChapterOverridden ? 'bg-amber-500' : 'bg-primary'"
+                                        :title="isChapterOverridden ? 'Qari Khusus Aktif' : 'Default Global'"
+                                    />
                                 </button>
 
                                 <button
@@ -383,19 +459,28 @@ const resetDefaults = () => {
                                             <User class="h-3.5 w-3.5 text-primary" />
                                             <span>Qari Surah {{ activeChapter.name_simple }}</span>
                                         </label>
-                                        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
-                                            Surah Ini
+                                        <span 
+                                            v-if="isChapterOverridden"
+                                            class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30 flex items-center gap-1"
+                                        >
+                                            <span>🏷️ Qari Khusus</span>
+                                        </span>
+                                        <span 
+                                            v-else
+                                            class="text-[10px] font-medium px-2 py-0.5 rounded-full bg-muted text-muted-foreground border border-border flex items-center gap-1"
+                                        >
+                                            <span>🌐 Default Global</span>
                                         </span>
                                     </div>
 
                                     <Select
-                                        :model-value="String(currentReciterId)"
-                                        @update:model-value="onReciterSelectChange"
+                                        :model-value="String(chapterReciterId)"
+                                        @update:model-value="onChapterReciterSelectChange"
                                     >
                                         <SelectTrigger class="w-full h-11 rounded-2xl bg-muted/50 border border-border/70 hover:border-primary/50 text-sm font-semibold cursor-pointer transition-all flex items-center justify-between px-3.5">
                                             <div class="flex items-center gap-2.5 truncate min-w-0 pr-2">
                                                 <Volume2 class="h-4 w-4 text-primary shrink-0" />
-                                                <span class="truncate text-foreground font-semibold">{{ selectedReciterLabel }}</span>
+                                                <span class="truncate text-foreground font-semibold">{{ selectedChapterReciterLabel }}</span>
                                             </div>
                                         </SelectTrigger>
                                         <SelectContent class="z-[60] max-h-72 rounded-2xl border-border bg-card shadow-xl custom-scrollbar">
@@ -424,6 +509,22 @@ const resetDefaults = () => {
                                             </SelectGroup>
                                         </SelectContent>
                                     </Select>
+
+                                    <!-- Reset Override Action for this Surah -->
+                                    <div v-if="isChapterOverridden" class="flex items-center justify-between px-1 text-xs">
+                                        <span class="text-[11px] text-muted-foreground">Qari khusus tersimpan untuk surah ini</span>
+                                        <button
+                                            type="button"
+                                            @click="revertChapterToGlobalDefault"
+                                            class="text-[11px] font-semibold text-primary hover:underline flex items-center gap-1 cursor-pointer transition-colors"
+                                        >
+                                            <RotateCcw class="h-3 w-3" />
+                                            <span>Gunakan Default Global</span>
+                                        </button>
+                                    </div>
+                                    <p v-else class="text-[11px] text-muted-foreground px-1">
+                                        💡 Memilih Qari di sini akan menyimpannya khusus untuk Surah {{ activeChapter.name_simple }}.
+                                    </p>
                                 </div>
 
                                 <!-- 2. Gaya Rasm Kaligrafi Surah Ini -->
@@ -586,13 +687,13 @@ const resetDefaults = () => {
                                     </div>
 
                                     <Select
-                                        :model-value="String(currentReciterId)"
-                                        @update:model-value="onReciterSelectChange"
+                                        :model-value="String(globalReciterId)"
+                                        @update:model-value="onGlobalReciterSelectChange"
                                     >
                                         <SelectTrigger class="w-full h-11 rounded-2xl bg-muted/50 border border-border/70 hover:border-primary/50 text-sm font-semibold cursor-pointer transition-all flex items-center justify-between px-3.5">
                                             <div class="flex items-center gap-2.5 truncate min-w-0 pr-2">
                                                 <Volume2 class="h-4 w-4 text-primary shrink-0" />
-                                                <span class="truncate text-foreground font-semibold">{{ selectedReciterLabel }}</span>
+                                                <span class="truncate text-foreground font-semibold">{{ selectedGlobalReciterLabel }}</span>
                                             </div>
                                         </SelectTrigger>
                                         <SelectContent class="z-[60] max-h-72 rounded-2xl border-border bg-card shadow-xl custom-scrollbar">
@@ -621,6 +722,30 @@ const resetDefaults = () => {
                                             </SelectGroup>
                                         </SelectContent>
                                     </Select>
+
+                                    <!-- Override notice if currently viewed surah has custom override -->
+                                    <p v-if="isChapterOverridden" class="text-[11px] text-amber-600 dark:text-amber-400 bg-amber-500/10 border border-amber-500/20 rounded-xl p-2.5 leading-relaxed">
+                                        ℹ️ Surah {{ activeChapter?.name_simple }} saat ini menggunakan Qari khusus tersimpan. Qari default ini akan digunakan untuk surah lainnya.
+                                    </p>
+
+                                    <!-- Active Overrides Counter Banner -->
+                                    <div v-if="totalOverridesCount > 0" class="p-3 rounded-2xl bg-muted/40 border border-border/70 flex items-center justify-between gap-3 text-xs mt-2">
+                                        <div class="space-y-0.5 min-w-0">
+                                            <p class="font-semibold text-foreground flex items-center gap-1.5 truncate">
+                                                <span>🏷️ {{ totalOverridesCount }} Surah dengan Qari Khusus</span>
+                                            </p>
+                                            <p class="text-[11px] text-muted-foreground truncate">
+                                                Override tersimpan di browser
+                                            </p>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            @click="clearAllOverrides"
+                                            class="px-2.5 py-1 rounded-lg bg-card hover:bg-destructive/10 text-muted-foreground hover:text-destructive border border-border text-[11px] font-semibold transition-colors cursor-pointer shrink-0"
+                                        >
+                                            Reset Semua
+                                        </button>
+                                    </div>
                                 </div>
 
                                 <!-- 2. Mode Tampilan Bacaan Default Global -->

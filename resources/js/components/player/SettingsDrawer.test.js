@@ -124,4 +124,35 @@ describe('SettingsDrawer.vue', () => {
         expect(wrapper.emitted('update:readingMode')).toBeTruthy();
         expect(wrapper.emitted('update:readingMode')[0]).toEqual(['mushaf']);
     });
+
+    it('emits select-reciter with isOverride: true when changing reciter in Surah tab', async () => {
+        const wrapper = mount(SettingsDrawer, {
+            props: {
+                ...defaultProps,
+                chapter: {
+                    id: 1,
+                    name_simple: 'Al-Fatihah',
+                    name_arabic: 'الفاتحة',
+                    verses_count: 7,
+                },
+            },
+            global: {
+                stubs: {
+                    Teleport: true,
+                    Transition: false,
+                },
+            },
+        });
+
+        expect(wrapper.text()).toContain('Qari Surah Al-Fatihah');
+
+        const select = wrapper.findComponent(Select);
+        expect(select.exists()).toBe(true);
+        await select.vm.$emit('update:modelValue', '1');
+
+        expect(wrapper.emitted('select-reciter')).toBeTruthy();
+        const emittedPayload = wrapper.emitted('select-reciter')[0][0];
+        expect(emittedPayload.id).toBe(1);
+        expect(emittedPayload.isOverride).toBe(true);
+    });
 });

@@ -44,7 +44,7 @@
 | **E-33** | **Slider Kontrol Volume Bergaya Windows 11 dengan Dynamic Vibe Primary Fill & Live Persentase** | Player UX & Impeccable Polish | `resources/css/app.css`, `Room.vue`, `AudioPlayerBar.vue`, `KhusyuPlayerView.vue` | `[x]` |
 | **E-34** | **Integrasi Laravel Reverb (WebSocket) untuk Real-Time Audio Sync (< 50ms), Zero HTTP Polling & Auto-Fallback di Fitur Dengar Bersama** | Real-Time Architecture & Performance | `RoomSyncEvent.php`, `useRoomSync.js`, `echo.js`, `ListenTogetherController.php`, `supervisord.conf`, `nginx.conf` | `[x]` |
 | **E-35** | **Next Major: Mode Tadabbur Alam (Cinematic Video Sanctuary & Sacred Verses Background)** | Immersive Sanctuary & Nature Video | `TadabburPlayerView.vue`, `.agents/catatan.md` | `[ ]` |
-| **E-36** | **Hybrid User Preference System (Global Visuals + Optional Per-Surah Qari Override)** | State Management & Architecture | `useUserPreferences.js`, `.agents/catatan.md` | `[ ]` |
+| **E-36** | **Hybrid User Preference System (Global Visuals + Optional Per-Surah Qari Override)** | State Management & Architecture | `useUserPreferences.js`, `SettingsDrawer.vue`, `Show.vue` | `[x]` |
 | **E-37** | **Modal Dialog Penyelesaian Surah (Putar Surah Selanjutnya, Kembali ke Daftar, Putar Ulang & Dismissible)** | Player UX & Journey Continuity | `SurahCompletionModal.vue`, `useQuranAudioPlayer.js`, `Show.vue` | `[x]` |
 | **E-38** | **Sinkronisasi Otomatis Mode Khusyu' (خُشُوع), Word-by-Word Highlight & Anti-Delay Dengar Bersama Lintas Perangkat (Tablet & Laptop)** | Real-Time Sync & Karaoke Mode | `Room.vue`, `Show.vue`, `KhusyuPlayerView.vue`, `ListenTogetherController.php`, `useRoomSync.js`, `echo.js` | `[x]` |
 | **E-39** | **Resolusi Komprehensif VPS: Trusted Proxies (HTTPS/Mixed Content Fix), Reverb Runtime Hydration, FastCGI Buffers, & Anti-Looping Paused Audio** | Production Architecture & Mobile Stability | `bootstrap/app.php`, `AppServiceProvider.php`, `app.blade.php`, `echo.js`, `Room.vue`, `nginx.conf`, `Dockerfile` | `[x]` |
@@ -317,3 +317,39 @@
   - Frontend Vitest suite: 21/21 test files pass (87/87 tests).
   - Vite production build: terkompilasi bersih dalam 13.9s tanpa error.
   - Linter Pint: lolos dan terformat sesuai standar Laravel.
+
+### 14. [E-36] Hybrid User Preference System (Global Visuals + Optional Per-Surah Qari Override)
+- **Kebutuhan & Analisis**:
+  - Menyelesaikan diskrepansi tab "Surah Ini" vs "Preferensi Global" di mana kedua tab sebelumnya memutasi state tunggal global yang sama di `useUserPreferences.js`, menciptakan ilusi pengaturan per-surah tanpa persistensi per-surah sesungguhnya.
+  - Membangun arsitektur preferensi hibrida (Opsi 1): Pilihan Qari mendukung *Per-Surah Override* opsional (misal: Surah Al-Kahf / Al-Baqarah memilih qari tertentu), sementara pengaturan visual (gaya rasm, ukuran font, terjemahan, transliterasi, vibe) tetap global demi konsistensi membaca (*reading fatigue prevention*).
+  - Menjaga integritas sesi Dengar Bersama: listener dalam room sync tetap tunduk 100% pada qari Host.
+- **Implementasi & Solusi**:
+  1. **Composable State & Storage Hydration (`useUserPreferences.js`)**:
+     - Menambahkan dictionary `surahReciterOverrides: {}` pada state reaktif preferences.
+     - Menyimpan dan memuat kamus override dari `localStorage.getItem('anisul_surah_reciter_overrides')`.
+     - Menyediakan method helper: `getReciterIdForSurah(surahId)`, `hasSurahReciterOverride(surahId)`, `setSurahReciterOverride(surahId, reciterId)`, `clearSurahReciterOverride(surahId)`, dan `clearAllSurahReciterOverrides()`.
+     - Mengintegrasikan pembersihan overrides pada `resetDefaults()`.
+  2. **Pengaturan Right Drawer Dual-Scope (`SettingsDrawer.vue`)**:
+     - **Tab 1: Surah Ini**:
+       - Menampilkan komputasi qari khusus surah aktif (`chapterReciterId`).
+       - Status badge dinamis: `🏷️ Qari Khusus` (amber) jika ada override vs `🌐 Default Global` (muted) jika mengikuti global default.
+       - Aksi "Gunakan Default Global" untuk menghapus override surah aktif dan kembali ke qari global seketika.
+       - Mengirimkan event `'select-reciter'` dengan payload `{ ...reciter, isOverride: true/false, isRevert: true }`.
+       - Dot indicator amber pada tab "Surah Ini" jika surah yang sedang dibuka memiliki override aktif.
+     - **Tab 2: Preferensi Global**:
+       - Dropdown Qari Default Aplikasi memutasi `preferences.selectedReciterId`.
+       - Banner informasi jika surah yang sedang dibuka sedang menggunakan override khusus.
+       - Kartu counter: `🏷️ X Surah dengan Qari Khusus` disertai tombol "Reset Semua" untuk membersihkan seluruh override.
+  3. **Audio Engine Resolution & URL Query Sync (`Surah/Show.vue`)**:
+     - Komputasi `currentReciter`: memprioritaskan room sync bagi listener, lalu `getReciterIdForSurah(props.chapter.id)`, dan fallback ke global default.
+     - Di `onMounted()` dan `watch(chapter.id)`: memuat qari sesuai resolusi surah tersebut.
+     - Watcher `selectedReciterId`: mengabaikan pergantian audio jika surah yang aktif saat ini memiliki per-surah override.
+     - Watcher `surahReciterOverrides`: reaktif memuat audio baru seketika override diubah atau dihapus.
+     - Tautan navigasi surah sebelumnya/selanjutnya (`prevChapter`/`nextChapter`) dan `handlePlayNextSurah`: otomatis menyematkan `?reciter=${getReciterIdForSurah(targetId)}` agar SSR backend langsung mengirimkan data timestamps yang sesuai.
+- **Hasil Verifikasi**:
+  - Unit & Component Tests: 13/13 tests passing (`useUserPreferences.test.js` & `SettingsDrawer.test.js`).
+  - Production Build: `npm run build` sukses 100% tanpa error bundling.
+  - Live Browser Inspection (`chrome-devtools-mcp`):
+    - Menguji Surah 1 dengan qari khusus Mishary (7), badge `🏷️ Qari Khusus` dan dot amber aktif, `localStorage` menyimpan `{"1":7}`.
+    - Menavigasi ke Surah 2, terbukti tetap memutar Qari Global Default (Mahmoud Khalil Al-Husary ID 4) dengan badge `🌐 Default Global`.
+    - Menguji aksi "Gunakan Default Global" pada Surah 1, override terhapus (`{}`) dan audio kembali ke Qari Global Default dengan mulus.

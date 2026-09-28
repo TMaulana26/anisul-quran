@@ -11,6 +11,7 @@ const DEFAULT_PREFERENCES = {
     autoZenOnPlay: true, // Alias for autoKhusyuOnPlay
     selectedReciterId: 7, // Mishary Rashid Alafasy default
     appVibe: 'noor', // 'noor' | 'midnight' | 'warqah'
+    surahReciterOverrides: {}, // { [chapterId]: reciterId }
 };
 
 const safeGetItem = (key, fallback) => {
@@ -101,6 +102,18 @@ export function useUserPreferences() {
             safeSetCookie('anisul_selected_reciter', parsedReciterId);
         }
 
+        const savedOverrides = safeGetItem('anisul_surah_reciter_overrides', null);
+        if (savedOverrides) {
+            try {
+                const parsed = JSON.parse(savedOverrides);
+                if (parsed && typeof parsed === 'object') {
+                    preferences.surahReciterOverrides = parsed;
+                }
+            } catch {
+                // Ignore parse errors
+            }
+        }
+
         const savedVibe = safeGetItem('anisul_app_vibe', null) || safeGetItem('anisul_khusyu_theme', null);
         if (savedVibe && ['noor', 'midnight', 'warqah'].includes(savedVibe)) {
             preferences.appVibe = savedVibe;
@@ -189,6 +202,44 @@ export function useUserPreferences() {
         safeSetCookie('anisul_selected_reciter', num);
     };
 
+    const getReciterIdForSurah = (surahId) => {
+        if (!surahId) return preferences.selectedReciterId;
+        const key = String(surahId);
+        const overrides = preferences.surahReciterOverrides || {};
+        const override = overrides[key];
+        return override ? parseInt(override, 10) : preferences.selectedReciterId;
+    };
+
+    const hasSurahReciterOverride = (surahId) => {
+        if (!surahId || !preferences.surahReciterOverrides) return false;
+        return Boolean(preferences.surahReciterOverrides[String(surahId)]);
+    };
+
+    const setSurahReciterOverride = (surahId, reciterId) => {
+        if (!surahId) return;
+        const key = String(surahId);
+        const num = parseInt(reciterId, 10);
+        if (isNaN(num)) return;
+
+        if (!preferences.surahReciterOverrides) {
+            preferences.surahReciterOverrides = {};
+        }
+        preferences.surahReciterOverrides[key] = num;
+        safeSetItem('anisul_surah_reciter_overrides', JSON.stringify(preferences.surahReciterOverrides));
+    };
+
+    const clearSurahReciterOverride = (surahId) => {
+        if (!surahId || !preferences.surahReciterOverrides) return;
+        const key = String(surahId);
+        delete preferences.surahReciterOverrides[key];
+        safeSetItem('anisul_surah_reciter_overrides', JSON.stringify(preferences.surahReciterOverrides));
+    };
+
+    const clearAllSurahReciterOverrides = () => {
+        preferences.surahReciterOverrides = {};
+        safeSetItem('anisul_surah_reciter_overrides', JSON.stringify({}));
+    };
+
     const withThemeTransition = (callback) => {
         if (typeof document === 'undefined') {
             callback();
@@ -247,7 +298,7 @@ export function useUserPreferences() {
     };
 
     const resetDefaults = () => {
-        Object.assign(preferences, DEFAULT_PREFERENCES);
+        Object.assign(preferences, DEFAULT_PREFERENCES, { surahReciterOverrides: {} });
         safeSetItem('anisul_reading_mode', DEFAULT_PREFERENCES.readingMode);
         safeSetItem('anisul_mushaf', DEFAULT_PREFERENCES.mushafType);
         safeSetItem('anisul_font_size', DEFAULT_PREFERENCES.arabicFontSize);
@@ -258,6 +309,7 @@ export function useUserPreferences() {
         safeSetItem('anisul_auto_zen', DEFAULT_PREFERENCES.autoZenOnPlay);
         safeSetItem('anisul_selected_reciter', DEFAULT_PREFERENCES.selectedReciterId);
         safeSetCookie('anisul_selected_reciter', DEFAULT_PREFERENCES.selectedReciterId);
+        safeSetItem('anisul_surah_reciter_overrides', JSON.stringify({}));
         safeSetItem('anisul_app_vibe', DEFAULT_PREFERENCES.appVibe);
         safeSetItem('anisul_khusyu_theme', DEFAULT_PREFERENCES.appVibe);
         if (typeof document !== 'undefined') {
@@ -273,6 +325,7 @@ export function useUserPreferences() {
     const autoScrollEnabled = computed(() => preferences.autoScrollEnabled);
     const autoKhusyuOnPlay = computed(() => preferences.autoKhusyuOnPlay);
     const selectedReciterId = computed(() => preferences.selectedReciterId);
+    const surahReciterOverrides = computed(() => preferences.surahReciterOverrides || {});
     const appVibe = computed(() => preferences.appVibe);
 
     return {
@@ -287,6 +340,7 @@ export function useUserPreferences() {
         autoScrollEnabled,
         autoKhusyuOnPlay,
         selectedReciterId,
+        surahReciterOverrides,
         appVibe,
         openDrawer,
         closeDrawer,
@@ -302,6 +356,11 @@ export function useUserPreferences() {
         setAutoKhusyuOnPlay,
         setAutoZenOnPlay,
         setSelectedReciterId,
+        getReciterIdForSurah,
+        hasSurahReciterOverride,
+        setSurahReciterOverride,
+        clearSurahReciterOverride,
+        clearAllSurahReciterOverrides,
         setAppVibe,
         resetDefaults,
     };

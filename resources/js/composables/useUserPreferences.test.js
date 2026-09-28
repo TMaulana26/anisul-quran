@@ -117,4 +117,55 @@ describe('useUserPreferences.js Composable', () => {
         expect(preferences.selectedReciterId).toBe(4);
         expect(document.cookie).toContain('anisul_selected_reciter=4');
     });
+
+    it('manages hybrid per-surah reciter overrides correctly', () => {
+        const {
+            preferences,
+            setSelectedReciterId,
+            getReciterIdForSurah,
+            hasSurahReciterOverride,
+            setSurahReciterOverride,
+            clearSurahReciterOverride,
+            clearAllSurahReciterOverrides,
+            resetDefaults,
+        } = useUserPreferences();
+
+        resetDefaults();
+        setSelectedReciterId(7);
+
+        // Without overrides, all surahs return global default
+        expect(hasSurahReciterOverride(1)).toBe(false);
+        expect(getReciterIdForSurah(1)).toBe(7);
+        expect(getReciterIdForSurah(2)).toBe(7);
+
+        // Set override for Surah 1 to reciter 4 (Al-Husary)
+        setSurahReciterOverride(1, 4);
+        expect(hasSurahReciterOverride(1)).toBe(true);
+        expect(getReciterIdForSurah(1)).toBe(4);
+        // Surah 2 still follows global default
+        expect(hasSurahReciterOverride(2)).toBe(false);
+        expect(getReciterIdForSurah(2)).toBe(7);
+
+        // Change global default to reciter 1 (AbdulBaset)
+        setSelectedReciterId(1);
+        expect(preferences.selectedReciterId).toBe(1);
+        // Surah 1 still keeps its custom override
+        expect(getReciterIdForSurah(1)).toBe(4);
+        // Surah 2 reflects the new global default
+        expect(getReciterIdForSurah(2)).toBe(1);
+
+        // Clear override for Surah 1
+        clearSurahReciterOverride(1);
+        expect(hasSurahReciterOverride(1)).toBe(false);
+        expect(getReciterIdForSurah(1)).toBe(1);
+
+        // Set multiple overrides and clear all
+        setSurahReciterOverride(18, 5);
+        setSurahReciterOverride(36, 6);
+        expect(hasSurahReciterOverride(18)).toBe(true);
+        expect(hasSurahReciterOverride(36)).toBe(true);
+        clearAllSurahReciterOverrides();
+        expect(hasSurahReciterOverride(18)).toBe(false);
+        expect(hasSurahReciterOverride(36)).toBe(false);
+    });
 });

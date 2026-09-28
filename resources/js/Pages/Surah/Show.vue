@@ -114,9 +114,15 @@ const handleListenTogether = () => {
     showListenTogetherModal.value = true;
 };
 
-// Active Reciter computed based on global preferences or prop
+// Active Reciter computed based on room sync (if listener), per-surah override, or global default
 const currentReciter = computed(() => {
-    const targetId = userPreferences.preferences.selectedReciterId || props.selectedReciterId || 7;
+    // If listener in active room session, strictly follow host reciter
+    if (roomSync.isListener.value && roomSync.roomState.value?.reciterId) {
+        const hostReciterId = roomSync.roomState.value.reciterId;
+        return props.reciters.find(r => r.id === hostReciterId) || { id: hostReciterId, name: 'Qari Host' };
+    }
+
+    const targetId = userPreferences.getReciterIdForSurah(props.chapter?.id) || props.selectedReciterId || 7;
     return props.reciters.find(r => r.id === targetId) || props.reciters[0] || { id: 7, name: 'Mishary Rashid Alafasy' };
 });
 
@@ -125,10 +131,15 @@ onMounted(async () => {
     const urlParams = new URLSearchParams(window.location.search);
     const shouldAutoplay = urlParams.get('autoplay') === 'true';
 
-    const prefReciterId = userPreferences.preferences.selectedReciterId;
-    if (prefReciterId && prefReciterId !== props.selectedReciterId) {
+    // If listener, let roomSync handle audio loading
+    if (roomSync.isListener.value && roomSync.roomState.value?.reciterId) {
+        return;
+    }
+
+    const resolvedReciterId = userPreferences.getReciterIdForSurah(props.chapter?.id);
+    if (resolvedReciterId && resolvedReciterId !== props.selectedReciterId) {
         // Preference differs from initial server-provided recitation
-        const found = props.reciters.find(r => r.id === prefReciterId) || { id: prefReciterId, name: 'Qari Pilihan' };
+        const found = props.reciters.find(r => r.id === resolvedReciterId) || { id: resolvedReciterId, name: 'Qari Pilihan' };
         await handleSelectReciter(found, shouldAutoplay, 1);
     } else if (props.chapter && props.recitation) {
         audioPlayer.loadSurah(props.chapter, props.recitation, currentReciter.value, 1, shouldAutoplay);
@@ -145,9 +156,13 @@ watch(() => props.chapter?.id, async (newId) => {
     const urlParams = new URLSearchParams(window.location.search);
     const shouldAutoplay = urlParams.get('autoplay') === 'true';
 
-    const prefReciterId = userPreferences.preferences.selectedReciterId;
-    if (prefReciterId && prefReciterId !== props.selectedReciterId) {
-        const found = props.reciters.find(r => r.id === prefReciterId) || { id: prefReciterId, name: 'Qari Pilihan' };
+    if (roomSync.isListener.value && roomSync.roomState.value?.reciterId) {
+        return;
+    }
+
+    const resolvedReciterId = userPreferences.getReciterIdForSurah(newId);
+    if (resolvedReciterId && resolvedReciterId !== audioPlayer.activeReciter.value?.id) {
+        const found = props.reciters.find(r => r.id === resolvedReciterId) || { id: resolvedReciterId, name: 'Qari Pilihan' };
         await handleSelectReciter(found, shouldAutoplay, 1);
     } else if (props.recitation) {
         audioPlayer.loadSurah(props.chapter, props.recitation, currentReciter.value, 1, shouldAutoplay);
@@ -165,10 +180,26 @@ watch(() => audioPlayer.isSurahCompleted?.value, (completed) => {
     }
 });
 
-// React to reciter preference change from global drawer or external source
+// React to global reciter preference change
 watch(() => userPreferences.preferences.selectedReciterId, async (newReciterId) => {
+    if (roomSync.isListener.value) return;
+    // If this surah has an active override, do not switch audio on global change
+    if (userPreferences.hasSurahReciterOverride(props.chapter?.id)) return;
+
     if (newReciterId && newReciterId !== audioPlayer.activeReciter.value?.id) {
         const found = props.reciters.find(r => r.id === newReciterId) || { id: newReciterId, name: 'Qari Pilihan' };
+        await handleSelectReciter(found);
+    }
+});
+
+// React to per-surah reciter override change or revert
+watch(() => userPreferences.preferences.surahReciterOverrides?.[String(props.chapter?.id)], async (newOverrideId, oldOverrideId) => {
+    if (roomSync.isListener.value) return;
+    if (newOverrideId === oldOverrideId) return;
+
+    const targetReciterId = newOverrideId || userPreferences.preferences.selectedReciterId;
+    if (targetReciterId && targetReciterId !== audioPlayer.activeReciter.value?.id) {
+        const found = props.reciters.find(r => r.id === targetReciterId) || { id: targetReciterId, name: 'Qari Pilihan' };
         await handleSelectReciter(found);
     }
 });
@@ -278,17 +309,39 @@ const handlePlayVerse = (verse) => {
     }
 };
 
-// Dynamic Reciter Switch (Opsi A: Full Global Preference)
+// Dynamic Reciter Switch (Hybrid: Supports Per-Surah Override & Global Default)
 const isSwitchingReciter = ref(false);
 
 const handleSelectReciter = async (reciter, forceAutoPlay = null, targetAyah = null) => {
     if (!reciter || !reciter.id) return;
 
-    // 1. Sync global user preference immediately
-    userPreferences.setSelectedReciterId(reciter.id);
+    const reciterId = reciter.id;
+    const isOverride = reciter.isOverride;
+    const isRevert = reciter.isRevert;
+
+    // 1. Sync preferences appropriately
+    if (isRevert) {
+        userPreferences.clearSurahReciterOverride(props.chapter?.id);
+    } else if (isOverride === true) {
+        userPreferences.setSurahReciterOverride(props.chapter?.id, reciterId);
+    } else if (isOverride === false) {
+        userPreferences.setSelectedReciterId(reciterId);
+        // If this surah currently has an override, global change should NOT reload this surah's audio!
+        if (userPreferences.hasSurahReciterOverride(props.chapter?.id)) {
+            return;
+        }
+    } else {
+        // From modal without explicit override flag:
+        // If surah currently has an override, update the surah override; else update global
+        if (userPreferences.hasSurahReciterOverride(props.chapter?.id)) {
+            userPreferences.setSurahReciterOverride(props.chapter?.id, reciterId);
+        } else {
+            userPreferences.setSelectedReciterId(reciterId);
+        }
+    }
 
     // 2. Prevent duplicate reload if engine is already on this reciter and chapter
-    if (audioPlayer.activeReciter.value?.id === reciter.id && audioPlayer.currentSurahId.value === props.chapter?.id) {
+    if (audioPlayer.activeReciter.value?.id === reciterId && audioPlayer.currentSurahId.value === props.chapter?.id) {
         if (forceAutoPlay && !audioPlayer.isPlaying.value) {
             audioPlayer.play();
         }
@@ -299,14 +352,15 @@ const handleSelectReciter = async (reciter, forceAutoPlay = null, targetAyah = n
     isSwitchingReciter.value = true;
 
     try {
-        const res = await fetch(`/api/recitation/${props.chapter.id}?reciter=${reciter.id}`);
+        const res = await fetch(`/api/recitation/${props.chapter.id}?reciter=${reciterId}`);
         if (res.ok) {
             const data = await res.json();
             if (data.recitation) {
                 const wasPlaying = forceAutoPlay !== null ? forceAutoPlay : audioPlayer.isPlaying.value;
                 const isSameSurah = audioPlayer.currentSurahId.value === props.chapter?.id;
                 const startAyah = targetAyah !== null ? targetAyah : (isSameSurah ? (audioPlayer.currentAyahNumber.value || 1) : 1);
-                audioPlayer.loadSurah(props.chapter, data.recitation, reciter, startAyah, wasPlaying);
+                const fullReciter = props.reciters.find(r => r.id === reciterId) || reciter;
+                audioPlayer.loadSurah(props.chapter, data.recitation, fullReciter, startAyah, wasPlaying);
             }
         }
     } catch (err) {
@@ -321,7 +375,7 @@ const handlePlayNextSurah = (targetChapter) => {
     showCompletionModal.value = false;
     audioPlayer.resetSurahCompleted();
     const targetId = targetChapter?.id || props.nextChapter?.id || 1;
-    const reciterId = currentReciter.value?.id || userPreferences.preferences.selectedReciterId || 7;
+    const reciterId = userPreferences.getReciterIdForSurah(targetId);
     router.visit(`/surah/${targetId}?reciter=${reciterId}&autoplay=true`);
 };
 
@@ -559,7 +613,7 @@ const handleCloseCompletionModal = () => {
             <div class="flex items-center justify-between gap-4 pt-8 border-t border-border">
                 <Link 
                     v-if="prevChapter"
-                    :href="`/surah/${prevChapter.id}?reciter=${currentReciter.id}`"
+                    :href="`/surah/${prevChapter.id}?reciter=${userPreferences.getReciterIdForSurah(prevChapter.id)}`"
                     class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-border bg-card text-sm font-medium text-foreground hover:bg-muted transition-colors shadow-xs"
                 >
                     <ChevronLeft class="h-4 w-4" />
@@ -569,7 +623,7 @@ const handleCloseCompletionModal = () => {
 
                 <Link 
                     v-if="nextChapter"
-                    :href="`/surah/${nextChapter.id}?reciter=${currentReciter.id}`"
+                    :href="`/surah/${nextChapter.id}?reciter=${userPreferences.getReciterIdForSurah(nextChapter.id)}`"
                     class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-border bg-card text-sm font-medium text-foreground hover:bg-muted transition-colors shadow-xs"
                 >
                     <span>Surah Berikutnya: {{ nextChapter.name_simple }}</span>
