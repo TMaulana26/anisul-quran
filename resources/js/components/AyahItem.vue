@@ -4,6 +4,7 @@ import { Play, Volume2, Bookmark, Share2 } from '@lucide/vue';
 import { getFormattedArabicText, getFormattedWordText, parseTranslationTokens } from '@/lib/quranUtils';
 import FootnoteDialog from '@/components/FootnoteDialog.vue';
 import AyahEndOrnament from '@/components/AyahEndOrnament.vue';
+import { useI18n } from '@/composables/useI18n';
 
 const props = defineProps({
     verse: {
@@ -41,6 +42,8 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['play']);
+
+const { t } = useI18n();
 
 // Footnote Dialog State
 const showFootnoteDialog = ref(false);
@@ -109,19 +112,19 @@ const hasArabicWords = computed(() => {
                             ? 'bg-primary text-primary-foreground shadow-xs' 
                             : 'bg-muted hover:bg-primary/10 hover:text-primary text-foreground'
                     ]"
-                    :title="`Putar Ayat ${verse.verse_number}`"
+                    :title="`${t('surah.ayah_number', { number: verse.verse_number })}`"
                 >
                     <Volume2 v-if="isActive && isPlaying" class="h-3.5 w-3.5 animate-pulse" />
                     <Play v-else class="h-3.5 w-3.5" />
-                    <span>{{ isActive ? (isPlaying ? 'Sedang Diputar' : 'Jeda') : 'Putar' }}</span>
+                    <span>{{ isActive ? (isPlaying ? t('player.now_playing') : t('player.paused')) : t('player.play') }}</span>
                 </button>
             </div>
 
             <!-- Juz & Page Info -->
             <div class="flex items-center gap-2 text-[11px] text-muted-foreground font-medium">
-                <span v-if="verse.juz_number">Juz {{ verse.juz_number }}</span>
+                <span v-if="verse.juz_number">{{ t('surah.juz', { number: verse.juz_number }) }}</span>
                 <span v-if="verse.juz_number && verse.page_number">•</span>
-                <span v-if="verse.page_number">Halaman {{ verse.page_number }}</span>
+                <span v-if="verse.page_number">{{ t('surah.page', { number: verse.page_number }) }}</span>
             </div>
         </div>
 

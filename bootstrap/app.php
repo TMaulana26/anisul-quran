@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\HandleInertiaRequests;
+use App\Http\Middleware\SetAppLocale;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -20,7 +21,15 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->validateCsrfTokens(except: [
             'api/*',
         ]);
+        $middleware->encryptCookies(except: [
+            'anisul_locale',
+            'anisul_selected_reciter',
+            'anisul_mushaf_type',
+            'anisul_reading_mode',
+            'anisul_preferences',
+        ]);
         $middleware->web(append: [
+            SetAppLocale::class,
             HandleInertiaRequests::class,
         ]);
     })

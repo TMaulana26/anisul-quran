@@ -3,6 +3,7 @@ import { ref, computed } from 'vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import SurahCard from '@/components/SurahCard.vue';
 import DecorativeMoon from '@/components/DecorativeMoon.vue';
+import { useI18n } from '@/composables/useI18n';
 import { Search, X, Sparkles, BookOpen, Layers } from '@lucide/vue';
 
 const props = defineProps({
@@ -16,6 +17,7 @@ const props = defineProps({
     },
 });
 
+const { t } = useI18n();
 const searchQuery = ref('');
 const activeFilter = ref('all'); // 'all', 'makkah', 'madinah'
 
@@ -44,13 +46,16 @@ const filteredChapters = computed(() => {
     });
 });
 
+const makkahCount = computed(() => props.chapters.filter(c => c.revelation_place === 'makkah').length);
+const madinahCount = computed(() => props.chapters.filter(c => c.revelation_place === 'madinah').length);
+
 const clearSearch = () => {
     searchQuery.value = '';
 };
 </script>
 
 <template>
-    <AppLayout title="Daftar 114 Surah">
+    <AppLayout :title="t('nav.surah_list')">
         <div class="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 space-y-8 animate-fade-in">
             <!-- Hero Banner & Intro -->
             <section class="relative overflow-hidden rounded-3xl border border-border/80 bg-gradient-to-br from-card via-card to-muted/40 p-6 sm:p-10 lg:p-12 shadow-sm animate-scale-in">
@@ -59,15 +64,15 @@ const clearSearch = () => {
                     <div class="max-w-2xl space-y-4">
                         <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-semibold shadow-2xs">
                             <Sparkles class="h-3.5 w-3.5" />
-                            <span>Interactive Quran Player & Karaoke Sync</span>
+                            <span>{{ t('index.hero_badge') }}</span>
                         </div>
 
                         <h1 class="font-heading font-extrabold text-3xl sm:text-4xl lg:text-5xl text-foreground leading-[1.2] sm:leading-[1.25] text-balance">
-                            Dengarkan & Hayati Lantunan Suci <span class="text-primary whitespace-nowrap">Al-Qur'an</span>
+                            {{ t('index.hero_title') }}
                         </h1>
 
                         <p class="text-muted-foreground text-sm sm:text-base leading-relaxed max-w-xl text-pretty">
-                            Pilih surah untuk membaca teks ayat, transliterasi Latin, dan terjemahan resmi Kemenag RI yang bergerak selaras dengan lantunan qari favorit Anda.
+                            {{ t('index.hero_subtitle') }}
                         </p>
                     </div>
 
@@ -88,15 +93,15 @@ const clearSearch = () => {
                     <input 
                         v-model="searchQuery"
                         type="text"
-                        placeholder="Cari nama surah, nomor, atau arti..."
+                        :placeholder="t('index.search_placeholder')"
                         class="w-full h-11 pl-10 pr-10 rounded-xl border border-border bg-card text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all shadow-sm"
                     />
                     <button 
                         v-if="searchQuery" 
                         @click="clearSearch"
                         type="button" 
-                        class="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground transition-colors"
-                        title="Hapus pencarian"
+                        class="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                        :title="t('index.clear_search')"
                     >
                         <X class="h-4 w-4" />
                     </button>
@@ -108,37 +113,37 @@ const clearSearch = () => {
                         @click="activeFilter = 'all'"
                         type="button"
                         :class="[
-                            'px-3.5 py-1.5 rounded-lg text-xs font-medium transition-colors',
+                            'px-3.5 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer',
                             activeFilter === 'all' 
                                 ? 'bg-primary text-primary-foreground shadow-xs' 
                                 : 'text-muted-foreground hover:text-foreground hover:bg-muted'
                         ]"
                     >
-                        Semua ({{ chapters.length }})
+                        {{ t('index.filter_all', { count: chapters.length }) }}
                     </button>
                     <button 
                         @click="activeFilter = 'makkah'"
                         type="button"
                         :class="[
-                            'px-3.5 py-1.5 rounded-lg text-xs font-medium transition-colors',
+                            'px-3.5 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer',
                             activeFilter === 'makkah' 
                                 ? 'bg-primary text-primary-foreground shadow-xs' 
                                 : 'text-muted-foreground hover:text-foreground hover:bg-muted'
                         ]"
                     >
-                        Makkiyah
+                        {{ t('index.filter_makkah', { count: makkahCount }) }}
                     </button>
                     <button 
                         @click="activeFilter = 'madinah'"
                         type="button"
                         :class="[
-                            'px-3.5 py-1.5 rounded-lg text-xs font-medium transition-colors',
+                            'px-3.5 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer',
                             activeFilter === 'madinah' 
                                 ? 'bg-primary text-primary-foreground shadow-xs' 
                                 : 'text-muted-foreground hover:text-foreground hover:bg-muted'
                         ]"
                     >
-                        Madaniyah
+                        {{ t('index.filter_madinah', { count: madinahCount }) }}
                     </button>
                 </div>
             </section>
@@ -160,17 +165,17 @@ const clearSearch = () => {
                     <Search class="h-6 w-6" />
                 </div>
                 <h3 class="font-heading font-semibold text-lg text-foreground">
-                    Surah tidak ditemukan
+                    {{ t('index.no_results_title') }}
                 </h3>
                 <p class="text-sm text-muted-foreground max-w-sm mx-auto">
-                    Tidak ada surah yang cocok dengan kata kunci "<span class="font-medium text-foreground">{{ searchQuery }}</span>". Coba cari dengan ejaan lain.
+                    {{ t('index.no_results_desc', { query: searchQuery }) }}
                 </p>
                 <button 
                     @click="clearSearch"
                     type="button"
-                    class="mt-2 inline-flex items-center px-4 py-2 rounded-lg bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/90 transition-colors"
+                    class="mt-2 inline-flex items-center px-4 py-2 rounded-lg bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/90 transition-colors cursor-pointer"
                 >
-                    Tampilkan Semua Surah
+                    {{ t('index.clear_search') }}
                 </button>
             </section>
         </div>

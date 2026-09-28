@@ -19,7 +19,11 @@ class SurahController extends Controller
      */
     public function index(Request $request): Response
     {
-        $language = $request->query('lang', 'id');
+        $language = $request->query('lang') ?? $request->cookie('anisul_locale') ?? app()->getLocale();
+        if (! in_array($language, ['id', 'en'], true)) {
+            $language = 'id';
+        }
+
         $chapters = $this->quran->getChapters($language);
         $reciters = $this->quran->getReciters($language);
 
@@ -38,7 +42,11 @@ class SurahController extends Controller
             abort(404, 'Surah tidak ditemukan.');
         }
 
-        $language = $request->query('lang', 'id');
+        $language = $request->query('lang') ?? $request->cookie('anisul_locale') ?? app()->getLocale();
+        if (! in_array($language, ['id', 'en'], true)) {
+            $language = 'id';
+        }
+
         $chapter = $this->quran->getChapter($id, $language);
 
         if (! $chapter) {
@@ -56,7 +64,6 @@ class SurahController extends Controller
         $versesData = $this->quran->getVersesByChapter($id, [
             'language' => $language,
             'words' => true,
-            'translations' => '33', // Kemenag RI
         ]);
 
         $chapterInfo = $this->quran->getChapterInfo($id, $language);

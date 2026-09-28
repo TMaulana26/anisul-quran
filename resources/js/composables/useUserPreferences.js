@@ -11,6 +11,7 @@ const DEFAULT_PREFERENCES = {
     autoZenOnPlay: true, // Alias for autoKhusyuOnPlay
     selectedReciterId: 7, // Mishary Rashid Alafasy default
     appVibe: 'noor', // 'noor' | 'midnight' | 'warqah'
+    appLocale: 'id', // 'id' | 'en'
     surahReciterOverrides: {}, // { [chapterId]: reciterId }
 };
 
@@ -135,6 +136,15 @@ export function useUserPreferences() {
             if (typeof document !== 'undefined') {
                 document.documentElement.classList.remove('dark');
             }
+        }
+
+        // Initialize App Locale
+        const savedLocale = safeGetItem('anisul_locale', null) || safeGetCookie('anisul_locale');
+        if (savedLocale && ['id', 'en'].includes(savedLocale)) {
+            preferences.appLocale = savedLocale;
+        }
+        if (typeof document !== 'undefined') {
+            document.documentElement.setAttribute('lang', preferences.appLocale || 'id');
         }
     };
 
@@ -297,6 +307,16 @@ export function useUserPreferences() {
         });
     };
 
+    const setAppLocale = (locale) => {
+        if (!['id', 'en'].includes(locale)) return;
+        preferences.appLocale = locale;
+        safeSetItem('anisul_locale', locale);
+        safeSetCookie('anisul_locale', locale);
+        if (typeof document !== 'undefined') {
+            document.documentElement.setAttribute('lang', locale);
+        }
+    };
+
     const resetDefaults = () => {
         Object.assign(preferences, DEFAULT_PREFERENCES, { surahReciterOverrides: {} });
         safeSetItem('anisul_reading_mode', DEFAULT_PREFERENCES.readingMode);
@@ -309,11 +329,14 @@ export function useUserPreferences() {
         safeSetItem('anisul_auto_zen', DEFAULT_PREFERENCES.autoZenOnPlay);
         safeSetItem('anisul_selected_reciter', DEFAULT_PREFERENCES.selectedReciterId);
         safeSetCookie('anisul_selected_reciter', DEFAULT_PREFERENCES.selectedReciterId);
+        safeSetItem('anisul_locale', DEFAULT_PREFERENCES.appLocale);
+        safeSetCookie('anisul_locale', DEFAULT_PREFERENCES.appLocale);
         safeSetItem('anisul_surah_reciter_overrides', JSON.stringify({}));
         safeSetItem('anisul_app_vibe', DEFAULT_PREFERENCES.appVibe);
         safeSetItem('anisul_khusyu_theme', DEFAULT_PREFERENCES.appVibe);
         if (typeof document !== 'undefined') {
             document.documentElement.setAttribute('data-vibe', DEFAULT_PREFERENCES.appVibe);
+            document.documentElement.setAttribute('lang', DEFAULT_PREFERENCES.appLocale);
         }
     };
 
@@ -327,6 +350,7 @@ export function useUserPreferences() {
     const selectedReciterId = computed(() => preferences.selectedReciterId);
     const surahReciterOverrides = computed(() => preferences.surahReciterOverrides || {});
     const appVibe = computed(() => preferences.appVibe);
+    const appLocale = computed(() => preferences.appLocale || 'id');
 
     return {
         isDrawerOpen,
@@ -342,6 +366,7 @@ export function useUserPreferences() {
         selectedReciterId,
         surahReciterOverrides,
         appVibe,
+        appLocale,
         openDrawer,
         closeDrawer,
         toggleDrawer,
@@ -362,6 +387,7 @@ export function useUserPreferences() {
         clearSurahReciterOverride,
         clearAllSurahReciterOverrides,
         setAppVibe,
+        setAppLocale,
         resetDefaults,
     };
 }

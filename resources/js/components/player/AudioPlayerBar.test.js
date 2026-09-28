@@ -26,7 +26,7 @@ describe('AudioPlayerBar.vue', () => {
         );
 
         const wrapper = mount(AudioPlayerBar);
-        const qariBtn = wrapper.find('button[title="Ganti Qari / Pembaca"]');
+        const qariBtn = wrapper.find('button[title*="Qari"]');
         expect(qariBtn.exists()).toBe(true);
 
         await qariBtn.trigger('click');
@@ -35,7 +35,7 @@ describe('AudioPlayerBar.vue', () => {
 
     it('emits open-listen-together when Listen Together button is clicked', async () => {
         const wrapper = mount(AudioPlayerBar);
-        const listenTogetherBtn = wrapper.find('button[title="Dengarkan Bersama (Realtime Sync)"]');
+        const listenTogetherBtn = wrapper.find('button[title*="Bersama"], button[title*="Listen Together"]');
         expect(listenTogetherBtn.exists()).toBe(true);
 
         await listenTogetherBtn.trigger('click');

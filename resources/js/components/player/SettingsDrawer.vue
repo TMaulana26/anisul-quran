@@ -1,7 +1,8 @@
 <script setup>
 import { ref, computed, watch } from 'vue';
-import { usePage } from '@inertiajs/vue3';
+import { usePage, router } from '@inertiajs/vue3';
 import { useUserPreferences } from '@/composables/useUserPreferences';
+import { useI18n } from '@/composables/useI18n';
 import { 
     X, 
     SlidersHorizontal, 
@@ -97,6 +98,16 @@ const emit = defineEmits([
 
 const page = usePage();
 const userPreferences = useUserPreferences();
+const { t, currentLocale, setLocale, supportedLocales } = useI18n();
+
+const onSelectLocale = (newLocale) => {
+    if (currentLocale.value === newLocale) return;
+    setLocale(newLocale);
+    router.reload({
+        preserveScroll: true,
+        preserveState: true,
+    });
+};
 
 // Detect active Surah context
 const activeChapter = computed(() => {
@@ -343,10 +354,10 @@ const resetDefaults = () => {
                                     </div>
                                     <div>
                                         <h2 class="font-heading font-bold text-lg text-foreground">
-                                            Pengaturan & Preferensi
+                                            {{ t('settings.title') }}
                                         </h2>
                                         <p class="text-xs text-muted-foreground">
-                                            Sesuaikan bacaan surah & preferensi aplikasi
+                                            {{ t('settings.subtitle') }}
                                         </p>
                                     </div>
                                 </div>
@@ -356,7 +367,7 @@ const resetDefaults = () => {
                                     type="button"
                                     @click="close"
                                     class="p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors cursor-pointer"
-                                    aria-label="Tutup Pengaturan"
+                                    :aria-label="t('common.close')"
                                 >
                                     <X class="h-5 w-5" />
                                 </button>
@@ -418,11 +429,11 @@ const resetDefaults = () => {
                                         : 'text-muted-foreground hover:text-foreground'"
                                 >
                                     <BookOpen class="h-3.5 w-3.5 text-primary" />
-                                    <span>Surah Ini</span>
+                                    <span>{{ t('settings.tab_surah') }}</span>
                                     <span 
                                         class="h-1.5 w-1.5 rounded-full" 
                                         :class="isChapterOverridden ? 'bg-amber-500' : 'bg-primary'"
-                                        :title="isChapterOverridden ? 'Qari Khusus Aktif' : 'Default Global'"
+                                        :title="isChapterOverridden ? t('settings.custom_badge') : t('settings.default_badge')"
                                     />
                                 </button>
 
@@ -435,7 +446,7 @@ const resetDefaults = () => {
                                         : 'text-muted-foreground hover:text-foreground'"
                                 >
                                     <Globe class="h-3.5 w-3.5 text-muted-foreground" />
-                                    <span>Preferensi Global</span>
+                                    <span>{{ t('settings.tab_global') }}</span>
                                 </button>
                             </div>
                         </div>
@@ -670,8 +681,61 @@ const resetDefaults = () => {
                             <template v-else>
                                 <div class="p-3 rounded-xl bg-muted/30 border border-border/50 text-xs text-muted-foreground leading-relaxed">
                                     <p>
-                                        🌐 Pengaturan di tab ini tersimpan di browser sebagai <span class="font-bold text-foreground">preferensi default</span> untuk setiap surah yang Anda buka berikutnya.
+                                        🌐 {{ t('settings.subtitle') }}
                                     </p>
+                                </div>
+
+                                <!-- 0. Bahasa & Sumber Terjemahan Al-Qur'an (Global) -->
+                                <div class="space-y-2.5">
+                                    <div class="flex items-center justify-between">
+                                        <label class="block font-heading font-bold text-xs uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                                            <Globe class="h-3.5 w-3.5 text-primary" />
+                                            <span>{{ t('settings.language_title') }}</span>
+                                        </label>
+                                        <span class="text-[10px] font-medium px-2 py-0.5 rounded-full bg-muted text-muted-foreground border border-border">
+                                            🌐 {{ t('settings.default_badge') }}
+                                        </span>
+                                    </div>
+
+                                    <div class="grid grid-cols-2 gap-2.5">
+                                        <!-- Bahasa Indonesia -->
+                                        <button
+                                            type="button"
+                                            @click="onSelectLocale('id')"
+                                            class="flex flex-col items-start gap-1 p-3.5 rounded-2xl border text-xs font-semibold transition-all cursor-pointer text-left"
+                                            :class="currentLocale === 'id'
+                                                ? 'bg-primary/10 border-primary text-primary ring-2 ring-primary/20 shadow-xs'
+                                                : 'bg-card border-border/70 hover:bg-muted/50 text-foreground'"
+                                        >
+                                            <div class="flex items-center justify-between w-full">
+                                                <span class="text-base">🇮🇩</span>
+                                                <Check v-if="currentLocale === 'id'" class="h-3.5 w-3.5 text-primary" />
+                                            </div>
+                                            <span class="font-bold text-sm">{{ t('settings.lang_id_title') }}</span>
+                                            <span class="text-[10px] text-muted-foreground font-normal leading-tight">
+                                                {{ t('settings.lang_id_source') }}
+                                            </span>
+                                        </button>
+
+                                        <!-- English -->
+                                        <button
+                                            type="button"
+                                            @click="onSelectLocale('en')"
+                                            class="flex flex-col items-start gap-1 p-3.5 rounded-2xl border text-xs font-semibold transition-all cursor-pointer text-left"
+                                            :class="currentLocale === 'en'
+                                                ? 'bg-primary/10 border-primary text-primary ring-2 ring-primary/20 shadow-xs'
+                                                : 'bg-card border-border/70 hover:bg-muted/50 text-foreground'"
+                                        >
+                                            <div class="flex items-center justify-between w-full">
+                                                <span class="text-base">🇬🇧</span>
+                                                <Check v-if="currentLocale === 'en'" class="h-3.5 w-3.5 text-primary" />
+                                            </div>
+                                            <span class="font-bold text-sm">{{ t('settings.lang_en_title') }}</span>
+                                            <span class="text-[10px] text-muted-foreground font-normal leading-tight">
+                                                {{ t('settings.lang_en_source') }}
+                                            </span>
+                                        </button>
+                                    </div>
                                 </div>
 
                                 <!-- 1. Qari Default Global -->

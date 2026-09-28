@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed } from 'vue';
 import { Search, X, User, Check, Sparkles, Volume2, Music2 } from '@lucide/vue';
+import { useI18n } from '@/composables/useI18n';
 
 const props = defineProps({
     open: {
@@ -18,6 +19,8 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['update:open', 'select-reciter']);
+
+const { t } = useI18n();
 
 const searchQuery = ref('');
 const activeFilter = ref('all'); // 'all', 'murattal', 'mujawwad'
@@ -97,10 +100,10 @@ const selectReciter = (reciter) => {
                             </div>
                             <div>
                                 <h2 id="reciter-modal-title" class="font-heading font-bold text-lg sm:text-xl text-foreground">
-                                    Pilih Qari Murottal & Mujawwad
+                                    {{ t('reciter_modal.title') }}
                                 </h2>
                                 <p class="text-xs text-muted-foreground">
-                                    Pilih pembaca Al-Qur'an favorit Anda untuk sinkronisasi audio presisi
+                                    {{ t('reciter_modal.subtitle') }}
                                 </p>
                             </div>
                         </div>
@@ -110,7 +113,7 @@ const selectReciter = (reciter) => {
                             type="button"
                             @click="close"
                             class="p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors cursor-pointer"
-                            aria-label="Tutup Dialog"
+                            :aria-label="t('reciter_modal.close')"
                         >
                             <X class="h-5 w-5" />
                         </button>
@@ -125,7 +128,7 @@ const selectReciter = (reciter) => {
                                 <input 
                                     v-model="searchQuery"
                                     type="text"
-                                    placeholder="Cari nama Qari (misal: Mishary, Al-Husary, Sudais)..."
+                                    :placeholder="t('reciter_modal.search_placeholder')"
                                     class="w-full pl-10 pr-10 py-2.5 rounded-xl bg-muted/60 border border-border/60 focus:border-primary focus:bg-background focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm transition-all placeholder:text-muted-foreground/70"
                                 />
                                 <button 
@@ -146,7 +149,7 @@ const selectReciter = (reciter) => {
                                     class="px-3 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer"
                                     :class="activeFilter === 'all' ? 'bg-card text-foreground shadow-xs' : 'text-muted-foreground hover:text-foreground'"
                                 >
-                                    Semua
+                                    {{ t('reciter_modal.all') }}
                                 </button>
                                 <button
                                     type="button"
@@ -157,7 +160,7 @@ const selectReciter = (reciter) => {
                                         : 'text-muted-foreground hover:text-emerald-600 dark:hover:text-emerald-400'"
                                 >
                                     <span class="h-2 w-2 rounded-full bg-emerald-500" />
-                                    <span>Murattal</span>
+                                    <span>{{ t('reciter_modal.murattal') }}</span>
                                 </button>
                                 <button
                                     type="button"
@@ -168,7 +171,7 @@ const selectReciter = (reciter) => {
                                         : 'text-muted-foreground hover:text-blue-600 dark:hover:text-blue-400'"
                                 >
                                     <span class="h-2 w-2 rounded-full bg-blue-500" />
-                                    <span>Mujawwad</span>
+                                    <span>{{ t('reciter_modal.mujawwad') }}</span>
                                 </button>
                             </div>
                         </div>
@@ -181,7 +184,7 @@ const selectReciter = (reciter) => {
                             class="py-16 text-center text-muted-foreground text-sm"
                         >
                             <User class="h-10 w-10 mx-auto mb-2 opacity-40 text-muted-foreground" />
-                            <p>Tidak ada Qari yang cocok dengan pencarian "{{ searchQuery }}".</p>
+                            <p>{{ t('reciter_modal.not_found', { query: searchQuery }) }}</p>
                         </div>
 
                         <div v-else class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 p-1">
@@ -215,7 +218,7 @@ const selectReciter = (reciter) => {
                                                 ? 'bg-blue-500/15 text-blue-600 dark:text-blue-400 border-blue-500/30'
                                                 : 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'"
                                         >
-                                            {{ getStyleType(reciter) === 'mujawwad' ? 'Mujawwad' : 'Murattal' }}
+                                            {{ getStyleType(reciter) === 'mujawwad' ? t('reciter_modal.mujawwad') : t('reciter_modal.murattal') }}
                                         </span>
                                     </div>
 
@@ -241,8 +244,8 @@ const selectReciter = (reciter) => {
 
                     <!-- Footer Note -->
                     <div class="pt-4 mt-3 border-t border-border/50 flex items-center justify-between text-[11px] text-muted-foreground">
-                        <span>Menampilkan {{ filteredReciters.length }} Qari</span>
-                        <span>Pilihan qari otomatis tersimpan</span>
+                        <span>{{ t('reciter_modal.showing_count', { count: filteredReciters.length }) }}</span>
+                        <span>{{ t('reciter_modal.auto_saved') }}</span>
                     </div>
                 </div>
             </div>

@@ -12,6 +12,7 @@ import ListenTogetherModal from '@/components/sync/ListenTogetherModal.vue';
 import { useQuranAudioPlayer } from '@/composables/useQuranAudioPlayer';
 import { useUserPreferences } from '@/composables/useUserPreferences';
 import { useRoomSync } from '@/composables/useRoomSync';
+import { useI18n } from '@/composables/useI18n';
 import { 
     ChevronLeft, 
     ChevronRight, 
@@ -75,6 +76,9 @@ const userPreferences = useUserPreferences();
 
 // Room Sync Composable (Host Broadcast)
 const roomSync = useRoomSync();
+
+// i18n Composable
+const { t, currentLocale } = useI18n();
 
 // View & Customization States synced with global preferences
 const readingMode = computed({
@@ -410,7 +414,7 @@ const handleCloseCompletionModal = () => {
                     class="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors p-1"
                 >
                     <ArrowLeft class="h-4 w-4" />
-                    <span>Kembali ke Daftar Surah</span>
+                    <span>{{ t('nav.surah_list') }}</span>
                 </Link>
 
                 <!-- Quick Prev / Next Surah Jump -->
@@ -419,7 +423,7 @@ const handleCloseCompletionModal = () => {
                         v-if="prevChapter"
                         :href="`/surah/${prevChapter.id}`"
                         class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-border bg-card text-xs font-medium text-foreground hover:bg-muted transition-colors shadow-2xs"
-                        :title="`Surah Sebelumnya: ${prevChapter.name_simple}`"
+                        :title="`${t('surah.prev_surah')}: ${prevChapter.name_simple}`"
                     >
                         <ChevronLeft class="h-3.5 w-3.5" />
                         <span class="hidden sm:inline">{{ prevChapter.name_simple }}</span>
@@ -429,7 +433,7 @@ const handleCloseCompletionModal = () => {
                         v-if="nextChapter"
                         :href="`/surah/${nextChapter.id}`"
                         class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-border bg-card text-xs font-medium text-foreground hover:bg-muted transition-colors shadow-2xs"
-                        :title="`Surah Berikutnya: ${nextChapter.name_simple}`"
+                        :title="`${t('surah.next_surah')}: ${nextChapter.name_simple}`"
                     >
                         <span class="hidden sm:inline">{{ nextChapter.name_simple }}</span>
                         <ChevronRight class="h-3.5 w-3.5" />
@@ -441,7 +445,7 @@ const handleCloseCompletionModal = () => {
             <header class="relative overflow-hidden rounded-3xl border border-border/80 bg-gradient-to-b from-card via-card to-muted/30 p-6 sm:p-10 shadow-sm text-center space-y-4">
                 <div class="flex flex-col items-center justify-center space-y-2">
                     <div class="inline-flex items-center justify-center px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold">
-                        <span>Surah Ke-{{ chapter.id }} • {{ chapter.revelation_place === 'makkah' ? 'Makkiyah' : 'Madaniyah' }}</span>
+                        <span>Surah Ke-{{ chapter.id }} • {{ chapter.revelation_place === 'makkah' ? t('common.revelation_makkah') : t('common.revelation_madinah') }}</span>
                     </div>
 
                     <h1 class="font-arabic font-bold text-4xl sm:text-5xl text-foreground pt-2 pb-1" dir="rtl">
@@ -453,7 +457,7 @@ const handleCloseCompletionModal = () => {
                     </h2>
 
                     <p class="text-sm text-muted-foreground font-medium">
-                        {{ chapter.translated_name?.name }} • {{ chapter.verses_count }} Ayat
+                        {{ chapter.translated_name?.name }} • {{ t('surah_card.verses_count', { count: chapter.verses_count }) }}
                     </p>
                 </div>
 
@@ -466,7 +470,7 @@ const handleCloseCompletionModal = () => {
                         بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ
                     </p>
                     <p class="text-xs text-muted-foreground mt-2 italic">
-                        Dengan nama Allah Yang Maha Pengasih, Maha Penyayang
+                        {{ t('surah.bismillah') }}
                     </p>
                 </div>
             </header>
@@ -484,10 +488,10 @@ const handleCloseCompletionModal = () => {
                                 ? 'bg-card text-foreground shadow-xs' 
                                 : 'text-muted-foreground hover:text-foreground'
                         ]"
-                        title="Mode Baca Per Ayat dengan Terjemahan"
+                        :title="t('surah.mode_ayah')"
                     >
                         <List class="h-3.5 w-3.5" />
-                        <span>Per Ayat</span>
+                        <span>{{ t('surah.mode_ayah') }}</span>
                     </button>
                     <button 
                         @click="setReadingMode('mushaf')"
@@ -498,10 +502,10 @@ const handleCloseCompletionModal = () => {
                                 ? 'bg-card text-foreground shadow-xs' 
                                 : 'text-muted-foreground hover:text-foreground'
                         ]"
-                        title="Mode Baca Per Lembar Seperti Mushaf Fisik"
+                        :title="t('surah.mode_mushaf')"
                     >
                         <BookOpen class="h-3.5 w-3.5" />
-                        <span>Mushaf Fisik</span>
+                        <span>{{ t('surah.mode_mushaf') }}</span>
                     </button>
                 </div>
 
@@ -537,7 +541,7 @@ const handleCloseCompletionModal = () => {
                             @click="decreaseFontSize" 
                             type="button" 
                             class="px-2 py-1 rounded-lg font-bold text-muted-foreground hover:text-foreground hover:bg-card transition-colors cursor-pointer"
-                            title="Perkecil Ukuran Huruf Arab"
+                            title="A-"
                         >
                             A-
                         </button>
@@ -546,7 +550,7 @@ const handleCloseCompletionModal = () => {
                             @click="increaseFontSize" 
                             type="button" 
                             class="px-2 py-1 rounded-lg font-bold text-muted-foreground hover:text-foreground hover:bg-card transition-colors cursor-pointer"
-                            title="Perbesar Ukuran Huruf Arab"
+                            title="A+"
                         >
                             A+
                         </button>
@@ -557,10 +561,10 @@ const handleCloseCompletionModal = () => {
                         type="button"
                         @click="isKhusyuMode = true"
                         class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary/10 hover:bg-primary/20 text-primary border border-primary/30 text-xs font-semibold transition-all cursor-pointer shadow-2xs"
-                        title="Buka Mode Khusyu' (خُشُوع) - Fokus & Imersif"
+                        :title="t('surah.khusyu_mode')"
                     >
                         <Maximize2 class="h-3.5 w-3.5" />
-                        <span>Mode Khusyu' (خُشُوع)</span>
+                        <span>{{ t('surah.khusyu_mode') }}</span>
                     </button>
 
                     <!-- Settings Drawer Trigger Button -->
@@ -617,7 +621,7 @@ const handleCloseCompletionModal = () => {
                     class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-border bg-card text-sm font-medium text-foreground hover:bg-muted transition-colors shadow-xs"
                 >
                     <ChevronLeft class="h-4 w-4" />
-                    <span>Surah Sebelumnya: {{ prevChapter.name_simple }}</span>
+                    <span>{{ t('surah.prev_surah') }}: {{ prevChapter.name_simple }}</span>
                 </Link>
                 <div v-else></div>
 
@@ -626,7 +630,7 @@ const handleCloseCompletionModal = () => {
                     :href="`/surah/${nextChapter.id}?reciter=${userPreferences.getReciterIdForSurah(nextChapter.id)}`"
                     class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-border bg-card text-sm font-medium text-foreground hover:bg-muted transition-colors shadow-xs"
                 >
-                    <span>Surah Berikutnya: {{ nextChapter.name_simple }}</span>
+                    <span>{{ t('surah.next_surah') }}: {{ nextChapter.name_simple }}</span>
                     <ChevronRight class="h-4 w-4" />
                 </Link>
             </div>

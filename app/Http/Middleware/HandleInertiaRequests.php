@@ -36,9 +36,17 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        $locale = app()->getLocale();
+
         return [
             ...parent::share($request),
-            'reciters' => fn () => app(QuranFoundationService::class)->getReciters('id'),
+            'locale' => $locale,
+            'translationInfo' => [
+                'locale' => $locale,
+                'resourceId' => QuranFoundationService::DEFAULT_TRANSLATIONS[$locale] ?? 33,
+                'sourceName' => $locale === 'en' ? 'Saheeh International' : 'Kemenag RI',
+            ],
+            'reciters' => fn () => app(QuranFoundationService::class)->getReciters($locale),
         ];
     }
 }

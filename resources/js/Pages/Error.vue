@@ -3,6 +3,7 @@ import { computed } from 'vue';
 import { Link, Head } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { Compass, Home, RefreshCw, AlertCircle, ShieldAlert, ServerCrash, FileQuestion } from '@lucide/vue';
+import { useI18n } from '@/composables/useI18n';
 
 const props = defineProps({
     status: {
@@ -15,24 +16,26 @@ const props = defineProps({
     },
 });
 
+const { t } = useI18n();
+
 const title = computed(() => {
     return {
-        404: 'Halaman Tidak Ditemukan',
-        500: 'Terjadi Kesalahan Server',
-        503: 'Layanan Sedang Pemeliharaan',
-        403: 'Akses Dibatasi',
-    }[props.status] || 'Terjadi Kendala';
+        404: t('error.404_title'),
+        500: t('error.500_title'),
+        503: t('error.503_title'),
+        403: t('error.403_title'),
+    }[props.status] || t('error.default_title');
 });
 
 const description = computed(() => {
     if (props.message) return props.message;
 
     return {
-        404: 'Maaf, surah, ayat, atau halaman yang Anda tuju tidak ditemukan atau URL mungkin salah ketik.',
-        500: 'Server kami sedang mengalami kendala teknis internal. Tim kami sedang menanganinya.',
-        503: 'Aplikasi sedang dalam peningkatan sistem berkala demi kenyamanan tilawah Anda. Silakan coba kembali sesaat lagi.',
-        403: 'Anda tidak memiliki hak akses untuk membuka halaman atau direktori ini.',
-    }[props.status] || 'Terjadi kesalahan yang tidak terduga saat memuat data.';
+        404: t('error.404_desc'),
+        500: t('error.500_desc'),
+        503: t('error.503_desc'),
+        403: t('error.403_desc'),
+    }[props.status] || t('error.default_desc');
 });
 
 const reloadPage = () => {
@@ -59,7 +62,7 @@ const reloadPage = () => {
             <!-- Error Code & Title -->
             <div class="space-y-3">
                 <span class="inline-flex items-center px-3 py-1 rounded-full bg-muted text-muted-foreground text-xs font-bold tracking-wider uppercase">
-                    Status {{ status }}
+                    {{ t('error.status', { status }) }}
                 </span>
                 <h1 class="font-heading font-extrabold text-3xl sm:text-4xl text-foreground tracking-tight">
                     {{ title }}
@@ -76,7 +79,7 @@ const reloadPage = () => {
                     class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-primary-foreground font-medium text-sm hover:bg-primary/90 shadow-sm transition-all duration-200"
                 >
                     <Home class="h-4 w-4" />
-                    <span>Kembali ke Beranda</span>
+                    <span>{{ t('error.back_home') }}</span>
                 </Link>
 
                 <button 
@@ -86,7 +89,7 @@ const reloadPage = () => {
                     class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-border bg-card text-foreground font-medium text-sm hover:bg-muted transition-colors shadow-xs"
                 >
                     <RefreshCw class="h-4 w-4" />
-                    <span>Muat Ulang Halaman</span>
+                    <span>{{ t('error.reload') }}</span>
                 </button>
             </div>
         </div>

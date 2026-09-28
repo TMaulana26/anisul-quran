@@ -10,6 +10,11 @@ use Throwable;
 
 class QuranFoundationService
 {
+    public const DEFAULT_TRANSLATIONS = [
+        'id' => 33,  // Indonesian Ministry of Religious Affairs (Kemenag RI)
+        'en' => 20, // Saheeh International
+    ];
+
     protected string $baseUrl;
 
     protected ?string $apiKey;
@@ -142,12 +147,19 @@ class QuranFoundationService
     {
         ini_set('memory_limit', '512M');
 
+        $language = $params['language'] ?? app()->getLocale();
+        if (! in_array($language, ['id', 'en'], true)) {
+            $language = 'id';
+        }
+
+        $defaultTranslationId = (string) (self::DEFAULT_TRANSLATIONS[$language] ?? 33);
+
         $defaultParams = [
-            'language' => 'id',
+            'language' => $language,
             'words' => true,
-            'word_translation_language' => 'id',
+            'word_translation_language' => $language,
             'word_fields' => 'text_uthmani,text_indopak,line_number,page_number',
-            'translations' => '33', // 33: Indonesian Ministry of Religious Affairs (Kemenag RI)
+            'translations' => $defaultTranslationId,
             'fields' => 'text_uthmani,text_indopak,chapter_id,verse_key,verse_number,page_number,juz_number',
             'per_page' => 300, // Fetch all verses of the chapter in one request where possible
         ];
@@ -155,7 +167,7 @@ class QuranFoundationService
         $queryParams = array_merge($defaultParams, $params);
         $cacheKey = "quran:verses:{$chapterId}:".md5(json_encode($queryParams));
 
-        return Cache::remember($cacheKey, now()->addDays(3), function () use ($chapterId, $queryParams) {
+        return Cache::remember($cacheKey, now()->addDays(3), function () use ($chapterId, $queryParams, $defaultTranslationId) {
             try {
                 $response = $this->client()->get("/verses/by_chapter/{$chapterId}", $queryParams);
 
@@ -163,7 +175,7 @@ class QuranFoundationService
                     $data = $response->json();
                     $verses = $data['verses'] ?? [];
 
-                    $cleanVerses = array_map(function (array $verse): array {
+                    $cleanVerses = array_map(function (array $verse) use ($defaultTranslationId): array {
                         $cleanWords = [];
                         if (! empty($verse['words'])) {
                             foreach ($verse['words'] as $w) {
@@ -186,7 +198,7 @@ class QuranFoundationService
                             foreach ($verse['translations'] as $t) {
                                 $cleanTranslations[] = [
                                     'id' => $t['id'] ?? null,
-                                    'resource_id' => $t['resource_id'] ?? 33,
+                                    'resource_id' => $t['resource_id'] ?? (int) $defaultTranslationId,
                                     'text' => $t['text'] ?? '',
                                 ];
                             }

@@ -1,6 +1,6 @@
 <script setup>
 import { Link } from '@inertiajs/vue3';
-import { Volume2 } from '@lucide/vue';
+import { useI18n } from '@/composables/useI18n';
 
 const props = defineProps({
     chapter: {
@@ -9,9 +9,11 @@ const props = defineProps({
     },
 });
 
-// Format revelation place in Indonesian
+const { t } = useI18n();
+
+// Format revelation place
 const formatRevelation = (place) => {
-    return place === 'makkah' ? 'Makkiyah' : 'Madaniyah';
+    return place === 'makkah' ? t('common.revelation_makkah') : t('common.revelation_madinah');
 };
 </script>
 
@@ -40,7 +42,7 @@ const formatRevelation = (place) => {
                         {{ formatRevelation(chapter.revelation_place) }}
                     </span>
                     <span class="text-[11px] text-muted-foreground">
-                        {{ chapter.verses_count }} Ayat
+                        {{ t('surah_card.verses_count', { count: chapter.verses_count }) }}
                     </span>
                 </div>
             </div>

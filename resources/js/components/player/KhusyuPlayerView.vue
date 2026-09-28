@@ -2,6 +2,7 @@
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { useQuranAudioPlayer } from '@/composables/useQuranAudioPlayer';
 import { useUserPreferences } from '@/composables/useUserPreferences';
+import { useI18n } from '@/composables/useI18n';
 import { getFormattedArabicText, getFormattedWordText, parseTranslationTokens, cleanTranslationText } from '@/lib/quranUtils';
 import FootnoteDialog from '@/components/FootnoteDialog.vue';
 import AyahEndOrnament from '@/components/AyahEndOrnament.vue';
@@ -83,6 +84,7 @@ const emit = defineEmits([
 const audioPlayer = useQuranAudioPlayer();
 const userPreferences = useUserPreferences();
 const roomSync = useRoomSync();
+const { t } = useI18n();
 
 // True if device is Follower/Listener in Listen Together
 const effectiveIsListener = computed(() => props.isListener || roomSync.isListener.value);
@@ -538,9 +540,9 @@ const selectSpeed = (rate) => {
                                 </span>
                             </div>
                             <p class="text-[11px] sm:text-xs opacity-70 font-medium truncate">
-                                Ayat <span class="font-semibold">{{ audioPlayer.currentAyahNumber.value || 1 }}</span>/{{ chapter.verses_count }}
+                                {{ t('surah.ayah_number', { number: audioPlayer.currentAyahNumber.value || 1 }) }}/{{ chapter.verses_count }}
                                 <span v-if="currentChunk && currentChunk.totalChunks > 1" class="ml-1 opacity-80">
-                                    • Bagian {{ currentChunk.index }}/{{ currentChunk.totalChunks }}
+                                    • {{ t('khusyu.part_progress', { current: currentChunk.index, total: currentChunk.totalChunks }) }}
                                 </span>
                             </p>
                         </div>
@@ -566,7 +568,7 @@ const selectSpeed = (rate) => {
                                         ? 'bg-primary text-primary-foreground shadow-xs font-bold'
                                         : 'opacity-70 hover:opacity-100 hover:text-foreground'
                                 ]"
-                                title="Noor Sanctuary (Modern Bersih)"
+                                title="Noor Sanctuary"
                             >
                                 <Sparkles class="h-3.5 w-3.5" />
                                 <span>Noor</span>
@@ -581,7 +583,7 @@ const selectSpeed = (rate) => {
                                         ? 'bg-amber-500 text-amber-950 font-bold shadow-xs'
                                         : 'opacity-70 hover:opacity-100 hover:text-foreground'
                                 ]"
-                                title="Midnight Mushaf (Tahajjud Malam Emas)"
+                                title="Midnight Mushaf"
                             >
                                 <Moon class="h-3.5 w-3.5" />
                                 <span>Midnight</span>
@@ -596,7 +598,7 @@ const selectSpeed = (rate) => {
                                         ? 'bg-amber-800 dark:bg-amber-600 text-white font-bold shadow-xs'
                                         : 'opacity-70 hover:opacity-100 hover:text-foreground'
                                 ]"
-                                title="Warqah Turath (Manuskrip Perkamen Klasik)"
+                                title="Warqah Turath"
                             >
                                 <ScrollText class="h-3.5 w-3.5" />
                                 <span>Warqah</span>
@@ -613,7 +615,7 @@ const selectSpeed = (rate) => {
                                 currentTheme === 'midnight' ? 'bg-amber-500/20 border-amber-500/40 text-amber-300' : '',
                                 currentTheme === 'warqah' ? 'bg-amber-900/15 dark:bg-amber-500/20 border-amber-900/30 dark:border-amber-500/40 text-amber-800 dark:text-amber-300' : ''
                             ]"
-                            title="Ganti Suasana / Vibe (Ketuk untuk beralih)"
+                            :title="t('khusyu.vibe_tooltip')"
                         >
                             <Sparkles v-if="currentTheme === 'noor'" class="h-3 w-3" />
                             <Moon v-else-if="currentTheme === 'midnight'" class="h-3 w-3" />
@@ -631,9 +633,9 @@ const selectSpeed = (rate) => {
                                     ? (currentTheme === 'midnight' ? 'bg-amber-500/25 border-amber-500/50 text-amber-300' : 'bg-primary/15 border-primary/40 text-primary')
                                     : 'opacity-70 hover:opacity-100 border-border/50'
                             ]"
-                            title="Tampilkan / Sembunyikan Transliterasi Latin"
+                            :title="t('khusyu.latin_tooltip')"
                         >
-                            Latin
+                            {{ t('khusyu.latin_toggle') }}
                         </button>
 
                         <!-- Full Translation Dialog Trigger -->
@@ -646,7 +648,7 @@ const selectSpeed = (rate) => {
                                 currentTheme === 'midnight' ? 'bg-amber-500/10 border-amber-500/30 text-amber-300 hover:bg-amber-500/20' : '',
                                 currentTheme === 'warqah' ? 'bg-amber-900/10 dark:bg-amber-400/10 border-amber-900/25 dark:border-amber-400/25 hover:bg-amber-900/20' : ''
                             ]"
-                            title="Buka Terjemahan Utuh Resmi Kemenag RI"
+                            :title="t('khusyu.full_translation_dialog')"
                         >
                             <BookOpen class="h-3.5 w-3.5" />
                         </button>
@@ -661,12 +663,12 @@ const selectSpeed = (rate) => {
                                 currentTheme === 'midnight' ? 'bg-white/10 hover:bg-destructive/20 text-[#f4efe6] hover:text-destructive hover:border-destructive/40 border-amber-500/20' : '',
                                 currentTheme === 'warqah' ? 'bg-amber-900/10 dark:bg-white/10 hover:bg-destructive/15 hover:text-destructive hover:border-destructive/30 border-amber-900/20 dark:border-amber-700/30 text-[#2c1d11] dark:text-[#f4ebd0]' : ''
                             ]"
-                            :title="effectiveIsListener ? 'Tinggalkan Sesi Dengar Bersama' : 'Keluar dari Mode Khusyu\' (Esc)'"
-                            :aria-label="effectiveIsListener ? 'Tinggalkan Sesi Dengar Bersama' : 'Keluar dari Mode Khusyu\''"
+                            :title="effectiveIsListener ? t('khusyu.leave_session') : t('khusyu.exit')"
+                            :aria-label="effectiveIsListener ? t('khusyu.leave_session') : t('khusyu.exit')"
                         >
                             <X class="h-4 w-4 sm:hidden" />
                             <Minimize2 v-if="!effectiveIsListener" class="hidden sm:block h-3.5 w-3.5" />
-                            <span class="hidden sm:inline">{{ effectiveIsListener ? 'Keluar Sesi' : 'Keluar' }}</span>
+                            <span class="hidden sm:inline">{{ effectiveIsListener ? t('khusyu.leave_session_btn') : t('khusyu.exit_btn') }}</span>
                         </button>
                     </div>
                 </header>
@@ -687,8 +689,8 @@ const selectSpeed = (rate) => {
                             currentTheme === 'midnight' ? 'bg-white/5 hover:bg-white/15 text-amber-200 border-amber-500/20' : '',
                             currentTheme === 'warqah' ? 'bg-amber-900/5 dark:bg-white/5 hover:bg-amber-900/15 text-[#3b2416] dark:text-[#ebd8ba] border-amber-900/20 dark:border-amber-600/30' : ''
                         ]"
-                        :title="effectiveIsListener ? 'Mengikuti Host' : (activeChunkIndex > 1 ? 'Bagian Sebelumnya' : 'Ayat Sebelumnya')"
-                        :aria-label="effectiveIsListener ? 'Mengikuti Host' : (activeChunkIndex > 1 ? 'Bagian Sebelumnya' : 'Ayat Sebelumnya')"
+                        :title="effectiveIsListener ? t('khusyu.locked_to_host') : (activeChunkIndex > 1 ? t('khusyu.prev_part') : t('player.prev'))"
+                        :aria-label="effectiveIsListener ? t('khusyu.locked_to_host') : (activeChunkIndex > 1 ? t('khusyu.prev_part') : t('player.prev'))"
                     >
                         <ChevronLeft class="h-6 w-6 sm:h-7 sm:w-7" />
                     </button>
@@ -707,8 +709,8 @@ const selectSpeed = (rate) => {
                             currentTheme === 'midnight' ? 'bg-white/5 hover:bg-white/15 text-amber-200 border-amber-500/20' : '',
                             currentTheme === 'warqah' ? 'bg-amber-900/5 dark:bg-white/5 hover:bg-amber-900/15 text-[#3b2416] dark:text-[#ebd8ba] border-amber-900/20 dark:border-amber-600/30' : ''
                         ]"
-                        :title="effectiveIsListener ? 'Mengikuti Host' : (activeChunkIndex < verseChunks.length ? 'Bagian Selanjutnya' : 'Ayat Selanjutnya')"
-                        :aria-label="effectiveIsListener ? 'Mengikuti Host' : (activeChunkIndex < verseChunks.length ? 'Bagian Selanjutnya' : 'Ayat Selanjutnya')"
+                        :title="effectiveIsListener ? t('khusyu.locked_to_host') : (activeChunkIndex < verseChunks.length ? t('khusyu.next_part') : t('player.next'))"
+                        :aria-label="effectiveIsListener ? t('khusyu.locked_to_host') : (activeChunkIndex < verseChunks.length ? t('khusyu.next_part') : t('player.next'))"
                     >
                         <ChevronRight class="h-6 w-6 sm:h-7 sm:w-7" />
                     </button>
@@ -739,10 +741,10 @@ const selectSpeed = (rate) => {
                                 ]"
                             >
                                 <span v-if="currentChunk && currentChunk.totalChunks > 1">
-                                    Ayat {{ currentVerse.verse_number }} • Bagian {{ currentChunk.index }} dari {{ currentChunk.totalChunks }}
+                                    {{ t('surah.ayah_number', { number: currentVerse.verse_number }) }} • {{ t('khusyu.part_of', { current: currentChunk.index, total: currentChunk.totalChunks }) }}
                                 </span>
                                 <span v-else>
-                                    Ayat {{ currentVerse.verse_number }}
+                                    {{ t('surah.ayah_number', { number: currentVerse.verse_number }) }}
                                 </span>
                             </div>
                         </div>
@@ -855,8 +857,8 @@ const selectSpeed = (rate) => {
                                                     'inline-flex items-center justify-center px-1.5 py-0.5 mx-0.5 rounded text-[11px] font-sans font-bold transition-colors cursor-pointer align-super select-none not-italic',
                                                     currentTheme === 'midnight' ? 'bg-amber-500/20 text-amber-300 hover:bg-amber-500 hover:text-amber-950' : currentTheme === 'warqah' ? 'bg-amber-900/15 text-[#5a422d] dark:text-[#d3c2aa] hover:bg-amber-800 hover:text-white' : 'bg-primary/15 text-primary hover:bg-primary hover:text-primary-foreground'
                                                 ]"
-                                                :title="`Buka Catatan Kaki [${token.number}]`"
-                                                :aria-label="`Buka Catatan Kaki [${token.number}]`"
+                                                :title="t('khusyu.footnote_title', { number: token.number })"
+                                                :aria-label="t('khusyu.footnote_title', { number: token.number })"
                                             >[{{ token.number }}]</button></template></template><template v-else>{{ currentChunk.translation }}</template>”
                                         </p>
                                     </div>
@@ -880,7 +882,7 @@ const selectSpeed = (rate) => {
                                         ? (currentTheme === 'midnight' ? 'w-6 bg-amber-400' : 'w-6 bg-primary')
                                         : 'w-1.5 opacity-30 hover:opacity-80 bg-foreground'
                                 ]"
-                                :title="`Menuju Bagian ${c.index}`"
+                                :title="t('khusyu.part_of', { current: c.index, total: currentChunk.totalChunks })"
                             />
                         </div>
                     </div>
@@ -935,7 +937,7 @@ const selectSpeed = (rate) => {
                                             'h-8 px-2 sm:h-9 sm:px-2.5 rounded-xl text-xs font-mono font-bold border transition-colors cursor-pointer flex items-center justify-center',
                                             controlButtonClass
                                         ]"
-                                        title="Kecepatan Pemutaran"
+                                        :title="t('player.speed')"
                                     >
                                         {{ audioPlayer.playbackRate.value }}x
                                     </button>
@@ -967,7 +969,7 @@ const selectSpeed = (rate) => {
                                             ? (currentTheme === 'midnight' ? 'bg-amber-500/20 border-amber-500/40 text-amber-300' : 'bg-primary/15 border-primary/40 text-primary') 
                                             : controlButtonClass
                                     ]"
-                                    :title="audioPlayer.repeatMode.value === 'ayah' ? 'Ulangi Ayat Ini' : audioPlayer.repeatMode.value === 'surah' ? 'Ulangi Surah' : 'Tanpa Pengulangan'"
+                                    :title="audioPlayer.repeatMode.value === 'ayah' ? t('player.repeat_ayah') : audioPlayer.repeatMode.value === 'surah' ? t('player.repeat_surah') : t('player.repeat_none')"
                                 >
                                     <Repeat1 v-if="audioPlayer.repeatMode.value === 'ayah'" class="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                                     <Repeat v-else class="h-3.5 w-3.5 sm:h-4 sm:w-4" />
@@ -988,7 +990,7 @@ const selectSpeed = (rate) => {
                                             : 'cursor-pointer',
                                         controlButtonClass
                                     ]"
-                                    title="Ayat Sebelumnya"
+                                    :title="t('player.prev')"
                                 >
                                     <SkipBack class="h-4 w-4 sm:h-5 sm:w-5" />
                                 </button>
@@ -1002,8 +1004,8 @@ const selectSpeed = (rate) => {
                                             ? 'bg-amber-400 text-amber-950 font-bold hover:bg-amber-300 shadow-amber-500/25' 
                                             : 'bg-primary text-primary-foreground hover:bg-primary/90 shadow-primary/25'
                                     ]"
-                                    :title="audioPlayer.isPlaying.value ? 'Jeda Audio' : 'Putar Audio'"
-                                    :aria-label="audioPlayer.isPlaying.value ? 'Jeda Audio' : 'Putar Audio'"
+                                    :title="audioPlayer.isPlaying.value ? t('player.pause') : t('player.play')"
+                                    :aria-label="audioPlayer.isPlaying.value ? t('player.pause') : t('player.play')"
                                 >
                                     <Loader2 v-if="audioPlayer.isLoading.value" class="h-5 w-5 sm:h-6 sm:w-6 animate-spin" />
                                     <Pause v-else-if="audioPlayer.isPlaying.value" class="h-5 w-5 sm:h-6 sm:w-6 fill-current" />
@@ -1021,7 +1023,7 @@ const selectSpeed = (rate) => {
                                             : 'cursor-pointer',
                                         controlButtonClass
                                     ]"
-                                    title="Ayat Selanjutnya"
+                                    :title="t('player.next')"
                                 >
                                     <SkipForward class="h-4 w-4 sm:h-5 sm:w-5" />
                                 </button>
@@ -1034,11 +1036,11 @@ const selectSpeed = (rate) => {
                                     class="px-4 py-2 rounded-2xl bg-primary text-primary-foreground font-semibold text-xs flex items-center gap-2 shadow-lg active:scale-95 transition-all cursor-pointer"
                                 >
                                     <Play class="h-4 w-4 fill-current" />
-                                    <span>Mulai Dengar</span>
+                                    <span>{{ t('khusyu.start_listen') }}</span>
                                 </button>
                                 <div v-else class="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-primary/10 border border-primary/25 text-primary text-xs font-semibold">
                                     <Radio class="h-3.5 w-3.5 animate-pulse" />
-                                    <span>Terkunci ke Host</span>
+                                    <span>{{ t('khusyu.locked_to_host') }}</span>
                                 </div>
                             </div>
 
@@ -1055,8 +1057,8 @@ const selectSpeed = (rate) => {
                                             ? (currentTheme === 'midnight' ? 'bg-emerald-500/25 border-emerald-500/50 text-emerald-300' : 'bg-emerald-500/20 border-emerald-500/40 text-emerald-700 dark:text-emerald-400')
                                             : controlButtonClass
                                     ]"
-                                    title="Dengar Bersama (Listen Together)"
-                                    aria-label="Dengar Bersama"
+                                    :title="t('player.listen_together')"
+                                    :aria-label="t('player.listen_together')"
                                 >
                                     <Radio class="h-3.5 w-3.5 sm:h-4 sm:w-4" :class="roomSync.roomCode.value ? 'animate-pulse' : ''" />
                                     <span 
@@ -1075,7 +1077,7 @@ const selectSpeed = (rate) => {
                                             'h-9 w-9 rounded-xl border opacity-80 hover:opacity-100 transition-colors cursor-pointer flex items-center justify-center',
                                             controlButtonClass
                                         ]"
-                                        :title="audioPlayer.isMuted.value ? 'Nyalakan Suara' : 'Pengaturan Volume'"
+                                        :title="audioPlayer.isMuted.value ? t('player.volume_unmute') : t('player.volume')"
                                     >
                                         <VolumeX v-if="audioPlayer.isMuted.value || audioPlayer.volume.value === 0" class="h-4 w-4 text-destructive" />
                                         <Volume2 v-else class="h-4 w-4" />
@@ -1089,7 +1091,7 @@ const selectSpeed = (rate) => {
                                             type="button"
                                             @click="audioPlayer.toggleMute"
                                             class="p-1 rounded-lg hover:bg-muted transition-colors cursor-pointer"
-                                            :title="audioPlayer.isMuted.value ? 'Nyalakan Suara' : 'Bisukan Suara'"
+                                            :title="audioPlayer.isMuted.value ? t('player.volume_unmute') : t('player.volume_mute')"
                                         >
                                             <VolumeX v-if="audioPlayer.isMuted.value || audioPlayer.volume.value === 0" class="h-3.5 w-3.5 text-destructive" />
                                             <Volume2 v-else class="h-3.5 w-3.5" />
@@ -1119,7 +1121,7 @@ const selectSpeed = (rate) => {
                                         'h-8 w-8 sm:h-9 sm:w-9 rounded-xl border opacity-80 hover:opacity-100 transition-colors cursor-pointer flex items-center justify-center',
                                         controlButtonClass
                                     ]"
-                                    title="Pengaturan Tampilan"
+                                    :title="t('settings.title')"
                                 >
                                     <SlidersHorizontal class="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                                 </button>
@@ -1139,7 +1141,7 @@ const selectSpeed = (rate) => {
                             <div class="flex items-center gap-2">
                                 <BookOpen class="h-5 w-5 text-primary" />
                                 <h3 class="font-heading font-extrabold text-base sm:text-lg">
-                                    Terjemahan Lengkap — Surah {{ chapter.name_simple }}: Ayat {{ currentVerse?.verse_number }}
+                                    {{ t('khusyu.full_translation_title', { surah: chapter.name_simple, ayah: currentVerse?.verse_number }) }}
                                 </h3>
                             </div>
                             <button
@@ -1168,10 +1170,10 @@ const selectSpeed = (rate) => {
                             </p>
                         </div>
 
-                        <!-- Full Indonesian Translation (Kemenag RI) with Footnote buttons -->
+                        <!-- Full Translation with Footnote buttons -->
                         <div class="space-y-2 text-sm sm:text-base leading-relaxed text-foreground font-medium" dir="ltr">
                             <h4 class="text-xs uppercase font-bold text-muted-foreground tracking-wider">
-                                Terjemahan Resmi Kemenag RI:
+                                {{ t('khusyu.official_translation_label') }}
                             </h4>
                             <p class="leading-relaxed">
                                 <template v-for="(token, idx) in currentTranslationTokens" :key="idx">
@@ -1181,7 +1183,7 @@ const selectSpeed = (rate) => {
                                         @click.stop="openFootnote(token.id, token.number)"
                                         type="button"
                                         class="inline-flex items-center justify-center px-1.5 py-0.5 mx-0.5 rounded-md text-[10px] font-bold bg-primary/15 text-primary hover:bg-primary hover:text-primary-foreground transition-colors cursor-pointer align-baseline select-none"
-                                        :title="`Lihat Catatan Kaki [${token.number}]`"
+                                        :title="t('khusyu.footnote_title', { number: token.number })"
                                     >
                                         [{{ token.number }}]
                                     </button>
@@ -1195,7 +1197,7 @@ const selectSpeed = (rate) => {
                                 @click="showFullTranslationDialog = false"
                                 class="px-4 py-2 rounded-xl bg-muted hover:bg-muted/80 text-xs font-bold transition-colors cursor-pointer"
                             >
-                                Tutup
+                                {{ t('khusyu.close') }}
                             </button>
                         </div>
                     </div>

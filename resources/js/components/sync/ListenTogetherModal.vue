@@ -45,10 +45,10 @@
                             </div>
                             <div>
                                 <h3 id="modal-title" class="font-heading font-semibold text-lg leading-tight">
-                                    Dengar Bersama
+                                    {{ t('sync.modal_title') }}
                                 </h3>
                                 <p class="text-xs text-muted-foreground mt-0.5">
-                                    Sinkronisasi audio & ayat real-time multi-device
+                                    {{ t('sync.modal_desc') }}
                                 </p>
                             </div>
                         </div>
@@ -57,7 +57,7 @@
                             type="button"
                             @click="close"
                             class="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors cursor-pointer"
-                            aria-label="Tutup Dialog"
+                            :aria-label="t('common.close_dialog')"
                         >
                             <X class="h-5 w-5" />
                         </button>
@@ -68,11 +68,11 @@
                         <div class="p-4 rounded-xl bg-muted/50 border border-border/60 space-y-2.5 text-xs text-muted-foreground">
                             <div class="flex items-start gap-2.5">
                                 <Users class="h-4 w-4 text-primary shrink-0 mt-0.5" />
-                                <span>Bagikan audio dan highlight ayat yang Anda putar ke HP, tablet, atau laptop teman secara serentak.</span>
+                                <span>{{ t('sync.info_1') }}</span>
                             </div>
                             <div class="flex items-start gap-2.5">
                                 <QrCode class="h-4 w-4 text-primary shrink-0 mt-0.5" />
-                                <span>Cukup arahkan kamera smartphone ke QR Code untuk langsung bergabung tanpa perlu install aplikasi.</span>
+                                <span>{{ t('sync.info_2') }}</span>
                             </div>
                         </div>
 
@@ -84,7 +84,7 @@
                         >
                             <Loader2 v-if="isCreating" class="h-4 w-4 animate-spin" />
                             <Radio v-else class="h-4 w-4" />
-                            <span>{{ isCreating ? 'Menyiapkan Ruang Sesi...' : 'Mulai Sesi Dengar Bersama' }}</span>
+                            <span>{{ isCreating ? t('sync.preparing') : t('sync.start') }}</span>
                         </button>
 
                         <p v-if="createError" class="text-xs text-destructive text-center font-medium animate-in fade-in">
@@ -101,12 +101,12 @@
                                     <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                                     <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
                                 </span>
-                                <span>Sesi Siaran Aktif</span>
+                                <span>{{ t('sync.active_session') }}</span>
                             </div>
 
                             <div class="flex items-center gap-1.5 font-mono text-[11px] bg-card px-2 py-0.5 rounded-md border border-emerald-500/20">
                                 <Users class="h-3 w-3" />
-                                <span>{{ roomSync.listenerCount.value }} Terhubung</span>
+                                <span>{{ t('sync.connected', { count: roomSync.listenerCount.value }) }}</span>
                             </div>
                         </div>
 
@@ -115,7 +115,7 @@
                             <div class="w-48 h-48 sm:w-52 sm:h-52" v-html="qrSvg" />
                             <p class="text-[11px] text-zinc-600 font-medium mt-2 flex items-center gap-1">
                                 <QrCode class="h-3.5 w-3.5" />
-                                <span>Scan dengan kamera HP untuk bergabung</span>
+                                <span>{{ t('sync.scan_hint') }}</span>
                             </p>
                         </div>
 
@@ -123,7 +123,7 @@
                         <div class="flex items-center justify-between p-3 rounded-xl bg-muted/60 border border-border">
                             <div>
                                 <span class="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground block">
-                                    Kode Room Sesi
+                                    {{ t('sync.room_code_label') }}
                                 </span>
                                 <span class="font-mono text-xl font-bold tracking-widest text-primary">
                                     {{ roomSync.roomCode.value }}
@@ -141,7 +141,7 @@
                                 >
                                     <Check v-if="codeCopied" class="h-3.5 w-3.5 text-emerald-500" />
                                     <Copy v-else class="h-3.5 w-3.5" />
-                                    <span>{{ codeCopied ? 'Tersalin!' : 'Salin Kode' }}</span>
+                                    <span>{{ codeCopied ? t('sync.copied') : t('sync.copy_code') }}</span>
                                 </button>
 
                                 <!-- Tooltip Popup -->
@@ -158,7 +158,7 @@
                                         class="absolute -top-8.5 right-0 z-50 px-2 py-0.5 rounded-md bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 text-[10px] font-semibold whitespace-nowrap shadow-md pointer-events-none flex items-center gap-1"
                                     >
                                         <Check class="h-3 w-3 text-emerald-400 dark:text-emerald-600" />
-                                        <span>Kode tersalin!</span>
+                                        <span>{{ t('sync.code_copied') }}</span>
                                         <div class="absolute -bottom-1 right-5 border-4 border-transparent border-t-zinc-900 dark:border-t-zinc-100"></div>
                                     </div>
                                 </Transition>
@@ -184,7 +184,7 @@
                                 >
                                     <Check v-if="linkCopied" class="h-3.5 w-3.5 text-emerald-500" />
                                     <Share2 v-else class="h-3.5 w-3.5" />
-                                    <span>{{ linkCopied ? 'Tersalin!' : 'Salin Link' }}</span>
+                                    <span>{{ linkCopied ? t('sync.copied') : t('sync.copy_link') }}</span>
                                 </button>
 
                                 <!-- Tooltip Popup -->
@@ -201,7 +201,7 @@
                                         class="absolute -top-8.5 right-0 z-50 px-2 py-0.5 rounded-md bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 text-[10px] font-semibold whitespace-nowrap shadow-md pointer-events-none flex items-center gap-1"
                                     >
                                         <Check class="h-3 w-3 text-emerald-400 dark:text-emerald-600" />
-                                        <span>Tautan tersalin!</span>
+                                        <span>{{ t('sync.link_copied') }}</span>
                                         <div class="absolute -bottom-1 right-5 border-4 border-transparent border-t-zinc-900 dark:border-t-zinc-100"></div>
                                     </div>
                                 </Transition>
@@ -215,7 +215,7 @@
                                 @click="handleEndSession"
                                 class="text-xs text-destructive hover:text-destructive/80 font-medium transition-colors cursor-pointer"
                             >
-                                Tutup Sesi Bersama
+                                {{ t('sync.end_session') }}
                             </button>
 
                             <button
@@ -223,7 +223,7 @@
                                 @click="close"
                                 class="px-4 py-2 rounded-xl bg-primary/10 text-primary hover:bg-primary/20 text-xs font-medium transition-colors cursor-pointer"
                             >
-                                Siarkan di Latar Belakang
+                                {{ t('sync.broadcast_bg') }}
                             </button>
                         </div>
                     </div>
@@ -239,6 +239,7 @@ import { Radio, Users, QrCode, X, Copy, Check, Share2, Loader2 } from 'lucide-vu
 import { useRoomSync } from '@/composables/useRoomSync';
 import { useQuranAudioPlayer } from '@/composables/useQuranAudioPlayer';
 import { useUserPreferences } from '@/composables/useUserPreferences';
+import { useI18n } from '@/composables/useI18n';
 import { generateQRCodeSVG } from '@/lib/qrcode';
 import { copyToClipboard } from '@/lib/utils';
 
@@ -255,6 +256,7 @@ const props = defineProps({
 
 const emit = defineEmits(['update:open']);
 
+const { t } = useI18n();
 const roomSync = useRoomSync();
 const audioPlayer = useQuranAudioPlayer();
 const userPreferences = useUserPreferences();
@@ -312,7 +314,7 @@ const handleCreateRoom = async () => {
         });
     } catch (e) {
         console.error('Failed to create room:', e);
-        createError.value = e.message || 'Gagal menyiapkan ruang sesi. Silakan coba lagi.';
+        createError.value = e.message || t('sync.create_error');
     } finally {
         isCreating.value = false;
     }
@@ -323,7 +325,7 @@ const copyRoomCode = async () => {
     const ok = await copyToClipboard(roomSync.roomCode.value);
     if (ok) {
         codeCopied.value = true;
-        triggerToast(`Kode Room ${roomSync.roomCode.value} berhasil disalin!`);
+        triggerToast(t('sync.code_toast', { code: roomSync.roomCode.value }));
         setTimeout(() => { codeCopied.value = false; }, 2500);
     }
 };
@@ -333,7 +335,7 @@ const copyJoinLink = async () => {
     const ok = await copyToClipboard(roomSync.joinUrl.value);
     if (ok) {
         linkCopied.value = true;
-        triggerToast('Tautan Dengar Bersama berhasil disalin!');
+        triggerToast(t('sync.link_toast'));
         setTimeout(() => { linkCopied.value = false; }, 2500);
     }
 };

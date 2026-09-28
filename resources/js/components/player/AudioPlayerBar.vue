@@ -2,6 +2,7 @@
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { useQuranAudioPlayer } from '@/composables/useQuranAudioPlayer';
 import { useRoomSync } from '@/composables/useRoomSync';
+import { useI18n } from '@/composables/useI18n';
 import {
     Play,
     Pause,
@@ -25,6 +26,7 @@ import {
 const emit = defineEmits(['open-reciter-modal', 'open-settings', 'open-listen-together', 'open-khusyu-mode', 'open-zen-mode']);
 
 const roomSync = useRoomSync();
+const { t } = useI18n();
 
 const {
     isPlaying,
@@ -197,7 +199,7 @@ onUnmounted(() => {
                             v-if="currentAyahNumber" 
                             class="inline-flex items-center px-2 py-0.5 rounded-full bg-primary/15 text-primary font-semibold text-[11px] shrink-0"
                         >
-                            Ayat {{ currentAyahNumber }}
+                            {{ t('surah.ayah_number', { number: currentAyahNumber }) }}
                         </span>
                     </div>
 
@@ -208,10 +210,10 @@ onUnmounted(() => {
                             type="button"
                             @click="emit('open-khusyu-mode'); emit('open-zen-mode');"
                             class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-primary/15 hover:bg-primary/25 text-primary border border-primary/30 font-semibold text-[11px] transition-all cursor-pointer shadow-2xs"
-                            title="Buka Mode Khusyu' (خُشُوع) - Fokus & Imersif"
+                            :title="t('surah.khusyu_mode')"
                         >
                             <Maximize2 class="h-3.5 w-3.5" />
-                            <span>Mode Khusyu' (خُشُوع)</span>
+                            <span>{{ t('surah.khusyu_mode') }} (خُشُوع)</span>
                         </button>
 
                         <!-- Qari Selector Button -->
@@ -219,11 +221,11 @@ onUnmounted(() => {
                             type="button"
                             @click="emit('open-reciter-modal')"
                             class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-muted/60 hover:bg-muted text-foreground/85 hover:text-primary border border-border/60 transition-colors"
-                            title="Ganti Qari / Pembaca"
+                            :title="t('player.change_reciter')"
                         >
                             <User class="h-3.5 w-3.5 text-primary" />
                             <span class="hidden sm:inline truncate max-w-[130px]">
-                                {{ activeReciter?.name || 'Pilih Qari' }}
+                                {{ activeReciter?.name || t('player.change_reciter') }}
                             </span>
                         </button>
 
@@ -233,10 +235,10 @@ onUnmounted(() => {
                             @click="toggleAutoScroll"
                             class="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl border transition-colors text-[11px] font-medium"
                             :class="autoScrollEnabled ? 'bg-primary/10 border-primary/30 text-primary' : 'bg-muted/40 border-border/40 text-muted-foreground'"
-                            title="Sinkronisasi Gulir Otomatis (Auto-Scroll)"
+                            :title="t('player.auto_scroll')"
                         >
                             <Sparkles class="h-3 w-3" />
-                            <span class="hidden md:inline">Auto-Scroll</span>
+                            <span class="hidden md:inline">{{ t('player.auto_scroll') }}</span>
                         </button>
 
                         <!-- Listen Together Trigger -->
@@ -247,10 +249,10 @@ onUnmounted(() => {
                             :class="roomSync.roomCode.value 
                                 ? 'bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border border-emerald-500/40 shadow-xs' 
                                 : 'bg-gradient-to-r from-emerald-600/15 to-teal-600/15 border border-primary/30 text-primary hover:bg-primary/20'"
-                            title="Dengarkan Bersama (Realtime Sync)"
+                            :title="t('player.listen_together')"
                         >
                             <Radio class="h-3.5 w-3.5" :class="roomSync.roomCode.value ? 'animate-pulse text-emerald-500' : 'text-primary'" />
-                            <span class="hidden sm:inline">{{ roomSync.roomCode.value ? `Room ${roomSync.roomCode.value}` : 'Listen Together' }}</span>
+                            <span class="hidden sm:inline">{{ roomSync.roomCode.value ? `Room ${roomSync.roomCode.value}` : t('player.listen_together') }}</span>
                             <span 
                                 v-if="roomSync.roomCode.value" 
                                 class="h-1.5 w-1.5 rounded-full bg-emerald-500 shrink-0 animate-ping"
@@ -268,7 +270,7 @@ onUnmounted(() => {
                             type="button"
                             @click="prevAyah"
                             class="p-2 rounded-xl text-foreground/80 hover:text-foreground hover:bg-muted/70 active:scale-95 transition-all"
-                            title="Ayat Sebelumnya"
+                            :title="t('player.prev')"
                         >
                             <SkipBack class="h-4 w-4" />
                         </button>
@@ -278,7 +280,7 @@ onUnmounted(() => {
                             type="button"
                             @click="handlePlayClick"
                             class="p-3 rounded-2xl bg-primary text-primary-foreground hover:bg-primary/90 active:scale-95 shadow-md shadow-primary/20 transition-all flex items-center justify-center cursor-pointer"
-                            :title="isPlaying ? 'Jeda Audio' : 'Putar Audio'"
+                            :title="isPlaying ? t('player.pause') : t('player.play')"
                         >
                             <Loader2 v-if="isLoading" class="h-5 w-5 animate-spin" />
                             <Pause v-else-if="isPlaying" class="h-5 w-5 fill-current" />
@@ -290,7 +292,7 @@ onUnmounted(() => {
                             type="button"
                             @click="nextAyah"
                             class="p-2 rounded-xl text-foreground/80 hover:text-foreground hover:bg-muted/70 active:scale-95 transition-all"
-                            title="Ayat Selanjutnya"
+                            :title="t('player.next')"
                         >
                             <SkipForward class="h-4 w-4" />
                         </button>
@@ -330,8 +332,8 @@ onUnmounted(() => {
                             @click="cycleRepeatMode"
                             class="p-2 rounded-xl transition-colors relative cursor-pointer"
                             :class="repeatMode !== 'none' ? 'bg-primary/15 text-primary' : 'text-muted-foreground hover:text-foreground hover:bg-muted/60'"
-                            :title="repeatMode === 'ayah' ? 'Ulangi Ayat Ini' : repeatMode === 'surah' ? 'Ulangi Seluruh Surah' : 'Tanpa Pengulangan'"
-                            :aria-label="repeatMode === 'ayah' ? 'Ulangi Ayat Ini' : repeatMode === 'surah' ? 'Ulangi Seluruh Surah' : 'Tanpa Pengulangan'"
+                            :title="repeatMode === 'ayah' ? t('player.repeat_ayah') : repeatMode === 'surah' ? t('player.repeat_surah') : t('player.repeat_none')"
+                            :aria-label="repeatMode === 'ayah' ? t('player.repeat_ayah') : repeatMode === 'surah' ? t('player.repeat_surah') : t('player.repeat_none')"
                         >
                             <Repeat1 v-if="repeatMode === 'ayah'" class="h-4 w-4" />
                             <Repeat v-else class="h-4 w-4" />

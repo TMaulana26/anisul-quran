@@ -124,7 +124,7 @@ it('honors the anisul_selected_reciter cookie when rendering surah show page', f
         ], 200),
     ]);
 
-    $response = $this->withCookie('anisul_selected_reciter', '4')->get('/surah/1');
+    $response = $this->withUnencryptedCookie('anisul_selected_reciter', '4')->get('/surah/1');
 
     $response->assertStatus(200);
     $response->assertInertia(fn (Assert $page) => $page

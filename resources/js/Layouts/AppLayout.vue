@@ -1,9 +1,10 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue';
-import { Link, Head, usePage } from '@inertiajs/vue3';
+import { Link, Head, usePage, router } from '@inertiajs/vue3';
 import AppLogo from '@/components/AppLogo.vue';
 import SettingsDrawer from '@/components/player/SettingsDrawer.vue';
 import { useUserPreferences } from '@/composables/useUserPreferences';
+import { useI18n } from '@/composables/useI18n';
 import { 
     BookOpen, 
     Moon, 
@@ -15,7 +16,8 @@ import {
     Compass,
     Sparkles,
     ScrollText,
-    SlidersHorizontal
+    SlidersHorizontal,
+    Languages
 } from '@lucide/vue';
 
 defineProps({
@@ -30,7 +32,17 @@ const emit = defineEmits(['select-reciter']);
 const page = usePage();
 const userPreferences = useUserPreferences();
 const { isDrawerOpen, openDrawer, isDark, toggleTheme } = userPreferences;
+const { t, currentLocale, setLocale } = useI18n();
 const reciters = computed(() => page.props.reciters || []);
+
+const switchLocale = (newLocale) => {
+    if (currentLocale.value === newLocale) return;
+    setLocale(newLocale);
+    router.reload({
+        preserveScroll: true,
+        preserveState: true,
+    });
+};
 </script>
 
 <template>
@@ -52,8 +64,32 @@ const reciters = computed(() => page.props.reciters || []);
                         class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
                     >
                         <Compass class="h-4 w-4" />
-                        Daftar Surah
+                        {{ t('nav.surah_list') }}
                     </Link>
+
+                    <!-- Language Switcher Pill (ID | EN) -->
+                    <div class="flex items-center p-0.5 rounded-xl border border-border/80 bg-card/80 text-xs font-bold backdrop-blur-md shadow-2xs">
+                        <button
+                            type="button"
+                            @click="switchLocale('id')"
+                            :class="currentLocale === 'id' ? 'bg-primary text-primary-foreground shadow-xs' : 'text-muted-foreground hover:text-foreground'"
+                            class="px-2 py-1 rounded-lg transition-all cursor-pointer"
+                            title="Bahasa Indonesia (Kemenag RI)"
+                            aria-label="Bahasa Indonesia"
+                        >
+                            ID
+                        </button>
+                        <button
+                            type="button"
+                            @click="switchLocale('en')"
+                            :class="currentLocale === 'en' ? 'bg-primary text-primary-foreground shadow-xs' : 'text-muted-foreground hover:text-foreground'"
+                            class="px-2 py-1 rounded-lg transition-all cursor-pointer"
+                            title="English (The Clear Quran)"
+                            aria-label="English"
+                        >
+                            EN
+                        </button>
+                    </div>
 
                     <!-- Global Suasana / Vibe Switcher (Noor, Midnight, Warqah) -->
                     <div class="flex items-center p-1 rounded-xl border border-border/80 bg-card/80 text-xs font-semibold backdrop-blur-md shadow-2xs">
@@ -64,7 +100,7 @@ const reciters = computed(() => page.props.reciters || []);
                             :class="userPreferences.preferences.appVibe === 'noor'
                                 ? 'bg-primary text-primary-foreground shadow-xs font-bold'
                                 : 'text-muted-foreground hover:text-foreground'"
-                            title="Suasana Noor (Zamrud Sejuk)"
+                            :title="t('nav.vibe_noor')"
                         >
                             <Sparkles class="h-3.5 w-3.5" />
                             <span class="hidden md:inline">Noor</span>
@@ -77,7 +113,7 @@ const reciters = computed(() => page.props.reciters || []);
                             :class="userPreferences.preferences.appVibe === 'midnight'
                                 ? 'bg-amber-500 text-amber-950 shadow-xs font-bold'
                                 : 'text-muted-foreground hover:text-foreground'"
-                            title="Suasana Midnight (Emas Tahajjud)"
+                            :title="t('nav.vibe_midnight')"
                         >
                             <Moon class="h-3.5 w-3.5" />
                             <span class="hidden md:inline">Midnight</span>
@@ -90,7 +126,7 @@ const reciters = computed(() => page.props.reciters || []);
                             :class="userPreferences.preferences.appVibe === 'warqah'
                                 ? 'bg-amber-800 dark:bg-amber-600 text-white shadow-xs font-bold'
                                 : 'text-muted-foreground hover:text-foreground'"
-                            title="Suasana Warqah (Perkamen Klasik)"
+                            :title="t('nav.vibe_warqah')"
                         >
                             <ScrollText class="h-3.5 w-3.5" />
                             <span class="hidden md:inline">Warqah</span>
@@ -102,8 +138,8 @@ const reciters = computed(() => page.props.reciters || []);
                         @click="openDrawer"
                         type="button"
                         class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-card text-foreground hover:bg-muted hover:text-primary transition-colors focus:outline-none focus:ring-2 focus:ring-primary/40 cursor-pointer"
-                        title="Pengaturan & Preferensi Pengguna"
-                        aria-label="Buka Pengaturan"
+                        :title="t('settings.title')"
+                        :aria-label="t('settings.title')"
                     >
                         <SlidersHorizontal class="h-4 w-4" />
                     </button>
@@ -113,8 +149,8 @@ const reciters = computed(() => page.props.reciters || []);
                         @click="toggleTheme" 
                         type="button" 
                         class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-card text-foreground hover:bg-muted hover:text-primary transition-colors focus:outline-none focus:ring-2 focus:ring-primary/40 cursor-pointer"
-                        :title="isDark ? 'Beralih ke Mode Terang' : 'Beralih ke Mode Gelap'"
-                        aria-label="Toggle theme"
+                        :title="t('nav.theme_toggle')"
+                        :aria-label="t('nav.theme_toggle')"
                     >
                         <Sun v-if="isDark" class="h-4 w-4 transition-transform rotate-0 scale-100" />
                         <Moon v-else class="h-4 w-4 transition-transform rotate-0 scale-100" />
