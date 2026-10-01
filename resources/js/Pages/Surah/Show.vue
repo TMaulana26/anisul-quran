@@ -7,6 +7,7 @@ import MushafPageView from '@/components/MushafPageView.vue';
 import AudioPlayerBar from '@/components/player/AudioPlayerBar.vue';
 import ReciterSelectorModal from '@/components/player/ReciterSelectorModal.vue';
 import KhusyuPlayerView from '@/components/player/KhusyuPlayerView.vue';
+import TadabburPlayerView from '@/components/player/TadabburPlayerView.vue';
 import SurahCompletionModal from '@/components/player/SurahCompletionModal.vue';
 import ListenTogetherModal from '@/components/sync/ListenTogetherModal.vue';
 import { useQuranAudioPlayer } from '@/composables/useQuranAudioPlayer';
@@ -26,7 +27,8 @@ import {
     SlidersHorizontal,
     User,
     Sliders,
-    Maximize2
+    Maximize2,
+    Film
 } from '@lucide/vue';
 
 const props = defineProps({
@@ -113,6 +115,7 @@ const showListenTogetherModal = ref(false);
 const showCompletionModal = ref(false);
 const isKhusyuMode = ref(false);
 const isZenMode = isKhusyuMode;
+const isTadabburMode = ref(false);
 
 const handleListenTogether = () => {
     showListenTogetherModal.value = true;
@@ -567,6 +570,17 @@ const handleCloseCompletionModal = () => {
                         <span>{{ t('surah.khusyu_mode') }}</span>
                     </button>
 
+                    <!-- Mode Tadabbur Alam Trigger Button in Sticky Bar -->
+                    <button
+                        type="button"
+                        @click="isTadabburMode = true"
+                        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-400 border border-amber-500/30 text-xs font-semibold transition-all cursor-pointer shadow-2xs"
+                        :title="t('tadabbur.open_tadabbur')"
+                    >
+                        <Film class="h-3.5 w-3.5" />
+                        <span>{{ t('tadabbur.title') }}</span>
+                    </button>
+
                     <!-- Settings Drawer Trigger Button -->
                     <button
                         type="button"
@@ -643,6 +657,7 @@ const handleCloseCompletionModal = () => {
             @open-listen-together="handleListenTogether"
             @open-khusyu-mode="autoKhusyuOnPlay ? (isKhusyuMode = true) : null"
             @open-zen-mode="autoKhusyuOnPlay ? (isKhusyuMode = true) : null"
+            @open-tadabbur-mode="isTadabburMode = true"
         />
 
         <!-- Fullscreen Khusyu Focus Reading Player View -->
@@ -657,6 +672,18 @@ const handleCloseCompletionModal = () => {
             @open-reciter-modal="showReciterModal = true"
             @open-settings="userPreferences.openDrawer()"
             @open-listen-together="handleListenTogether"
+        />
+
+        <!-- Fullscreen Tadabbur Alam Cinematic Sanctuary Player View -->
+        <TadabburPlayerView
+            v-model:open="isTadabburMode"
+            :chapter="chapter"
+            :verses="verses"
+            :mushaf-type="mushafType"
+            :show-translation="showTranslation"
+            :arabic-font-size="arabicFontSize"
+            @open-reciter-modal="showReciterModal = true"
+            @open-settings="userPreferences.openDrawer()"
         />
 
         <!-- Reciter Selector Modal Dialog -->

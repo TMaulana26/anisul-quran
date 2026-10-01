@@ -13,6 +13,8 @@ const DEFAULT_PREFERENCES = {
     appVibe: 'noor', // 'noor' | 'midnight' | 'warqah'
     appLocale: 'id', // 'id' | 'en'
     surahReciterOverrides: {}, // { [chapterId]: reciterId }
+    tadabburDataSaver: false,
+    tadabburOverlayOpacity: 0.45,
 };
 
 const safeGetItem = (key, fallback) => {
@@ -145,6 +147,20 @@ export function useUserPreferences() {
         }
         if (typeof document !== 'undefined') {
             document.documentElement.setAttribute('lang', preferences.appLocale || 'id');
+        }
+
+        // Initialize Tadabbur Preferences
+        const savedDataSaver = safeGetItem('anisul_tadabbur_data_saver', null);
+        if (savedDataSaver !== null) {
+            preferences.tadabburDataSaver = savedDataSaver === 'true';
+        }
+
+        const savedOverlayOpacity = safeGetItem('anisul_tadabbur_opacity', null);
+        if (savedOverlayOpacity !== null) {
+            const parsed = parseFloat(savedOverlayOpacity);
+            if (!isNaN(parsed) && parsed >= 0.1 && parsed <= 0.9) {
+                preferences.tadabburOverlayOpacity = parsed;
+            }
         }
     };
 
@@ -334,10 +350,25 @@ export function useUserPreferences() {
         safeSetItem('anisul_surah_reciter_overrides', JSON.stringify({}));
         safeSetItem('anisul_app_vibe', DEFAULT_PREFERENCES.appVibe);
         safeSetItem('anisul_khusyu_theme', DEFAULT_PREFERENCES.appVibe);
+        preferences.tadabburDataSaver = DEFAULT_PREFERENCES.tadabburDataSaver;
+        preferences.tadabburOverlayOpacity = DEFAULT_PREFERENCES.tadabburOverlayOpacity;
+        safeSetItem('anisul_tadabbur_data_saver', DEFAULT_PREFERENCES.tadabburDataSaver);
+        safeSetItem('anisul_tadabbur_opacity', DEFAULT_PREFERENCES.tadabburOverlayOpacity);
         if (typeof document !== 'undefined') {
             document.documentElement.setAttribute('data-vibe', DEFAULT_PREFERENCES.appVibe);
             document.documentElement.setAttribute('lang', DEFAULT_PREFERENCES.appLocale);
         }
+    };
+
+    const setTadabburDataSaver = (val) => {
+        preferences.tadabburDataSaver = Boolean(val);
+        safeSetItem('anisul_tadabbur_data_saver', preferences.tadabburDataSaver);
+    };
+
+    const setTadabburOverlayOpacity = (val) => {
+        const num = Math.min(0.9, Math.max(0.1, parseFloat(val) || 0.45));
+        preferences.tadabburOverlayOpacity = num;
+        safeSetItem('anisul_tadabbur_opacity', num);
     };
 
     const readingMode = computed(() => preferences.readingMode);
@@ -351,6 +382,8 @@ export function useUserPreferences() {
     const surahReciterOverrides = computed(() => preferences.surahReciterOverrides || {});
     const appVibe = computed(() => preferences.appVibe);
     const appLocale = computed(() => preferences.appLocale || 'id');
+    const tadabburDataSaver = computed(() => preferences.tadabburDataSaver);
+    const tadabburOverlayOpacity = computed(() => preferences.tadabburOverlayOpacity);
 
     return {
         isDrawerOpen,
@@ -367,6 +400,8 @@ export function useUserPreferences() {
         surahReciterOverrides,
         appVibe,
         appLocale,
+        tadabburDataSaver,
+        tadabburOverlayOpacity,
         openDrawer,
         closeDrawer,
         toggleDrawer,
@@ -388,6 +423,8 @@ export function useUserPreferences() {
         clearAllSurahReciterOverrides,
         setAppVibe,
         setAppLocale,
+        setTadabburDataSaver,
+        setTadabburOverlayOpacity,
         resetDefaults,
     };
 }

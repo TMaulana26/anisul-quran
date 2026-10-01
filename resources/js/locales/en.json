@@ -220,5 +220,23 @@
         "status": "Status {status}",
         "back_home": "Back to Home",
         "reload": "Reload Page"
+    },
+    "tadabbur": {
+        "title": "Nature Tadabbur",
+        "open_tadabbur": "Open Nature Tadabbur Sanctuary",
+        "close_tadabbur": "Exit Tadabbur Mode",
+        "theme_cosmic": "Cosmic & Stars",
+        "theme_ocean": "Ocean & Water",
+        "theme_mountain": "Mountain Sanctuary",
+        "theme_rain": "Living Rain & Flora",
+        "theme_sunrise": "Dawn & Golden Light",
+        "data_saver": "Data Saver Mode (Motion Photo)",
+        "ambience_volume": "Nature Ambience Volume",
+        "mute_ambience": "Mute Nature Sounds",
+        "unmute_ambience": "Unmute Nature Sounds",
+        "fullscreen": "Fullscreen",
+        "exit_fullscreen": "Exit Fullscreen",
+        "ayah_badge": "Surah {surah}: Ayah {ayah}",
+        "shortcuts_hint": "Space: Play/Pause • Arrows: Change Ayah • M: Mute Audio • F: Fullscreen • Esc: Exit"
     }
 }

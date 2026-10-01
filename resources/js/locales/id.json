@@ -220,5 +220,23 @@
         "status": "Status {status}",
         "back_home": "Kembali ke Beranda",
         "reload": "Muat Ulang Halaman"
+    },
+    "tadabbur": {
+        "title": "Tadabbur Alam",
+        "open_tadabbur": "Buka Mode Tadabbur Alam",
+        "close_tadabbur": "Keluar dari Mode Tadabbur",
+        "theme_cosmic": "Semesta & Bintang",
+        "theme_ocean": "Samudra & Lautan",
+        "theme_mountain": "Pegunungan & Lembah",
+        "theme_rain": "Rintik Hujan & Flora",
+        "theme_sunrise": "Fajar & Mentari",
+        "data_saver": "Mode Hemat Data (Foto Gerak)",
+        "ambience_volume": "Volume Suara Alam",
+        "mute_ambience": "Bisukan Suara Alam",
+        "unmute_ambience": "Nyalakan Suara Alam",
+        "fullscreen": "Layar Penuh",
+        "exit_fullscreen": "Keluar Layar Penuh",
+        "ayah_badge": "Surah {surah}: Ayat {ayah}",
+        "shortcuts_hint": "Spasi: Play/Pause • Panah: Ganti Ayat • M: Mute Suara • F: Fullscreen • Esc: Keluar"
     }
 }

@@ -20,10 +20,11 @@ import {
     ChevronDown,
     Sliders,
     Radio,
-    Maximize2
+    Maximize2,
+    Film
 } from '@lucide/vue';
 
-const emit = defineEmits(['open-reciter-modal', 'open-settings', 'open-listen-together', 'open-khusyu-mode', 'open-zen-mode']);
+const emit = defineEmits(['open-reciter-modal', 'open-settings', 'open-listen-together', 'open-khusyu-mode', 'open-zen-mode', 'open-tadabbur-mode']);
 
 const roomSync = useRoomSync();
 const { t } = useI18n();
@@ -214,6 +215,17 @@ onUnmounted(() => {
                         >
                             <Maximize2 class="h-3.5 w-3.5" />
                             <span>{{ t('surah.khusyu_mode') }} (خُشُوع)</span>
+                        </button>
+
+                        <!-- Mode Tadabbur Alam (Cinema Sanctuary) Trigger Button -->
+                        <button
+                            type="button"
+                            @click="emit('open-tadabbur-mode')"
+                            class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 text-amber-700 dark:text-amber-400 border border-amber-500/30 font-semibold text-[11px] transition-all cursor-pointer shadow-2xs"
+                            :title="t('tadabbur.open_tadabbur')"
+                        >
+                            <Film class="h-3.5 w-3.5" />
+                            <span>{{ t('tadabbur.title') }}</span>
                         </button>
 
                         <!-- Qari Selector Button -->
