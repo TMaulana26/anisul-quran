@@ -236,7 +236,11 @@
         "unmute_ambience": "Nyalakan Suara Alam",
         "fullscreen": "Layar Penuh",
         "exit_fullscreen": "Keluar Layar Penuh",
-        "ayah_badge": "Surah {surah}: Ayat {ayah}",
-        "shortcuts_hint": "Spasi: Play/Pause • Panah: Ganti Ayat • M: Mute Suara • F: Fullscreen • Esc: Keluar"
+        "surah_label": "Surah {name}",
+        "ayah_of": "Ayat {ayah} dari {total}",
+        "scene_label": "Pilih suasana",
+        "on": "Aktif",
+        "off": "Mati",
+        "shortcuts_hint": "Spasi · Putar   ←→ · Ayat   M · Bisu"
     }
 }

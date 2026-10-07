@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
+import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue';
 import { useQuranAudioPlayer } from '@/composables/useQuranAudioPlayer';
 import { useUserPreferences } from '@/composables/useUserPreferences';
 import { useTadabburAmbience } from '@/composables/useTadabburAmbience';
@@ -25,9 +25,10 @@ import {
     Maximize2,
     Minimize2,
     X,
+    ChevronDown,
+    Check,
     Image as ImageIcon,
     Film,
-    Sparkles,
 } from '@lucide/vue';
 
 const props = defineProps({
@@ -85,6 +86,10 @@ const overlayOpacity = computed(() => userPreferences.tadabburOverlayOpacity.val
 // Fullscreen State
 const isFullscreen = ref(false);
 
+// Scene (theme) menu & root focus target
+const rootRef = ref(null);
+const isSceneMenuOpen = ref(false);
+
 // HUD Visibility & Auto-Hide (3.5 seconds inactivity)
 const isHudVisible = ref(true);
 let hudTimer = null;
@@ -93,11 +98,29 @@ const showHudTemporarily = () => {
     isHudVisible.value = true;
     if (hudTimer) clearTimeout(hudTimer);
     hudTimer = setTimeout(() => {
-        if (audioPlayer.isPlaying.value) {
+        if (audioPlayer.isPlaying.value && !isSceneMenuOpen.value) {
             isHudVisible.value = false;
         }
     }, 3500);
 };
+
+// Page scroll lock while the sanctuary covers the viewport
+let previousHtmlOverflow = '';
+const lockPageScroll = () => {
+    previousHtmlOverflow = document.documentElement.style.overflow;
+    document.documentElement.style.overflow = 'hidden';
+};
+const unlockPageScroll = () => {
+    document.documentElement.style.overflow = previousHtmlOverflow;
+};
+
+// Surah progress & Arabic scale (user font-size preference clamped 26-46px, 36px = 1x)
+const totalAyahs = computed(() => props.chapter?.verses_count || props.verses.length || 1);
+const progressPercent = computed(() => {
+    const ayah = audioPlayer.currentAyahNumber.value || 1;
+    return Math.min(100, Math.max(0, (ayah / totalAyahs.value) * 100));
+});
+const arabicScale = computed(() => Math.min(46, Math.max(26, props.arabicFontSize)) / 36);
 
 // Current Verse Resolution
 const currentVerse = computed(() => {
@@ -183,7 +206,13 @@ const activeSubtitle = computed(() => {
 const selectTheme = (themeId) => {
     currentThemeId.value = themeId;
     hasVideoError.value = false;
+    isSceneMenuOpen.value = false;
     tadabburAmbience.setTheme(themeId);
+    showHudTemporarily();
+};
+
+const toggleSceneMenu = () => {
+    isSceneMenuOpen.value = !isSceneMenuOpen.value;
     showHudTemporarily();
 };
 
@@ -245,6 +274,10 @@ const handleKeyDown = (e) => {
         toggleFullscreen();
     } else if (e.code === 'Escape') {
         e.preventDefault();
+        if (isSceneMenuOpen.value) {
+            isSceneMenuOpen.value = false;
+            return;
+        }
         closeTadabbur();
     }
 };
@@ -264,11 +297,15 @@ watch(
             if (audioPlayer.isPlaying.value) {
                 tadabburAmbience.play(currentThemeId.value);
             }
+            lockPageScroll();
             showHudTemporarily();
             window.addEventListener('keydown', handleKeyDown);
             document.addEventListener('fullscreenchange', onFullscreenChange);
+            nextTick(() => rootRef.value?.focus({ preventScroll: true }));
         } else {
             tadabburAmbience.pause();
+            isSceneMenuOpen.value = false;
+            unlockPageScroll();
             window.removeEventListener('keydown', handleKeyDown);
             document.removeEventListener('fullscreenchange', onFullscreenChange);
             if (hudTimer) clearTimeout(hudTimer);
@@ -291,6 +328,10 @@ watch(
     }
 );
 
+watch(isHudVisible, (visible) => {
+    if (!visible) isSceneMenuOpen.value = false;
+});
+
 watch(
     () => props.chapter?.id,
     (newChapterId) => {
@@ -304,12 +345,14 @@ watch(
 
 onMounted(() => {
     if (props.open) {
+        lockPageScroll();
         window.addEventListener('keydown', handleKeyDown);
         document.addEventListener('fullscreenchange', onFullscreenChange);
     }
 });
 
 onUnmounted(() => {
+    unlockPageScroll();
     window.removeEventListener('keydown', handleKeyDown);
     document.removeEventListener('fullscreenchange', onFullscreenChange);
     if (hudTimer) clearTimeout(hudTimer);
@@ -320,15 +363,30 @@ onUnmounted(() => {
 <template>
     <div
         v-if="open"
-        class="fixed inset-0 z-50 overflow-hidden select-none bg-black flex flex-col justify-between font-sans transition-colors duration-700"
+        ref="rootRef"
+        role="dialog"
+        aria-modal="true"
+        :aria-label="t('tadabbur.title')"
+        tabindex="-1"
+        class="tdb-root fixed inset-0 z-50 select-none overflow-hidden bg-[#0b111a] font-sans text-white outline-none"
+        :style="{ '--tdb-accent': currentThemeConfig.accentColor, '--ar-scale': arabicScale }"
         @mousemove="showHudTemporarily"
-        @touchstart="showHudTemporarily"
-        tabindex="0"
+        @touchstart.passive="showHudTemporarily"
+        @focusin="showHudTemporarily"
     >
-        <!-- 1. Background Video or Ken Burns Poster -->
-        <div class="absolute inset-0 pointer-events-none overflow-hidden">
+        <h2 class="sr-only">{{ t('tadabbur.title') }}</h2>
+
+        <!-- 1. Scene: plate / video / Ken Burns poster, drifting mist, theme tint, reading scrim -->
+        <div class="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
+            <img
+                v-if="currentThemeConfig.scene"
+                :key="currentThemeConfig.scene"
+                :src="currentThemeConfig.scene"
+                alt=""
+                class="tdb-scene absolute inset-0 size-full object-cover"
+            />
             <video
-                v-if="!isDataSaver"
+                v-else-if="!isDataSaver"
                 :key="currentThemeConfig.video"
                 :src="currentThemeConfig.video"
                 autoplay
@@ -336,210 +394,595 @@ onUnmounted(() => {
                 muted
                 playsinline
                 preload="auto"
-                class="absolute inset-0 w-full h-full object-cover transition-opacity duration-1000"
+                class="absolute inset-0 size-full object-cover"
                 @error="handleVideoError"
             ></video>
-
-            <!-- Fallback / Data Saver Ken Burns Motion Background -->
             <div
                 v-else
                 :key="currentThemeConfig.poster"
-                class="absolute inset-0 bg-cover bg-center animate-ken-burns scale-105 transition-transform duration-1000"
+                class="animate-ken-burns absolute inset-0 scale-105 bg-cover bg-center"
                 :style="{ backgroundImage: `url(${currentThemeConfig.poster})` }"
             ></div>
 
-            <!-- Dynamic Contrast Vignette Overlay -->
+            <div class="tdb-mist absolute -inset-[10%]"></div>
             <div
-                class="absolute inset-0 transition-opacity duration-700 pointer-events-none"
-                :style="{
-                    background: currentThemeConfig.gradientOverlay,
-                    opacity: overlayOpacity,
-                }"
+                class="absolute inset-0 transition-opacity duration-700"
+                :style="{ background: currentThemeConfig.gradientOverlay, opacity: overlayOpacity }"
             ></div>
+            <div class="tdb-scrim absolute inset-0"></div>
         </div>
 
-        <!-- 2. Minimalist HUD: Top Header Bar -->
+        <!-- 2. Top bar: close + heading left, scene switcher + fullscreen right -->
         <header
-            class="relative z-20 flex items-center justify-between px-4 sm:px-8 pt-4 pb-2 transition-opacity duration-500"
-            :class="{ 'opacity-0 pointer-events-none': !isHudVisible, 'opacity-100': isHudVisible }"
+            class="tdb-hud tdb-enter-top absolute inset-x-0 top-0 z-20 flex items-start justify-between gap-4 px-5 pt-5 sm:px-6 sm:pt-6"
+            :class="{ 'tdb-hud-hidden': !isHudVisible }"
         >
-            <!-- Left: Back Button & Surah Badge -->
-            <div class="flex items-center gap-3">
+            <div class="relative z-20 flex min-w-0 items-center gap-3">
                 <button
-                    @click="closeTadabbur"
-                    class="p-2 sm:p-2.5 rounded-full bg-black/40 hover:bg-black/60 text-white/90 border border-white/10 backdrop-blur-md transition-all active:scale-95 shadow-lg"
+                    type="button"
+                    class="tdb-icon-btn shrink-0"
                     :title="t('tadabbur.close_tadabbur')"
                     aria-label="Close Tadabbur"
+                    @click="closeTadabbur"
                 >
-                    <X class="w-5 h-5" />
+                    <X class="size-5" aria-hidden="true" />
                 </button>
 
-                <div class="flex flex-col">
-                    <div class="flex items-center gap-2">
-                        <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-white/10 text-white border border-white/10 backdrop-blur-md">
-                            <Sparkles class="w-3 h-3 text-amber-300" />
-                            <span>{{ t('tadabbur.title') }}</span>
-                        </span>
-                        <span class="text-xs sm:text-sm font-medium text-white/80 drop-shadow">
-                            {{ chapter.name_simple }} ({{ chapter.name_arabic }})
-                        </span>
-                    </div>
-                    <span class="text-[11px] text-white/60 drop-shadow">
-                        {{ t('tadabbur.ayah_badge', { surah: chapter.name_simple, ayah: audioPlayer.currentAyahNumber.value || 1 }) }}
-                    </span>
+                <div class="-mt-1 min-w-0 leading-snug">
+                    <p class="truncate text-base font-normal text-white sm:text-[19px]">
+                        {{ t('tadabbur.surah_label', { name: chapter.name_simple }) }}
+                        <span class="text-white/90">(<bdi lang="ar" class="font-arabic">{{ chapter.name_arabic }}</bdi>)</span>
+                    </p>
+                    <p class="truncate text-sm tabular-nums text-white/65 sm:text-[15px]">
+                        {{ t('tadabbur.ayah_of', { ayah: audioPlayer.currentAyahNumber.value || 1, total: totalAyahs }) }}
+                    </p>
                 </div>
             </div>
 
-            <!-- Right: Quick Themes Pill, Data Saver, Fullscreen -->
-            <div class="flex items-center gap-2 sm:gap-3">
-                <!-- 5 Theme Quick Switcher Pills -->
-                <div class="flex items-center gap-1 p-1 rounded-full bg-black/40 border border-white/10 backdrop-blur-md shadow-lg">
+            <div class="relative z-20 flex shrink-0 items-center gap-3">
+                <div class="relative">
                     <button
-                        v-for="theme in availableThemes"
-                        :key="theme.id"
-                        @click="selectTheme(theme.id)"
-                        class="p-1.5 sm:px-2.5 sm:py-1 rounded-full text-xs transition-all flex items-center gap-1"
-                        :class="currentThemeId === theme.id ? 'bg-white/20 text-white font-medium shadow-inner' : 'text-white/60 hover:text-white hover:bg-white/10'"
-                        :title="t(theme.nameKey)"
+                        type="button"
+                        class="tdb-pill"
+                        aria-haspopup="listbox"
+                        :aria-expanded="isSceneMenuOpen"
+                        :aria-label="`${t('tadabbur.scene_label')}: ${t(currentThemeConfig.nameKey)}`"
+                        @click="toggleSceneMenu"
                     >
-                        <span class="text-sm leading-none">{{ theme.icon }}</span>
-                        <span class="hidden md:inline">{{ t(theme.nameKey) }}</span>
+                        <span class="size-2.5 shrink-0 rounded-full" :style="{ backgroundColor: currentThemeConfig.accentColor }"></span>
+                        <span class="hidden truncate sm:inline">{{ t(currentThemeConfig.nameKey) }}</span>
+                        <ChevronDown
+                            class="size-4 shrink-0 text-white/70 transition-transform duration-300"
+                            :class="{ 'rotate-180': isSceneMenuOpen }"
+                            aria-hidden="true"
+                        />
                     </button>
+
+                    <Transition name="tdb-menu">
+                        <div
+                            v-if="isSceneMenuOpen"
+                            class="tdb-menu absolute right-0 top-full z-30 mt-2 w-72 max-w-[calc(100vw-2.5rem)] overflow-hidden rounded-2xl border border-white/12 bg-[#0e1622]/95 p-1.5 shadow-[0_18px_40px_-12px_rgba(0,0,0,0.7)]"
+                        >
+                            <ul role="listbox" :aria-label="t('tadabbur.scene_label')">
+                                <li v-for="theme in availableThemes" :key="theme.id" role="presentation">
+                                    <button
+                                        type="button"
+                                        role="option"
+                                        :aria-selected="currentThemeId === theme.id"
+                                        class="tdb-menu-item"
+                                        :class="{ 'tdb-menu-item-active': currentThemeId === theme.id }"
+                                        @click="selectTheme(theme.id)"
+                                    >
+                                        <span class="size-2.5 shrink-0 rounded-full" :style="{ backgroundColor: theme.accentColor }"></span>
+                                        <span class="flex-1 truncate text-left">{{ t(theme.nameKey) }}</span>
+                                        <Check v-if="currentThemeId === theme.id" class="size-4 shrink-0" aria-hidden="true" />
+                                    </button>
+                                </li>
+                            </ul>
+                            <div class="my-1.5 h-px bg-white/10"></div>
+                            <button
+                                type="button"
+                                class="tdb-menu-item"
+                                :aria-pressed="isDataSaver"
+                                aria-label="Toggle Data Saver"
+                                @click="toggleDataSaver"
+                            >
+                                <ImageIcon v-if="isDataSaver" class="size-4 shrink-0 text-white/70" aria-hidden="true" />
+                                <Film v-else class="size-4 shrink-0 text-white/70" aria-hidden="true" />
+                                <span class="flex-1 truncate text-left">{{ t('tadabbur.data_saver') }}</span>
+                                <span
+                                    class="text-xs font-medium"
+                                    :class="isDataSaver ? 'text-[var(--tdb-accent)]' : 'text-white/45'"
+                                >{{ isDataSaver ? t('tadabbur.on') : t('tadabbur.off') }}</span>
+                            </button>
+                        </div>
+                    </Transition>
                 </div>
 
-                <!-- Data Saver Toggle -->
                 <button
-                    @click="toggleDataSaver"
-                    class="p-2 sm:p-2.5 rounded-full bg-black/40 hover:bg-black/60 text-white/90 border border-white/10 backdrop-blur-md transition-all active:scale-95 shadow-lg"
-                    :class="{ 'text-amber-300 border-amber-400/40': isDataSaver }"
-                    :title="t('tadabbur.data_saver')"
-                    aria-label="Toggle Data Saver"
-                >
-                    <ImageIcon v-if="isDataSaver" class="w-4 h-4" />
-                    <Film v-else class="w-4 h-4" />
-                </button>
-
-                <!-- Fullscreen Toggle -->
-                <button
-                    @click="toggleFullscreen"
-                    class="p-2 sm:p-2.5 rounded-full bg-black/40 hover:bg-black/60 text-white/90 border border-white/10 backdrop-blur-md transition-all active:scale-95 shadow-lg"
+                    type="button"
+                    class="tdb-icon-btn max-sm:!hidden"
                     :title="isFullscreen ? t('tadabbur.exit_fullscreen') : t('tadabbur.fullscreen')"
                     aria-label="Toggle Fullscreen"
+                    @click="toggleFullscreen"
                 >
-                    <Minimize2 v-if="isFullscreen" class="w-4 h-4" />
-                    <Maximize2 v-else class="w-4 h-4" />
+                    <Minimize2 v-if="isFullscreen" class="size-[18px]" aria-hidden="true" />
+                    <Maximize2 v-else class="size-[18px]" aria-hidden="true" />
                 </button>
             </div>
         </header>
 
-        <!-- 3. Center/Bottom Cinematic Subtitle Stage -->
-        <main class="relative z-10 flex-1 flex flex-col justify-end items-center pb-28 sm:pb-32 px-4 sm:px-8 text-center pointer-events-none">
-            <div class="w-full max-w-5xl mx-auto flex flex-col items-center gap-4 transition-all duration-500">
-                <!-- Subtitle Container (Cinema Styling) -->
+        <!-- Click-away layer for the scene menu (sits under the header controls) -->
+        <div v-if="isSceneMenuOpen" class="absolute inset-0 z-10" @click="isSceneMenuOpen = false"></div>
+
+        <!-- 3. Stage: cinematic subtitle (no card) + footer controls -->
+        <div class="relative z-10 flex h-full flex-col justify-end">
+            <section
+                class="tdb-enter-stage pointer-events-none mb-[clamp(1.25rem,4vh,3.5rem)] px-6 text-center sm:px-10"
+                aria-live="polite"
+            >
+                <Transition name="tdb-verse" mode="out-in">
+                    <div
+                        v-if="activeSubtitle.arabicText"
+                        :key="`${currentVerse?.verse_number}-${activeSubtitle.id}`"
+                        class="mx-auto flex max-w-6xl flex-col items-center"
+                    >
+                        <p class="tdb-verse font-arabic" dir="rtl" lang="ar">
+                            {{ activeSubtitle.arabicText }}
+                        </p>
+                        <span class="tdb-rule" aria-hidden="true"></span>
+                        <p v-if="showTranslation && activeSubtitle.translation" class="tdb-translation">
+                            {{ activeSubtitle.translation }}
+                        </p>
+                    </div>
+                </Transition>
+            </section>
+
+            <footer class="tdb-enter-bottom">
                 <div
-                    v-if="activeSubtitle.arabicText"
-                    class="inline-flex flex-col items-center gap-3 px-6 sm:px-10 py-4 sm:py-6 rounded-3xl bg-black/45 backdrop-blur-[3px] border border-white/10 shadow-2xl max-w-4xl transition-all duration-500"
+                    class="relative h-0.5 w-full overflow-visible bg-[#2d343d]"
+                    role="progressbar"
+                    aria-label="Surah progress"
+                    aria-valuemin="1"
+                    :aria-valuemax="totalAyahs"
+                    :aria-valuenow="audioPlayer.currentAyahNumber.value || 1"
                 >
-                    <!-- Max 1-Line Arabic Subtitle -->
-                    <p
-                        class="font-arabic text-2xl sm:text-4xl md:text-5xl text-white/95 leading-relaxed tracking-wide text-center whitespace-nowrap overflow-hidden text-ellipsis max-w-full drop-shadow-[0_2px_14px_rgba(0,0,0,0.95)]"
-                        dir="rtl"
-                        :style="{ fontSize: `${Math.min(46, Math.max(26, arabicFontSize))}px` }"
-                    >
-                        {{ activeSubtitle.arabicText }}
-                    </p>
-
-                    <!-- Translation Subtitle Line -->
-                    <p
-                        v-if="showTranslation && activeSubtitle.translation"
-                        class="text-sm sm:text-base md:text-lg text-neutral-200 font-medium leading-normal tracking-wide text-center line-clamp-2 max-w-3xl drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]"
-                    >
-                        {{ activeSubtitle.translation }}
-                    </p>
+                    <span
+                        class="absolute inset-y-0 left-[3px] bg-[var(--tdb-accent)] transition-[width] duration-700 ease-out"
+                        :style="{ width: `${progressPercent}%` }"
+                    ></span>
+                    <span
+                        class="absolute top-1/2 size-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[var(--tdb-accent)] shadow-[0_0_0_4px_rgba(255,255,255,0.08)] transition-[left] duration-700 ease-out"
+                        :style="{ left: `min(max(${progressPercent}%, 6px), calc(100% - 6px))` }"
+                    ></span>
                 </div>
-            </div>
-        </main>
 
-        <!-- 4. Minimalist HUD: Bottom Transport & Ambience Bar -->
-        <footer
-            class="relative z-20 flex items-center justify-between px-4 sm:px-8 pb-6 pt-2 transition-opacity duration-500"
-            :class="{ 'opacity-0 pointer-events-none': !isHudVisible, 'opacity-100': isHudVisible }"
-        >
-            <!-- Left: Keyboard Shortcut Hint -->
-            <div class="hidden lg:flex items-center text-xs text-white/50 drop-shadow">
-                <span>{{ t('tadabbur.shortcuts_hint') }}</span>
-            </div>
-
-            <!-- Center: Audio Transport Floating Pill -->
-            <div class="flex items-center gap-2 sm:gap-4 p-1.5 sm:p-2 rounded-full bg-black/50 border border-white/10 backdrop-blur-md shadow-2xl mx-auto">
-                <button
-                    @click="audioPlayer.prevAyah"
-                    class="p-2 sm:p-2.5 rounded-full text-white/80 hover:text-white hover:bg-white/10 transition active:scale-95"
-                    aria-label="Previous Ayah"
+                <div
+                    class="tdb-hud grid grid-cols-[1fr_auto_1fr] items-center gap-2 px-5 sm:gap-4 pb-5 pt-[22px] sm:px-8"
+                    :class="{ 'tdb-hud-hidden': !isHudVisible }"
                 >
-                    <SkipBack class="w-4 h-4 sm:w-5 sm:h-5" />
-                </button>
+                    <p class="hidden whitespace-pre-wrap text-[15px] text-white/60 lg:block">{{ t('tadabbur.shortcuts_hint') }}</p>
+                    <span class="lg:hidden"></span>
 
-                <button
-                    @click="audioPlayer.togglePlay"
-                    class="p-3 sm:p-3.5 rounded-full bg-white text-black hover:bg-neutral-200 transition active:scale-95 shadow-lg"
-                    aria-label="Play / Pause"
-                >
-                    <Pause v-if="audioPlayer.isPlaying.value" class="w-5 h-5 fill-current" />
-                    <Play v-else class="w-5 h-5 fill-current translate-x-0.5" />
-                </button>
+                    <div class="flex items-center gap-2 sm:gap-4">
+                        <button type="button" class="tdb-ghost-btn" aria-label="Previous Ayah" @click="audioPlayer.prevAyah">
+                            <SkipBack class="size-6" aria-hidden="true" />
+                        </button>
+                        <button type="button" class="tdb-play-btn" aria-label="Play / Pause" @click="audioPlayer.togglePlay">
+                            <Pause v-if="audioPlayer.isPlaying.value" class="size-6 fill-current" aria-hidden="true" />
+                            <Play v-else class="size-6 translate-x-0.5 fill-current" aria-hidden="true" />
+                        </button>
+                        <button type="button" class="tdb-ghost-btn" aria-label="Next Ayah" @click="audioPlayer.nextAyah">
+                            <SkipForward class="size-6" aria-hidden="true" />
+                        </button>
+                    </div>
 
-                <button
-                    @click="audioPlayer.nextAyah"
-                    class="p-2 sm:p-2.5 rounded-full text-white/80 hover:text-white hover:bg-white/10 transition active:scale-95"
-                    aria-label="Next Ayah"
-                >
-                    <SkipForward class="w-4 h-4 sm:w-5 sm:h-5" />
-                </button>
-            </div>
-
-            <!-- Right: Secondary Nature Soundscape Ambience Mixer -->
-            <div class="flex items-center gap-2 p-1.5 sm:px-3 sm:py-2 rounded-full bg-black/50 border border-white/10 backdrop-blur-md shadow-2xl">
-                <button
-                    @click="tadabburAmbience.toggleMute"
-                    class="p-1.5 text-white/80 hover:text-white transition active:scale-95"
-                    :title="tadabburAmbience.isMuted.value ? t('tadabbur.unmute_ambience') : t('tadabbur.mute_ambience')"
-                    aria-label="Toggle Ambience Mute"
-                >
-                    <VolumeX v-if="tadabburAmbience.isMuted.value" class="w-4 h-4 text-rose-400" />
-                    <Volume2 v-else class="w-4 h-4 text-emerald-400" />
-                </button>
-
-                <input
-                    type="range"
-                    min="0"
-                    max="1"
-                    step="0.05"
-                    :value="tadabburAmbience.ambienceVolume.value"
-                    @input="tadabburAmbience.setVolume(parseFloat($event.target.value))"
-                    class="w-16 sm:w-20 accent-emerald-400 bg-white/20 h-1 rounded-lg cursor-pointer"
-                    :title="t('tadabbur.ambience_volume')"
-                    aria-label="Ambience Volume Slider"
-                />
-            </div>
-        </footer>
+                    <div class="flex items-center justify-self-end gap-1">
+                        <button
+                            type="button"
+                            class="tdb-ghost-btn !size-9 sm:!size-10"
+                            :title="tadabburAmbience.isMuted.value ? t('tadabbur.unmute_ambience') : t('tadabbur.mute_ambience')"
+                            aria-label="Toggle Ambience Mute"
+                            @click="tadabburAmbience.toggleMute"
+                        >
+                            <VolumeX v-if="tadabburAmbience.isMuted.value" class="size-[18px] text-rose-300" aria-hidden="true" />
+                            <Volume2 v-else class="size-[18px] text-[var(--tdb-accent)]" aria-hidden="true" />
+                        </button>
+                        <input
+                            type="range"
+                            min="0"
+                            max="1"
+                            step="0.05"
+                            :value="tadabburAmbience.ambienceVolume.value"
+                            class="tdb-range w-10 cursor-pointer sm:w-[94px]"
+                            :style="{ '--vol': `${Math.round(tadabburAmbience.ambienceVolume.value * 100)}%` }"
+                            :title="t('tadabbur.ambience_volume')"
+                            aria-label="Ambience Volume Slider"
+                            @input="tadabburAmbience.setVolume(parseFloat($event.target.value))"
+                        />
+                    </div>
+                </div>
+            </footer>
+        </div>
     </div>
 </template>
 
 <style scoped>
+.tdb-root {
+    --tdb-ease: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.tdb-root ::selection {
+    background: color-mix(in oklab, var(--tdb-accent) 40%, transparent);
+    color: #fff;
+}
+
+/* Scene */
+.tdb-scene {
+    animation: tdb-scene-drift 60s ease-in-out infinite alternate;
+    transform-origin: 50% 60%;
+}
+
+.tdb-mist {
+    background:
+        radial-gradient(55% 32% at 18% 74%, rgba(170, 205, 205, 0.16), transparent 70%),
+        radial-gradient(48% 28% at 82% 68%, rgba(170, 205, 205, 0.11), transparent 70%);
+    animation: tdb-mist-drift 48s ease-in-out infinite alternate;
+}
+
+/* Reading scrim: keeps the verse legible on any theme, without a caption card */
+.tdb-scrim {
+    background:
+        linear-gradient(to top, rgba(16, 20, 31, 0.88) 0%, rgba(16, 20, 31, 0.55) 26%, transparent 52%),
+        linear-gradient(to bottom, rgba(16, 20, 31, 0.5) 0%, transparent 18%),
+        radial-gradient(ellipse at 50% 45%, transparent 58%, rgba(16, 20, 31, 0.55) 100%);
+}
+
+/* Subtitle */
+.tdb-verse {
+    max-width: 100%;
+    font-size: calc(clamp(1.9rem, 3.9vw, 4.25rem) * var(--ar-scale, 1));
+    line-height: 1.7;
+    color: rgba(255, 255, 255, 0.97);
+    text-wrap: balance;
+    text-shadow: 0 2px 18px rgba(0, 0, 0, 0.35);
+}
+
+.tdb-rule {
+    margin-block: clamp(0.5rem, 1.4vh, 1rem) clamp(0.75rem, 1.8vh, 1.25rem);
+    height: 1px;
+    width: min(100%, 48vw);
+    background: linear-gradient(90deg, transparent, var(--tdb-accent) 30%, var(--tdb-accent) 70%, transparent);
+    opacity: 0.85;
+}
+
+.tdb-translation {
+    max-width: min(44rem, 88vw);
+    font-size: clamp(0.9375rem, 1.5vw, 1.5rem);
+    line-height: 1.55;
+    color: rgba(255, 255, 255, 0.86);
+    text-wrap: pretty;
+    text-shadow: 0 1px 14px rgba(0, 0, 0, 0.65);
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+@media (min-width: 1024px) {
+    .tdb-translation {
+        max-width: min(44rem, 46vw);
+        -webkit-line-clamp: 3;
+    }
+}
+
+@media (min-width: 1440px) {
+    .tdb-translation {
+        max-width: min(52rem, 46vw);
+    }
+}
+
+/* Controls */
+.tdb-hud {
+    transition: opacity 0.5s var(--tdb-ease);
+}
+
+.tdb-hud-hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.tdb-icon-btn,
+.tdb-ghost-btn,
+.tdb-play-btn,
+.tdb-pill,
+.tdb-menu-item {
+    transition:
+        background-color 0.25s var(--tdb-ease),
+        transform 0.25s var(--tdb-ease),
+        color 0.25s var(--tdb-ease),
+        border-color 0.25s var(--tdb-ease);
+}
+
+.tdb-icon-btn {
+    display: grid;
+    place-items: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 9999px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(28, 41, 56, 0.72);
+    color: rgba(255, 255, 255, 0.95);
+}
+
+.tdb-icon-btn:hover {
+    background: rgba(255, 255, 255, 0.16);
+}
+
+.tdb-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.625rem;
+    height: 2.5rem;
+    padding-inline: 1rem;
+    border-radius: 9999px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(112, 128, 144, 0.3);
+    color: rgba(255, 255, 255, 0.95);
+    font-size: 0.9375rem;
+}
+
+.tdb-pill:hover {
+    background: rgba(255, 255, 255, 0.22);
+}
+
+/* Ambience slider: emerald fill up to the thumb */
+.tdb-range {
+    appearance: none;
+    height: 1.25rem;
+    background: transparent;
+}
+
+.tdb-range::-webkit-slider-runnable-track {
+    height: 5px;
+    border: 1.5px solid rgba(255, 255, 255, 0.55);
+    border-radius: 9999px;
+    background: linear-gradient(to right, var(--tdb-accent) var(--vol, 50%), transparent var(--vol, 50%));
+}
+
+.tdb-range::-webkit-slider-thumb {
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    margin-top: -5px;
+    border: 0;
+    border-radius: 9999px;
+    background: var(--tdb-accent);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+}
+
+.tdb-range::-moz-range-track {
+    height: 7px;
+    box-sizing: border-box;
+    border: 1.5px solid rgba(255, 255, 255, 0.55);
+    border-radius: 9999px;
+    background: transparent;
+}
+
+.tdb-range::-moz-range-progress {
+    height: 6px;
+    border-radius: 9999px;
+    background: var(--tdb-accent);
+}
+
+.tdb-range::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    border: 0;
+    border-radius: 9999px;
+    background: var(--tdb-accent);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+}
+
+.tdb-range:focus-visible {
+    outline: 2px solid rgba(255, 255, 255, 0.85);
+    outline-offset: 2px;
+}
+
+.tdb-ghost-btn {
+    display: grid;
+    place-items: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 9999px;
+    color: rgba(255, 255, 255, 0.82);
+}
+
+.tdb-ghost-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+}
+
+.tdb-play-btn {
+    display: grid;
+    place-items: center;
+    width: 3.5rem;
+    height: 3.5rem;
+    border-radius: 9999px;
+    background: #fff;
+    color: #0b111a;
+    box-shadow: 0 10px 28px -8px rgba(0, 0, 0, 0.6);
+}
+
+.tdb-play-btn:hover {
+    background: rgba(255, 255, 255, 0.9);
+}
+
+.tdb-icon-btn:active,
+.tdb-ghost-btn:active,
+.tdb-play-btn:active,
+.tdb-pill:active {
+    transform: scale(0.95);
+}
+
+.tdb-icon-btn:focus-visible,
+.tdb-ghost-btn:focus-visible,
+.tdb-play-btn:focus-visible,
+.tdb-pill:focus-visible,
+.tdb-menu-item:focus-visible {
+    outline: 2px solid rgba(255, 255, 255, 0.85);
+    outline-offset: 2px;
+}
+
+.tdb-menu-item {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    gap: 0.75rem;
+    min-height: 2.75rem;
+    padding-inline: 0.875rem;
+    border-radius: 0.75rem;
+    font-size: 0.9375rem;
+    color: rgba(255, 255, 255, 0.82);
+}
+
+.tdb-menu-item:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+}
+
+.tdb-menu-item-active {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+}
+
+/* Motion: one authored entrance, verse crossfade, menu reveal */
+.tdb-enter-top {
+    animation: tdb-rise-down 0.9s var(--tdb-ease) both;
+}
+
+.tdb-enter-stage {
+    animation: tdb-fade 1.1s var(--tdb-ease) 0.15s both;
+}
+
+.tdb-enter-bottom {
+    animation: tdb-rise-up 0.9s var(--tdb-ease) 0.25s both;
+}
+
+.tdb-verse-enter-active {
+    transition:
+        opacity 0.7s var(--tdb-ease),
+        transform 0.7s var(--tdb-ease),
+        filter 0.7s var(--tdb-ease);
+}
+
+.tdb-verse-leave-active {
+    transition: opacity 0.25s ease-out;
+}
+
+.tdb-verse-enter-from {
+    opacity: 0;
+    transform: translateY(10px);
+    filter: blur(4px);
+}
+
+.tdb-verse-leave-to {
+    opacity: 0;
+}
+
+.tdb-menu-enter-active,
+.tdb-menu-leave-active {
+    transition:
+        opacity 0.25s var(--tdb-ease),
+        transform 0.25s var(--tdb-ease);
+    transform-origin: top right;
+}
+
+.tdb-menu-enter-from,
+.tdb-menu-leave-to {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.97);
+}
+
+.animate-ken-burns {
+    animation: kenburns 35s ease-in-out infinite alternate;
+}
+
 @keyframes kenburns {
     0% {
-        transform: scale(1.0) translate(0, 0);
+        transform: scale(1) translate(0, 0);
     }
     50% {
         transform: scale(1.08) translate(-1%, -1%);
     }
     100% {
-        transform: scale(1.0) translate(0, 0);
+        transform: scale(1) translate(0, 0);
     }
 }
 
-.animate-ken-burns {
-    animation: kenburns 35s ease-in-out infinite alternate;
+@keyframes tdb-scene-drift {
+    from {
+        transform: scale(1.02) translate3d(0, 0, 0);
+    }
+    to {
+        transform: scale(1.07) translate3d(-1%, -0.8%, 0);
+    }
+}
+
+@keyframes tdb-mist-drift {
+    from {
+        transform: translate3d(-3%, 0, 0);
+    }
+    to {
+        transform: translate3d(3%, -2%, 0);
+    }
+}
+
+@keyframes tdb-rise-down {
+    from {
+        opacity: 0;
+        transform: translateY(-12px);
+    }
+}
+
+@keyframes tdb-rise-up {
+    from {
+        opacity: 0;
+        transform: translateY(14px);
+    }
+}
+
+@keyframes tdb-fade {
+    from {
+        opacity: 0;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .tdb-scene,
+    .tdb-mist,
+    .animate-ken-burns,
+    .tdb-enter-top,
+    .tdb-enter-stage,
+    .tdb-enter-bottom {
+        animation: none;
+    }
+
+    .tdb-verse-enter-active,
+    .tdb-verse-leave-active,
+    .tdb-menu-enter-active,
+    .tdb-menu-leave-active {
+        transition: opacity 0.2s linear;
+    }
+
+    .tdb-verse-enter-from {
+        transform: none;
+        filter: none;
+    }
+
+    .tdb-menu-enter-from,
+    .tdb-menu-leave-to {
+        transform: none;
+    }
 }
 </style>

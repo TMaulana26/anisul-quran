@@ -236,7 +236,11 @@
         "unmute_ambience": "Unmute Nature Sounds",
         "fullscreen": "Fullscreen",
         "exit_fullscreen": "Exit Fullscreen",
-        "ayah_badge": "Surah {surah}: Ayah {ayah}",
-        "shortcuts_hint": "Space: Play/Pause • Arrows: Change Ayah • M: Mute Audio • F: Fullscreen • Esc: Exit"
+        "surah_label": "Surah {name}",
+        "ayah_of": "Ayah {ayah} of {total}",
+        "scene_label": "Choose scene",
+        "on": "On",
+        "off": "Off",
+        "shortcuts_hint": "Space · Play   ←→ · Ayah   M · Mute"
     }
 }

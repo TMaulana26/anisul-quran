@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { mount } from '@vue/test-utils';
+import { nextTick } from 'vue';
 import TadabburPlayerView from './TadabburPlayerView.vue';
 import { useQuranAudioPlayer } from '@/composables/useQuranAudioPlayer';
 
@@ -52,7 +53,7 @@ describe('TadabburPlayerView.vue', () => {
         expect(wrapper.find('header').exists()).toBe(false);
     });
 
-    it('defaults to the thematic preset for the surah (Al-Mulk = Cosmic 🌌)', () => {
+    it('defaults to the thematic preset for the surah (Al-Mulk = Cosmic)', () => {
         const wrapper = mount(TadabburPlayerView, {
             props: {
                 open: true,
@@ -61,8 +62,8 @@ describe('TadabburPlayerView.vue', () => {
             },
         });
 
-        // Theme icon for cosmic is 🌌
-        expect(wrapper.html()).toContain('🌌');
+        const scenePill = wrapper.find('button[aria-haspopup="listbox"]');
+        expect(scenePill.attributes('aria-label')).toContain('Semesta');
     });
 
     it('emits update:open false when close button is clicked', async () => {
@@ -82,7 +83,7 @@ describe('TadabburPlayerView.vue', () => {
         expect(wrapper.emitted('update:open')[0]).toEqual([false]);
     });
 
-    it('allows user to switch theme via quick pills', async () => {
+    it('switches theme from the scene menu', async () => {
         const wrapper = mount(TadabburPlayerView, {
             props: {
                 open: true,
@@ -91,14 +92,18 @@ describe('TadabburPlayerView.vue', () => {
             },
         });
 
-        const oceanButton = wrapper.findAll('header button').find((b) => b.text().includes('🌊'));
-        expect(oceanButton).toBeDefined();
+        expect(wrapper.find('[role="listbox"]').exists()).toBe(false);
 
-        await oceanButton.trigger('click');
+        await wrapper.find('button[aria-haspopup="listbox"]').trigger('click');
+        const oceanOption = wrapper.findAll('[role="option"]')[1];
+        expect(oceanOption).toBeDefined();
+
+        await oceanOption.trigger('click');
         expect(wrapper.html()).toContain('ocean.webm');
+        expect(wrapper.find('[role="listbox"]').exists()).toBe(false);
     });
 
-    it('toggles data saver mode when data saver button is clicked', async () => {
+    it('closes the scene menu with Escape without closing the player', async () => {
         const wrapper = mount(TadabburPlayerView, {
             props: {
                 open: true,
@@ -107,6 +112,25 @@ describe('TadabburPlayerView.vue', () => {
             },
         });
 
+        await wrapper.find('button[aria-haspopup="listbox"]').trigger('click');
+        expect(wrapper.find('[role="listbox"]').exists()).toBe(true);
+
+        window.dispatchEvent(new KeyboardEvent('keydown', { code: 'Escape', key: 'Escape' }));
+        await nextTick();
+        expect(wrapper.find('[role="listbox"]').exists()).toBe(false);
+        expect(wrapper.emitted('update:open')).toBeFalsy();
+    });
+
+    it('toggles data saver mode from the scene menu', async () => {
+        const wrapper = mount(TadabburPlayerView, {
+            props: {
+                open: true,
+                chapter: mockChapter,
+                verses: mockVerses,
+            },
+        });
+
+        await wrapper.find('button[aria-haspopup="listbox"]').trigger('click');
         const dataSaverBtn = wrapper.find('button[aria-label="Toggle Data Saver"]');
         expect(dataSaverBtn.exists()).toBe(true);
 

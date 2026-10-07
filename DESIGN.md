@@ -86,3 +86,15 @@ Menggunakan format modern **OKLCH** yang dikonfigurasi melalui CSS variables di 
 - ❌ Tidak menumpuk kartu dalam kartu secara berlebihan (*no excessive card nesting*).
 - ❌ Tidak menggunakan ikon mengambang (*floating icons*) tanpa fungsi yang jelas.
 - ❌ Tidak mengunci scrolling saat audio memutar (pengguna tetap leluasa membaca ayat lain).
+
+## 🌄 Tadabbur Alam (Immersive Player)
+
+Layar penuh bergaya *letterbox* tenang: tidak ada kartu, tidak ada emoji, satu hierarki.
+
+- **Struktur**: bar atas tipis (tutup + "Surah Al-Kahf (الكهف) / Ayah 1 of 110" di kiri; pil suasana + fullscreen di kanan), ayat di sepertiga bawah tanpa kartu, garis hairline aksen, terjemahan maksimal 3–4 baris, garis progres 2px dengan playhead, lalu grid 3 kolom: petunjuk keyboard | transport (selalu di tengah) | volume ambience.
+- **Adegan**: lapisan bertumpuk — plat `public/images/tadabbur/mountain-scene-art.webp` (tema Mountain) atau video/poster tema lain, lapisan kabut, tint tema, lalu `.tdb-scrim` (gradien bawah/atas + vinyet berwarna `#10141f`) agar teks selalu terbaca.
+- **Aksen per tema** (`accentColor` di `resources/js/lib/tadabburThemes.js`) dipakai untuk titik tema, garis hairline, playhead, dan slider. Mountain memakai emerald `#10c088`.
+- **Pil suasana** membuka *listbox* 5 tema + sakelar Data Saver; pada layar < `sm` pil hanya titik + chevron (nama tetap ada di `aria-label`), tombol fullscreen disembunyikan.
+- **Teks Arab** tetap memakai `font-arabic` proyek (bukan font hasil peringkingan alat); ukuran mengikuti preferensi pengguna (26–46px).
+- **Motion**: masuk bertahap (`cubic-bezier(0.16, 1, 0.3, 1)`), *crossfade* ayat, menu muncul halus, HUD auto-hide saat memutar; seluruhnya tunduk pada `prefers-reduced-motion`.
+- **Aksesibilitas**: `role=progressbar`, `aria-label` tombol dipertahankan, Esc menutup menu suasana dulu baru player, scroll halaman dikunci selama terbuka.
