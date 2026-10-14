@@ -72,4 +72,46 @@ describe('useRoomSync - Drift Correction & Room State', () => {
         expect(result.estimatedHostSec).toBeCloseTo(16, 1);
         expect(result.absDriftSec).toBeCloseTo(0, 1);
     });
+
+    it('unbinds Pusher connection listeners when leaving room', async () => {
+        const echoMod = await import('@/echo');
+        const bindSpy = vi.fn();
+        const unbindSpy = vi.fn();
+        const leaveSpy = vi.fn();
+
+        vi.spyOn(echoMod, 'getEcho').mockReturnValue({
+            channel: () => ({
+                listen: vi.fn().mockReturnThis(),
+            }),
+            leave: leaveSpy,
+            connector: {
+                pusher: {
+                    connection: {
+                        state: 'connected',
+                        bind: bindSpy,
+                        unbind: unbindSpy,
+                    },
+                },
+            },
+        });
+
+        vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+            ok: true,
+            status: 200,
+            json: async () => ({ success: true, room: { code: 'ABC234', listenerCount: 2 } }),
+        }));
+
+        const sync = useRoomSync();
+        sync.startListening('ABC234');
+
+        expect(bindSpy).toHaveBeenCalledTimes(4);
+
+        sync.leaveRoom();
+
+        expect(unbindSpy).toHaveBeenCalledTimes(4);
+        expect(leaveSpy).toHaveBeenCalledWith('room.ABC234');
+
+        vi.unstubAllGlobals();
+    });
 });
+

@@ -17,6 +17,8 @@ const clockOffset = ref(0);
 let pollTimer = null;
 let heartbeatTimer = null;
 let activeChannel = null;
+let activePusherConnection = null;
+let pusherConnectionHandlers = null;
 let lastSyncTimestamp = 0;
 const SYNC_THROTTLE_MS = 250;
 
@@ -240,6 +242,20 @@ export function useRoomSync() {
      * Clean up Echo channel subscription
      */
     const cleanupEcho = () => {
+        if (activePusherConnection && pusherConnectionHandlers) {
+            try {
+                Object.entries(pusherConnectionHandlers).forEach(([event, handler]) => {
+                    if (typeof activePusherConnection.unbind === 'function') {
+                        activePusherConnection.unbind(event, handler);
+                    }
+                });
+            } catch {
+                // Ignore connection unbind error
+            }
+            activePusherConnection = null;
+            pusherConnectionHandlers = null;
+        }
+
         if (activeChannel && roomCode.value) {
             const echo = getEcho();
             if (echo) {
@@ -428,33 +444,33 @@ export function useRoomSync() {
                 const pusher = echo.connector?.pusher;
                 if (pusher?.connection) {
                     const connection = pusher.connection;
+                    activePusherConnection = connection;
                     isWebSocketConnected.value = connection.state === 'connected';
                     if (isWebSocketConnected.value && pollTimer) {
                         clearInterval(pollTimer);
                         pollTimer = null;
                     }
 
-                    connection.bind('connected', () => {
-                        isWebSocketConnected.value = true;
-                        if (pollTimer) {
-                            clearInterval(pollTimer);
-                            pollTimer = null;
-                        }
-                    });
-
-                    connection.bind('disconnected', () => {
+                    const handleDisconnected = () => {
                         isWebSocketConnected.value = false;
                         startFallbackPolling();
-                    });
+                    };
 
-                    connection.bind('unavailable', () => {
-                        isWebSocketConnected.value = false;
-                        startFallbackPolling();
-                    });
+                    pusherConnectionHandlers = {
+                        connected: () => {
+                            isWebSocketConnected.value = true;
+                            if (pollTimer) {
+                                clearInterval(pollTimer);
+                                pollTimer = null;
+                            }
+                        },
+                        disconnected: handleDisconnected,
+                        unavailable: handleDisconnected,
+                        failed: handleDisconnected,
+                    };
 
-                    connection.bind('failed', () => {
-                        isWebSocketConnected.value = false;
-                        startFallbackPolling();
+                    Object.entries(pusherConnectionHandlers).forEach(([event, handler]) => {
+                        connection.bind(event, handler);
                     });
                 }
             } catch (err) {
