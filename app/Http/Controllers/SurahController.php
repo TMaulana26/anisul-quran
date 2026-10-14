@@ -25,11 +25,9 @@ class SurahController extends Controller
         }
 
         $chapters = $this->quran->getChapters($language);
-        $reciters = $this->quran->getReciters($language);
 
         return Inertia::render('Surah/Index', [
             'chapters' => $chapters,
-            'reciters' => $reciters,
         ]);
     }
 

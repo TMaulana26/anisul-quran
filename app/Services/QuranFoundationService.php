@@ -2,7 +2,9 @@
 
 namespace App\Services;
 
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\PendingRequest;
+use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -32,7 +34,13 @@ class QuranFoundationService
     {
         $client = Http::baseUrl($this->baseUrl)
             ->timeout(12)
-            ->retry(2, 250);
+            ->retry(
+                2,
+                250,
+                fn (\Exception $e) => $e instanceof ConnectionException
+                    || ($e instanceof RequestException && $e->response->serverError()),
+                throw: false
+            );
 
         if ($this->apiKey) {
             $client = $client->withHeaders([

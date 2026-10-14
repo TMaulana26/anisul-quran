@@ -4,6 +4,8 @@ import { Link, router } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import AyahItem from '@/components/AyahItem.vue';
 import MushafPageView from '@/components/MushafPageView.vue';
+import SurahHeroHeader from '@/components/surah/SurahHeroHeader.vue';
+import SurahReaderToolbar from '@/components/surah/SurahReaderToolbar.vue';
 import AudioPlayerBar from '@/components/player/AudioPlayerBar.vue';
 import ReciterSelectorModal from '@/components/player/ReciterSelectorModal.vue';
 import KhusyuPlayerView from '@/components/player/KhusyuPlayerView.vue';
@@ -14,21 +16,10 @@ import { useQuranAudioPlayer } from '@/composables/useQuranAudioPlayer';
 import { useUserPreferences } from '@/composables/useUserPreferences';
 import { useRoomSync } from '@/composables/useRoomSync';
 import { useI18n } from '@/composables/useI18n';
-import { 
-    ChevronLeft, 
-    ChevronRight, 
-    ArrowLeft, 
-    Volume2, 
-    Settings2, 
-    Type, 
-    Sparkles, 
-    BookOpen,
-    List,
-    SlidersHorizontal,
-    User,
-    Sliders,
-    Maximize2,
-    Film
+import {
+    ChevronLeft,
+    ChevronRight,
+    ArrowLeft,
 } from '@lucide/vue';
 
 const props = defineProps({
@@ -80,7 +71,7 @@ const userPreferences = useUserPreferences();
 const roomSync = useRoomSync();
 
 // i18n Composable
-const { t, currentLocale } = useI18n();
+const { t } = useI18n();
 
 // View & Customization States synced with global preferences
 const readingMode = computed({
@@ -107,14 +98,12 @@ const autoKhusyuOnPlay = computed({
     get: () => userPreferences.preferences.autoKhusyuOnPlay,
     set: (val) => userPreferences.setAutoKhusyuOnPlay(val),
 });
-const autoZenOnPlay = autoKhusyuOnPlay;
 
 // Modals State
 const showReciterModal = ref(false);
 const showListenTogetherModal = ref(false);
 const showCompletionModal = ref(false);
 const isKhusyuMode = ref(false);
-const isZenMode = isKhusyuMode;
 const isTadabburMode = ref(false);
 
 const handleListenTogether = () => {
@@ -123,7 +112,6 @@ const handleListenTogether = () => {
 
 // Active Reciter computed based on room sync (if listener), per-surah override, or global default
 const currentReciter = computed(() => {
-    // If listener in active room session, strictly follow host reciter
     if (roomSync.isListener.value && roomSync.roomState.value?.reciterId) {
         const hostReciterId = roomSync.roomState.value.reciterId;
         return props.reciters.find(r => r.id === hostReciterId) || { id: hostReciterId, name: 'Qari Host' };
@@ -138,14 +126,12 @@ onMounted(async () => {
     const urlParams = new URLSearchParams(window.location.search);
     const shouldAutoplay = urlParams.get('autoplay') === 'true';
 
-    // If listener, let roomSync handle audio loading
     if (roomSync.isListener.value && roomSync.roomState.value?.reciterId) {
         return;
     }
 
     const resolvedReciterId = userPreferences.getReciterIdForSurah(props.chapter?.id);
     if (resolvedReciterId && resolvedReciterId !== props.selectedReciterId) {
-        // Preference differs from initial server-provided recitation
         const found = props.reciters.find(r => r.id === resolvedReciterId) || { id: resolvedReciterId, name: 'Qari Pilihan' };
         await handleSelectReciter(found, shouldAutoplay, 1);
     } else if (props.chapter && props.recitation) {
@@ -190,7 +176,6 @@ watch(() => audioPlayer.isSurahCompleted?.value, (completed) => {
 // React to global reciter preference change
 watch(() => userPreferences.preferences.selectedReciterId, async (newReciterId) => {
     if (roomSync.isListener.value) return;
-    // If this surah has an active override, do not switch audio on global change
     if (userPreferences.hasSurahReciterOverride(props.chapter?.id)) return;
 
     if (newReciterId && newReciterId !== audioPlayer.activeReciter.value?.id) {
@@ -303,8 +288,6 @@ onUnmounted(() => {
 
 const setReadingMode = (mode) => userPreferences.setReadingMode(mode);
 const setMushafType = (type) => userPreferences.setMushafType(type);
-const toggleTranslation = () => userPreferences.setShowTranslation(!showTranslation.value);
-const toggleTransliteration = () => userPreferences.setShowTransliteration(!showTransliteration.value);
 const increaseFontSize = () => userPreferences.setArabicFontSize(arabicFontSize.value + 2);
 const decreaseFontSize = () => userPreferences.setArabicFontSize(arabicFontSize.value - 2);
 
@@ -326,20 +309,16 @@ const handleSelectReciter = async (reciter, forceAutoPlay = null, targetAyah = n
     const isOverride = reciter.isOverride;
     const isRevert = reciter.isRevert;
 
-    // 1. Sync preferences appropriately
     if (isRevert) {
         userPreferences.clearSurahReciterOverride(props.chapter?.id);
     } else if (isOverride === true) {
         userPreferences.setSurahReciterOverride(props.chapter?.id, reciterId);
     } else if (isOverride === false) {
         userPreferences.setSelectedReciterId(reciterId);
-        // If this surah currently has an override, global change should NOT reload this surah's audio!
         if (userPreferences.hasSurahReciterOverride(props.chapter?.id)) {
             return;
         }
     } else {
-        // From modal without explicit override flag:
-        // If surah currently has an override, update the surah override; else update global
         if (userPreferences.hasSurahReciterOverride(props.chapter?.id)) {
             userPreferences.setSurahReciterOverride(props.chapter?.id, reciterId);
         } else {
@@ -347,7 +326,6 @@ const handleSelectReciter = async (reciter, forceAutoPlay = null, targetAyah = n
         }
     }
 
-    // 2. Prevent duplicate reload if engine is already on this reciter and chapter
     if (audioPlayer.activeReciter.value?.id === reciterId && audioPlayer.currentSurahId.value === props.chapter?.id) {
         if (forceAutoPlay && !audioPlayer.isPlaying.value) {
             audioPlayer.play();
@@ -405,14 +383,14 @@ const handleCloseCompletionModal = () => {
 </script>
 
 <template>
-    <AppLayout 
+    <AppLayout
         :title="`Surah ${chapter.name_simple} (${chapter.name_arabic})`"
         @select-reciter="handleSelectReciter"
     >
         <div class="container mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-6 space-y-8 animate-fade-in pb-28">
             <!-- Top Breadcrumb & Navigation -->
             <div class="flex items-center justify-between gap-4">
-                <Link 
+                <Link
                     href="/"
                     class="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors p-1"
                 >
@@ -422,7 +400,7 @@ const handleCloseCompletionModal = () => {
 
                 <!-- Quick Prev / Next Surah Jump -->
                 <div class="flex items-center gap-1">
-                    <Link 
+                    <Link
                         v-if="prevChapter"
                         :href="`/surah/${prevChapter.id}`"
                         class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-border bg-card text-xs font-medium text-foreground hover:bg-muted transition-colors shadow-2xs"
@@ -432,7 +410,7 @@ const handleCloseCompletionModal = () => {
                         <span class="hidden sm:inline">{{ prevChapter.name_simple }}</span>
                     </Link>
 
-                    <Link 
+                    <Link
                         v-if="nextChapter"
                         :href="`/surah/${nextChapter.id}`"
                         class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-border bg-card text-xs font-medium text-foreground hover:bg-muted transition-colors shadow-2xs"
@@ -445,153 +423,21 @@ const handleCloseCompletionModal = () => {
             </div>
 
             <!-- Surah Hero Header Card -->
-            <header class="relative overflow-hidden rounded-3xl border border-border/80 bg-gradient-to-b from-card via-card to-muted/30 p-6 sm:p-10 shadow-sm text-center space-y-4">
-                <div class="flex flex-col items-center justify-center space-y-2">
-                    <div class="inline-flex items-center justify-center px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold">
-                        <span>Surah Ke-{{ chapter.id }} • {{ chapter.revelation_place === 'makkah' ? t('common.revelation_makkah') : t('common.revelation_madinah') }}</span>
-                    </div>
+            <SurahHeroHeader :chapter="chapter" />
 
-                    <h1 class="font-arabic font-bold text-4xl sm:text-5xl text-foreground pt-2 pb-1" dir="rtl">
-                        {{ chapter.name_arabic }}
-                    </h1>
-
-                    <h2 class="font-heading font-extrabold text-2xl sm:text-3xl text-foreground">
-                        {{ chapter.name_simple }}
-                    </h2>
-
-                    <p class="text-sm text-muted-foreground font-medium">
-                        {{ chapter.translated_name?.name }} • {{ t('surah_card.verses_count', { count: chapter.verses_count }) }}
-                    </p>
-                </div>
-
-                <!-- Bismillah Header (Except Surah 9 At-Tawbah & Surah 1 Al-Fatihah) -->
-                <div 
-                    v-if="chapter.id !== 1 && chapter.id !== 9" 
-                    class="pt-6 pb-2 border-t border-border/60"
-                >
-                    <p class="font-arabic text-2xl sm:text-3xl text-foreground/90 tracking-wide" dir="rtl">
-                        بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ
-                    </p>
-                    <p class="text-xs text-muted-foreground mt-2 italic">
-                        {{ t('surah.bismillah') }}
-                    </p>
-                </div>
-            </header>
-
-            <!-- Reader Controls Bar (Reading Mode, Rasm, Font Sizing & Settings Trigger) -->
-            <section class="sticky top-18 z-30 flex flex-wrap items-center justify-between gap-3 p-3 rounded-2xl border border-border bg-background/90 backdrop-blur-md shadow-xs transition-all">
-                <!-- Reading Mode Switcher: Per Ayat vs Mushaf Fisik -->
-                <div class="flex items-center gap-1 bg-muted/70 p-1 rounded-xl text-xs">
-                    <button 
-                        @click="setReadingMode('ayah')"
-                        type="button"
-                        :class="[
-                            'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium transition-colors cursor-pointer',
-                            readingMode === 'ayah' 
-                                ? 'bg-card text-foreground shadow-xs' 
-                                : 'text-muted-foreground hover:text-foreground'
-                        ]"
-                        :title="t('surah.mode_ayah')"
-                    >
-                        <List class="h-3.5 w-3.5" />
-                        <span>{{ t('surah.mode_ayah') }}</span>
-                    </button>
-                    <button 
-                        @click="setReadingMode('mushaf')"
-                        type="button"
-                        :class="[
-                            'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium transition-colors cursor-pointer',
-                            readingMode === 'mushaf' 
-                                ? 'bg-card text-foreground shadow-xs' 
-                                : 'text-muted-foreground hover:text-foreground'
-                        ]"
-                        :title="t('surah.mode_mushaf')"
-                    >
-                        <BookOpen class="h-3.5 w-3.5" />
-                        <span>{{ t('surah.mode_mushaf') }}</span>
-                    </button>
-                </div>
-
-                <!-- Right Controls: Rasm, Font Size, Qari & Settings Button -->
-                <div class="flex flex-wrap items-center gap-2 sm:gap-3">
-                    <!-- Rasm Mushaf Switcher -->
-                    <div class="flex items-center gap-1 bg-muted/70 p-1 rounded-xl text-xs">
-                        <button 
-                            @click="setMushafType('uthmani')"
-                            type="button"
-                            :class="[
-                                'px-2.5 py-1 rounded-lg font-medium transition-colors cursor-pointer',
-                                mushafType === 'uthmani' ? 'bg-card text-foreground shadow-xs' : 'text-muted-foreground hover:text-foreground'
-                            ]"
-                        >
-                            Uthmani
-                        </button>
-                        <button 
-                            @click="setMushafType('indopak')"
-                            type="button"
-                            :class="[
-                                'px-2.5 py-1 rounded-lg font-medium transition-colors cursor-pointer',
-                                mushafType === 'indopak' ? 'bg-card text-foreground shadow-xs' : 'text-muted-foreground hover:text-foreground'
-                            ]"
-                        >
-                            IndoPak
-                        </button>
-                    </div>
-
-                    <!-- Font Size Buttons -->
-                    <div class="flex items-center gap-1 bg-muted/70 p-1 rounded-xl text-xs">
-                        <button 
-                            @click="decreaseFontSize" 
-                            type="button" 
-                            class="px-2 py-1 rounded-lg font-bold text-muted-foreground hover:text-foreground hover:bg-card transition-colors cursor-pointer"
-                            title="A-"
-                        >
-                            A-
-                        </button>
-                        <span class="px-1.5 text-[11px] font-semibold text-foreground">{{ arabicFontSize }}px</span>
-                        <button 
-                            @click="increaseFontSize" 
-                            type="button" 
-                            class="px-2 py-1 rounded-lg font-bold text-muted-foreground hover:text-foreground hover:bg-card transition-colors cursor-pointer"
-                            title="A+"
-                        >
-                            A+
-                        </button>
-                    </div>
-
-                    <!-- Mode Khusyu' (خُشُوع) Trigger Button in Sticky Bar -->
-                    <button
-                        type="button"
-                        @click="isKhusyuMode = true"
-                        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary/10 hover:bg-primary/20 text-primary border border-primary/30 text-xs font-semibold transition-all cursor-pointer shadow-2xs"
-                        :title="t('surah.khusyu_mode')"
-                    >
-                        <Maximize2 class="h-3.5 w-3.5" />
-                        <span>{{ t('surah.khusyu_mode') }}</span>
-                    </button>
-
-                    <!-- Mode Tadabbur Alam Trigger Button in Sticky Bar -->
-                    <button
-                        type="button"
-                        @click="isTadabburMode = true"
-                        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-400 border border-amber-500/30 text-xs font-semibold transition-all cursor-pointer shadow-2xs"
-                        :title="t('tadabbur.open_tadabbur')"
-                    >
-                        <Film class="h-3.5 w-3.5" />
-                        <span>{{ t('tadabbur.title') }}</span>
-                    </button>
-
-                    <!-- Settings Drawer Trigger Button -->
-                    <button
-                        type="button"
-                        @click="userPreferences.openDrawer()"
-                        class="p-2 rounded-xl border border-border bg-card hover:bg-muted text-foreground transition-colors cursor-pointer"
-                        title="Buka Pengaturan Tampilan Lengkap"
-                    >
-                        <SlidersHorizontal class="h-4 w-4 text-primary" />
-                    </button>
-                </div>
-            </section>
+            <!-- Reader Controls Bar -->
+            <SurahReaderToolbar
+                :reading-mode="readingMode"
+                :mushaf-type="mushafType"
+                :arabic-font-size="arabicFontSize"
+                @update:reading-mode="setReadingMode"
+                @update:mushaf-type="setMushafType"
+                @decrease-font="decreaseFontSize"
+                @increase-font="increaseFontSize"
+                @open-khusyu="isKhusyuMode = true"
+                @open-tadabbur="isTadabburMode = true"
+                @open-settings="userPreferences.openDrawer()"
+            />
 
             <!-- Main Reading View: Either Mode Ayat OR Mode Mushaf -->
             <div class="transition-all duration-300">
