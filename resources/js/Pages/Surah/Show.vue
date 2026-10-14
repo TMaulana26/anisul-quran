@@ -389,38 +389,40 @@ const handleCloseCompletionModal = () => {
     >
         <div class="container mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-6 space-y-8 animate-fade-in pb-28">
             <!-- Top Breadcrumb & Navigation -->
-            <div class="flex items-center justify-between gap-4">
+            <nav aria-label="Navigasi antar Surah" class="flex items-center justify-between gap-4">
                 <Link
                     href="/"
-                    class="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors p-1"
+                    class="inline-flex min-h-11 items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
                 >
-                    <ArrowLeft class="h-4 w-4" />
+                    <ArrowLeft class="h-4 w-4 shrink-0" />
                     <span>{{ t('nav.surah_list') }}</span>
                 </Link>
 
                 <!-- Quick Prev / Next Surah Jump -->
-                <div class="flex items-center gap-1">
+                <div class="flex items-center gap-1.5">
                     <Link
                         v-if="prevChapter"
                         :href="`/surah/${prevChapter.id}`"
-                        class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-border bg-card text-xs font-medium text-foreground hover:bg-muted transition-colors shadow-2xs"
+                        class="inline-flex min-h-11 min-w-11 items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-border bg-card text-xs font-medium text-foreground hover:bg-muted transition-colors shadow-2xs"
                         :title="`${t('surah.prev_surah')}: ${prevChapter.name_simple}`"
+                        :aria-label="`${t('surah.prev_surah')}: ${prevChapter.name_simple}`"
                     >
-                        <ChevronLeft class="h-3.5 w-3.5" />
+                        <ChevronLeft class="h-4 w-4 shrink-0" />
                         <span class="hidden sm:inline">{{ prevChapter.name_simple }}</span>
                     </Link>
 
                     <Link
                         v-if="nextChapter"
                         :href="`/surah/${nextChapter.id}`"
-                        class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-border bg-card text-xs font-medium text-foreground hover:bg-muted transition-colors shadow-2xs"
+                        class="inline-flex min-h-11 min-w-11 items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-border bg-card text-xs font-medium text-foreground hover:bg-muted transition-colors shadow-2xs"
                         :title="`${t('surah.next_surah')}: ${nextChapter.name_simple}`"
+                        :aria-label="`${t('surah.next_surah')}: ${nextChapter.name_simple}`"
                     >
                         <span class="hidden sm:inline">{{ nextChapter.name_simple }}</span>
-                        <ChevronRight class="h-3.5 w-3.5" />
+                        <ChevronRight class="h-4 w-4 shrink-0" />
                     </Link>
                 </div>
-            </div>
+            </nav>
 
             <!-- Surah Hero Header Card -->
             <SurahHeroHeader :chapter="chapter" />
@@ -442,7 +444,11 @@ const handleCloseCompletionModal = () => {
             <!-- Main Reading View: Either Mode Ayat OR Mode Mushaf -->
             <div class="transition-all duration-300">
                 <!-- 1. Mode Baca Per Ayat -->
-                <section v-if="readingMode === 'ayah'" class="space-y-4">
+                <section
+                    v-if="readingMode === 'ayah'"
+                    aria-label="Daftar ayat Al-Qur'an"
+                    class="space-y-4"
+                >
                     <AyahItem 
                         v-for="verse in verses" 
                         :key="verse.id" 
@@ -459,7 +465,11 @@ const handleCloseCompletionModal = () => {
                 </section>
 
                 <!-- 2. Mode Baca Per Lembar (Mushaf Fisik) -->
-                <section v-else class="space-y-6">
+                <section
+                    v-else
+                    aria-label="Tampilan lembaran Mushaf Al-Qur'an"
+                    class="space-y-6"
+                >
                     <MushafPageView 
                         :verses="verses" 
                         :chapter="chapter"
@@ -474,13 +484,13 @@ const handleCloseCompletionModal = () => {
             </div>
 
             <!-- Bottom Prev / Next Navigation Footer -->
-            <div class="flex items-center justify-between gap-4 pt-8 border-t border-border">
+            <nav aria-label="Navigasi Surah sebelumnya dan selanjutnya" class="flex flex-wrap items-center justify-between gap-4 pt-8 border-t border-border">
                 <Link 
                     v-if="prevChapter"
                     :href="`/surah/${prevChapter.id}?reciter=${userPreferences.getReciterIdForSurah(prevChapter.id)}`"
-                    class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-border bg-card text-sm font-medium text-foreground hover:bg-muted transition-colors shadow-xs"
+                    class="inline-flex min-h-11 items-center gap-2 px-4 py-2.5 rounded-xl border border-border bg-card text-sm font-medium text-foreground hover:bg-muted transition-colors shadow-xs"
                 >
-                    <ChevronLeft class="h-4 w-4" />
+                    <ChevronLeft class="h-4 w-4 shrink-0" />
                     <span>{{ t('surah.prev_surah') }}: {{ prevChapter.name_simple }}</span>
                 </Link>
                 <div v-else></div>
@@ -488,12 +498,12 @@ const handleCloseCompletionModal = () => {
                 <Link 
                     v-if="nextChapter"
                     :href="`/surah/${nextChapter.id}?reciter=${userPreferences.getReciterIdForSurah(nextChapter.id)}`"
-                    class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-border bg-card text-sm font-medium text-foreground hover:bg-muted transition-colors shadow-xs"
+                    class="inline-flex min-h-11 items-center gap-2 px-4 py-2.5 rounded-xl border border-border bg-card text-sm font-medium text-foreground hover:bg-muted transition-colors shadow-xs"
                 >
                     <span>{{ t('surah.next_surah') }}: {{ nextChapter.name_simple }}</span>
-                    <ChevronRight class="h-4 w-4" />
+                    <ChevronRight class="h-4 w-4 shrink-0" />
                 </Link>
-            </div>
+            </nav>
         </div>
 
         <!-- Floating Audio Player Bar -->

@@ -130,23 +130,23 @@ onUnmounted(() => {
             <button
                 type="button"
                 @click="isCollapsed = !isCollapsed"
-                class="relative inline-flex items-center gap-1.5 px-3.5 py-1.5 sm:py-1 text-xs font-semibold rounded-t-xl bg-card/95 backdrop-blur-md border-t border-x border-border/80 text-foreground/80 hover:text-primary shadow-sm hover:bg-card transition-all cursor-pointer before:absolute before:-inset-2 before:content-['']"
+                class="relative inline-flex min-h-11 min-w-11 items-center justify-center gap-1.5 px-3.5 py-2 text-xs font-semibold rounded-t-xl bg-card/95 backdrop-blur-md border-t border-x border-border/80 text-foreground/80 hover:text-primary shadow-sm hover:bg-card transition-all cursor-pointer"
                 :title="isCollapsed ? 'Tampilkan Player Bar' : 'Sembunyikan Player Bar'"
                 :aria-label="isCollapsed ? 'Tampilkan Player Bar' : 'Sembunyikan Player Bar'"
             >
-                <component :is="isCollapsed ? ChevronUp : ChevronDown" class="h-3.5 w-3.5 text-primary" />
+                <component :is="isCollapsed ? ChevronUp : ChevronDown" class="h-3.5 w-3.5 text-primary shrink-0" />
                 <span>{{ isCollapsed ? 'Buka Player' : 'Kecilkan' }}</span>
             </button>
         </div>
 
         <!-- Main Glassmorphism Player Card (overflow-visible to prevent clipping popups) -->
-        <div class="relative rounded-2xl sm:rounded-3xl border border-border/80 bg-card/95 dark:bg-card/90 backdrop-blur-xl shadow-2xl p-3 sm:p-4 pb-4 sm:pb-5 text-card-foreground">
+        <div class="relative rounded-2xl sm:rounded-3xl border border-border/80 bg-card/95 dark:bg-card/90 backdrop-blur-xl shadow-2xl p-3 sm:p-4 pb-3.5 sm:pb-4 text-card-foreground">
             <!-- Ambient Emerald Glow Line on Top of Player -->
             <div class="absolute top-0 left-0 right-0 h-[2px] rounded-t-3xl overflow-hidden bg-gradient-to-r from-transparent via-primary/60 to-transparent" />
 
-            <div class="flex flex-col gap-2.5">
+            <div class="flex flex-col gap-2">
                 <!-- Top Row: Surah & Ayah Info, Qari pill, & Action triggers -->
-                <div class="flex items-center justify-between gap-2 text-xs">
+                <div class="flex flex-wrap items-center justify-between gap-2 text-xs">
                     <!-- Left: Now Playing Surah & Ayah badge -->
                     <div class="flex items-center gap-2 min-w-0">
                         <div class="h-2 w-2 rounded-full bg-primary animate-pulse shrink-0" />
@@ -155,44 +155,47 @@ onUnmounted(() => {
                         </span>
                         <span 
                             v-if="currentAyahNumber" 
-                            class="inline-flex items-center px-2 py-0.5 rounded-full bg-primary/15 text-primary font-semibold text-[11px] shrink-0"
+                            class="inline-flex items-center px-2 py-0.5 rounded-full bg-primary/15 text-primary font-semibold text-[11px] tabular-nums shrink-0"
                         >
                             {{ t('surah.ayah_number', { number: currentAyahNumber }) }}
                         </span>
                     </div>
 
-                    <!-- Right Controls: Mode Khusyu, Qari Button, Listen Together trigger -->
-                    <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
+                    <!-- Right Controls: Mode Khusyu, Tadabbur, Qari Button, Auto-Scroll, Listen Together -->
+                    <div class="flex items-center gap-1 sm:gap-1.5 shrink-0">
                         <!-- Mode Khusyu' (خُشُوع) Trigger Button -->
                         <button
                             type="button"
                             @click="emit('open-khusyu-mode'); emit('open-zen-mode');"
-                            class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-primary/15 hover:bg-primary/25 text-primary border border-primary/30 font-semibold text-[11px] transition-all cursor-pointer shadow-2xs"
+                            class="inline-flex min-h-11 min-w-11 items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-primary/15 hover:bg-primary/25 text-primary border border-primary/30 font-semibold text-[11px] transition-all cursor-pointer shadow-2xs"
                             :title="t('surah.khusyu_mode')"
+                            :aria-label="t('surah.khusyu_mode')"
                         >
-                            <Maximize2 class="h-3.5 w-3.5" />
-                            <span>{{ t('surah.khusyu_mode') }} (خُشُوع)</span>
+                            <Maximize2 class="h-3.5 w-3.5 shrink-0" />
+                            <span class="hidden md:inline">{{ t('surah.khusyu_mode') }} (خُشُوع)</span>
                         </button>
 
                         <!-- Mode Tadabbur Alam (Cinema Sanctuary) Trigger Button -->
                         <button
                             type="button"
                             @click="emit('open-tadabbur-mode')"
-                            class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 text-amber-700 dark:text-amber-400 border border-amber-500/30 font-semibold text-[11px] transition-all cursor-pointer shadow-2xs"
+                            class="inline-flex min-h-11 min-w-11 items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-accent/70 hover:bg-accent text-accent-foreground border border-border font-semibold text-[11px] transition-all cursor-pointer shadow-2xs"
                             :title="t('tadabbur.open_tadabbur')"
+                            :aria-label="t('tadabbur.open_tadabbur')"
                         >
-                            <Film class="h-3.5 w-3.5" />
-                            <span>{{ t('tadabbur.title') }}</span>
+                            <Film class="h-3.5 w-3.5 shrink-0 text-primary" />
+                            <span class="hidden md:inline">{{ t('tadabbur.title') }}</span>
                         </button>
 
                         <!-- Qari Selector Button -->
                         <button
                             type="button"
                             @click="emit('open-reciter-modal')"
-                            class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-muted/60 hover:bg-muted text-foreground/85 hover:text-primary border border-border/60 transition-colors"
+                            class="inline-flex min-h-11 min-w-11 items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-muted/60 hover:bg-muted text-foreground/85 hover:text-primary border border-border/60 transition-colors cursor-pointer"
                             :title="t('player.change_reciter')"
+                            :aria-label="t('player.change_reciter')"
                         >
-                            <User class="h-3.5 w-3.5 text-primary" />
+                            <User class="h-3.5 w-3.5 text-primary shrink-0" />
                             <span class="hidden sm:inline truncate max-w-[130px]">
                                 {{ activeReciter?.name || t('player.change_reciter') }}
                             </span>
@@ -202,44 +205,48 @@ onUnmounted(() => {
                         <button
                             type="button"
                             @click="toggleAutoScroll"
-                            class="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl border transition-colors text-[11px] font-medium"
+                            :aria-pressed="autoScrollEnabled"
+                            :aria-label="t('player.auto_scroll')"
+                            class="inline-flex min-h-11 min-w-11 items-center justify-center gap-1 px-2.5 py-1.5 rounded-xl border transition-colors text-[11px] font-medium cursor-pointer"
                             :class="autoScrollEnabled ? 'bg-primary/10 border-primary/30 text-primary' : 'bg-muted/40 border-border/40 text-muted-foreground'"
                             :title="t('player.auto_scroll')"
                         >
-                            <Sparkles class="h-3 w-3" />
-                            <span class="hidden md:inline">{{ t('player.auto_scroll') }}</span>
+                            <Sparkles class="h-3.5 w-3.5 shrink-0" />
+                            <span class="hidden lg:inline">{{ t('player.auto_scroll') }}</span>
                         </button>
 
                         <!-- Listen Together Trigger -->
                         <button
                             type="button"
                             @click="emit('open-listen-together')"
-                            class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl transition-all text-[11px] font-semibold relative cursor-pointer"
+                            class="inline-flex min-h-11 min-w-11 items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-xl transition-all text-[11px] font-semibold relative cursor-pointer"
                             :class="roomSync.roomCode.value 
-                                ? 'bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border border-emerald-500/40 shadow-xs' 
-                                : 'bg-gradient-to-r from-emerald-600/15 to-teal-600/15 border border-primary/30 text-primary hover:bg-primary/20'"
+                                ? 'bg-primary/20 text-primary border border-primary/40 shadow-xs' 
+                                : 'bg-primary/10 border border-primary/30 text-primary hover:bg-primary/20'"
                             :title="t('player.listen_together')"
+                            :aria-label="t('player.listen_together')"
                         >
-                            <Radio class="h-3.5 w-3.5" :class="roomSync.roomCode.value ? 'animate-pulse text-emerald-500' : 'text-primary'" />
+                            <Radio class="h-3.5 w-3.5 shrink-0" :class="roomSync.roomCode.value ? 'animate-pulse text-primary' : 'text-primary'" />
                             <span class="hidden sm:inline">{{ roomSync.roomCode.value ? `Room ${roomSync.roomCode.value}` : t('player.listen_together') }}</span>
                             <span 
                                 v-if="roomSync.roomCode.value" 
-                                class="h-1.5 w-1.5 rounded-full bg-emerald-500 shrink-0 animate-ping"
+                                class="h-1.5 w-1.5 rounded-full bg-primary shrink-0 animate-ping"
                             />
                         </button>
                     </div>
                 </div>
 
                 <!-- Middle/Bottom Row: Playback Controls & Seekbar -->
-                <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-4">
+                <div class="flex flex-wrap sm:flex-nowrap items-center justify-between gap-2 sm:gap-4">
                     <!-- Transport Buttons: Prev, Play/Pause, Next -->
-                    <div class="flex items-center justify-center sm:justify-start gap-2 shrink-0">
+                    <div class="flex items-center gap-1.5 shrink-0 order-1">
                         <!-- Prev Ayah Button -->
                         <button
                             type="button"
                             @click="prevAyah"
-                            class="p-2 rounded-xl text-foreground/80 hover:text-foreground hover:bg-muted/70 active:scale-95 transition-all"
+                            class="inline-flex h-11 w-11 items-center justify-center rounded-xl text-foreground/80 hover:text-foreground hover:bg-muted/70 active:scale-95 transition-all cursor-pointer"
                             :title="t('player.prev')"
+                            :aria-label="t('player.prev')"
                         >
                             <SkipBack class="h-4 w-4" />
                         </button>
@@ -248,8 +255,9 @@ onUnmounted(() => {
                         <button
                             type="button"
                             @click="handlePlayClick"
-                            class="p-3 rounded-2xl bg-primary text-primary-foreground hover:bg-primary/90 active:scale-95 shadow-md shadow-primary/20 transition-all flex items-center justify-center cursor-pointer"
+                            class="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-primary text-primary-foreground hover:bg-primary/90 active:scale-95 shadow-md shadow-primary/20 transition-all cursor-pointer"
                             :title="isPlaying ? t('player.pause') : t('player.play')"
+                            :aria-label="isPlaying ? t('player.pause') : t('player.play')"
                         >
                             <Loader2 v-if="isLoading" class="h-5 w-5 animate-spin" />
                             <Pause v-else-if="isPlaying" class="h-5 w-5 fill-current" />
@@ -260,15 +268,16 @@ onUnmounted(() => {
                         <button
                             type="button"
                             @click="nextAyah"
-                            class="p-2 rounded-xl text-foreground/80 hover:text-foreground hover:bg-muted/70 active:scale-95 transition-all"
+                            class="inline-flex h-11 w-11 items-center justify-center rounded-xl text-foreground/80 hover:text-foreground hover:bg-muted/70 active:scale-95 transition-all cursor-pointer"
                             :title="t('player.next')"
+                            :aria-label="t('player.next')"
                         >
                             <SkipForward class="h-4 w-4" />
                         </button>
                     </div>
 
                     <!-- Seekbar Slider & Timers -->
-                    <div class="flex items-center gap-2.5 flex-1 w-full">
+                    <div class="flex items-center gap-2.5 w-full sm:w-auto sm:flex-1 order-3 sm:order-2">
                         <span class="text-[11px] font-mono font-medium text-muted-foreground tabular-nums w-12 sm:w-14 text-right shrink-0">
                             {{ formattedCurrentTime }}
                         </span>
@@ -294,12 +303,12 @@ onUnmounted(() => {
                     </div>
 
                     <!-- Extra Utilities: Repeat, Speed, Volume -->
-                    <div class="flex items-center justify-end gap-1 shrink-0 relative">
+                    <div class="flex items-center justify-end gap-1 shrink-0 relative order-2 sm:order-3">
                         <!-- Repeat Mode Toggle -->
                         <button
                             type="button"
                             @click="cycleRepeatMode"
-                            class="p-2 rounded-xl transition-colors relative cursor-pointer"
+                            class="inline-flex h-11 w-11 items-center justify-center rounded-xl transition-colors relative cursor-pointer"
                             :class="repeatMode !== 'none' ? 'bg-primary/15 text-primary' : 'text-muted-foreground hover:text-foreground hover:bg-muted/60'"
                             :title="repeatMode === 'ayah' ? t('player.repeat_ayah') : repeatMode === 'surah' ? t('player.repeat_surah') : t('player.repeat_none')"
                             :aria-label="repeatMode === 'ayah' ? t('player.repeat_ayah') : repeatMode === 'surah' ? t('player.repeat_surah') : t('player.repeat_none')"
@@ -308,7 +317,7 @@ onUnmounted(() => {
                             <Repeat v-else class="h-4 w-4" />
                             <span 
                                 v-if="repeatMode !== 'none'" 
-                                class="absolute -top-1 -right-1 flex h-2 w-2 rounded-full bg-primary"
+                                class="absolute top-1.5 right-1.5 flex h-2 w-2 rounded-full bg-primary"
                             />
                         </button>
 
@@ -317,7 +326,7 @@ onUnmounted(() => {
                             <button
                                 type="button"
                                 @click="showSpeedMenu = !showSpeedMenu"
-                                class="px-2 py-1 rounded-xl text-xs font-semibold font-mono text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors flex items-center gap-1 cursor-pointer"
+                                class="inline-flex min-h-11 min-w-11 items-center justify-center px-2.5 py-1.5 rounded-xl text-xs font-semibold font-mono tabular-nums text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors gap-1 cursor-pointer"
                                 :title="`Kecepatan Pemutaran ${playbackRate}x`"
                                 :aria-label="`Kecepatan Pemutaran ${playbackRate}x`"
                             >
@@ -327,14 +336,14 @@ onUnmounted(() => {
                             <!-- Speed Dropdown Menu -->
                             <div 
                                 v-if="showSpeedMenu" 
-                                class="absolute bottom-full right-0 mb-3 w-28 rounded-2xl border border-border/80 bg-popover/95 backdrop-blur-xl p-1.5 shadow-2xl z-50 flex flex-col gap-0.5 animate-scale-in"
+                                class="absolute bottom-full right-0 mb-3 w-32 rounded-2xl border border-border/80 bg-popover/95 backdrop-blur-xl p-1.5 shadow-2xl z-50 flex flex-col gap-0.5 animate-scale-in"
                             >
                                 <button
                                     v-for="rate in speedOptions"
                                     :key="rate"
                                     type="button"
                                     @click="selectSpeed(rate)"
-                                    class="w-full text-left px-2.5 py-1.5 text-xs rounded-xl font-mono transition-colors flex items-center justify-between cursor-pointer"
+                                    class="w-full min-h-11 text-left px-3 py-2 text-xs rounded-xl font-mono tabular-nums transition-colors flex items-center justify-between cursor-pointer"
                                     :class="playbackRate === rate ? 'bg-primary/15 text-primary font-bold' : 'text-foreground hover:bg-muted'"
                                 >
                                     <span>{{ rate }}x</span>
@@ -349,7 +358,7 @@ onUnmounted(() => {
                                 type="button"
                                 @click="showVolumeSlider = !showVolumeSlider"
                                 @mouseenter="showVolumeSlider = true"
-                                class="p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors cursor-pointer"
+                                class="inline-flex h-11 w-11 items-center justify-center rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors cursor-pointer"
                                 :title="isMuted ? 'Nyalakan Suara' : 'Pengaturan Volume'"
                                 :aria-label="isMuted ? 'Nyalakan Suara' : 'Pengaturan Volume'"
                             >
@@ -360,13 +369,14 @@ onUnmounted(() => {
                             <!-- Volume Slider Popover -->
                             <div 
                                 v-if="showVolumeSlider" 
-                                class="absolute bottom-full right-0 mb-3 p-3 rounded-2xl border border-border/80 bg-popover/95 backdrop-blur-xl shadow-2xl z-50 flex items-center gap-2.5 animate-scale-in w-44"
+                                class="absolute bottom-full right-0 mb-3 p-3 rounded-2xl border border-border/80 bg-popover/95 backdrop-blur-xl shadow-2xl z-50 flex items-center gap-2.5 animate-scale-in w-48"
                             >
                                 <button
                                     type="button"
                                     @click="toggleMute"
-                                    class="p-1 rounded-lg text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                                    class="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                                     :title="isMuted ? 'Nyalakan Suara' : 'Bisukan Suara'"
+                                    :aria-label="isMuted ? 'Nyalakan Suara' : 'Bisukan Suara'"
                                 >
                                     <VolumeX v-if="isMuted || volume === 0" class="h-3.5 w-3.5 text-destructive" />
                                     <Volume2 v-else class="h-3.5 w-3.5" />

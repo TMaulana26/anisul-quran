@@ -70,7 +70,7 @@ const getArabicText = (verse) => {
             class="relative rounded-2xl border border-border/80 bg-card p-6 sm:p-10 shadow-sm space-y-6 transition-all duration-200"
         >
             <!-- Page Header Ornament (Juz, Surah Name, Page) -->
-            <header class="flex items-center justify-between pb-4 border-b border-border/60 text-xs text-muted-foreground font-medium select-none">
+            <header class="flex items-center justify-between pb-4 border-b border-border/60 text-xs text-muted-foreground font-medium tabular-nums select-none">
                 <span class="inline-flex items-center gap-1">
                     <span>Juz {{ page.juzNumber }}</span>
                 </span>
@@ -94,14 +94,19 @@ const getArabicText = (verse) => {
                 <template v-for="verse in page.verses" :key="verse.id">
                     <span 
                         :id="`mushaf-ayah-${verse.verse_number}`"
+                        role="button"
+                        tabindex="0"
+                        :aria-label="`Putar Ayat ${verse.verse_number}`"
                         :class="[
-                            'inline transition-colors cursor-pointer group',
+                            'inline transition-colors cursor-pointer group rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50',
                             activeAyahNumber === verse.verse_number 
                                 ? 'text-primary font-medium' 
                                 : 'text-foreground'
                         ]"
                         :title="`Klik untuk memutar Ayat ${verse.verse_number}`"
                         @click="emit('play', verse)"
+                        @keydown.enter.prevent="emit('play', verse)"
+                        @keydown.space.prevent="emit('play', verse)"
                     ><template v-if="Array.isArray(verse.words) && verse.words.length > 0"><template v-for="(word, wIdx) in verse.words" :key="word.id || word.position"><AyahEndOrnament
                                     v-if="word.char_type_name === 'end'"
                                     :verse-number="verse.verse_number"
@@ -124,7 +129,7 @@ const getArabicText = (verse) => {
             </div>
 
             <!-- Page Footer -->
-            <footer class="flex items-center justify-center pt-4 border-t border-border/60 text-xs text-muted-foreground font-medium select-none">
+            <footer class="flex items-center justify-center pt-4 border-t border-border/60 text-xs text-muted-foreground font-medium tabular-nums select-none">
                 <div class="flex items-center gap-2">
                     <span class="h-1 w-6 bg-border rounded-full"></span>
                     <span>Halaman {{ page.pageNumber }}</span>

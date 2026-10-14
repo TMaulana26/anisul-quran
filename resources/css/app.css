@@ -230,10 +230,19 @@
   font-variation-settings: 'opsz' 144, 'wght' 900, 'SOFT' 0, 'WONK' 0.5;
 }
 
-/* Off-screen rendering optimization for 114 Surah cards */
+/* Off-screen rendering optimization for 114 Surah cards and long Surah Ayah lists */
 .surah-card-item {
   content-visibility: auto;
   contain-intrinsic-size: auto 97px;
+}
+
+.ayah-card-item {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 240px;
+}
+
+.ayah-card-item.ayah-card-active {
+  content-visibility: visible;
 }
 
 @keyframes fadeIn {

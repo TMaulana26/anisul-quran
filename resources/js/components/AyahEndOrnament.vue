@@ -56,7 +56,7 @@ const sizeClasses = computed(() => {
         :class="[
             'inline-flex items-center justify-center align-middle select-none transition-all duration-300 relative shrink-0',
             sizeClasses,
-            isActive ? 'text-primary scale-110 drop-shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'text-primary/80 hover:text-primary hover:scale-105',
+            isActive ? 'text-primary scale-110 drop-shadow-sm' : 'text-primary/80 hover:text-primary hover:scale-105',
             customClass
         ]"
         :title="`Ayat ${verseNumber}`"

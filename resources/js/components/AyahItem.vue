@@ -89,9 +89,9 @@ const hasArabicWords = computed(() => {
     <div 
         :id="`ayah-${verse.verse_number}`"
         :class="[
-            'group relative p-5 sm:p-6 rounded-2xl border transition-all duration-300',
+            'ayah-card-item group relative p-5 sm:p-6 rounded-2xl border transition-all duration-300',
             isActive 
-                ? 'bg-primary/10 border-primary/60 shadow-md ring-2 ring-primary/30' 
+                ? 'ayah-card-active bg-primary/10 border-primary/60 shadow-md ring-2 ring-primary/30' 
                 : 'bg-card border-border/80 hover:border-border hover:bg-muted/20'
         ]"
     >
@@ -99,29 +99,31 @@ const hasArabicWords = computed(() => {
         <div class="flex items-center justify-between gap-2 pb-4 border-b border-border/50 text-xs text-muted-foreground">
             <!-- Ayah Key Badge & Play Button -->
             <div class="flex items-center gap-2">
-                <span class="inline-flex items-center justify-center px-2.5 py-1 rounded-lg bg-muted text-foreground font-semibold">
+                <span class="inline-flex min-h-11 items-center justify-center px-3 py-1.5 rounded-xl bg-muted text-foreground font-semibold tabular-nums">
                     {{ verse.verse_key }}
                 </span>
                 
                 <button 
                     @click="emit('play', verse)"
                     type="button"
+                    :aria-pressed="isActive && isPlaying"
+                    :aria-label="`${t('player.play')} ${t('surah.ayah_number', { number: verse.verse_number })}`"
                     :class="[
-                        'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg font-medium transition-colors cursor-pointer',
+                        'inline-flex min-h-11 min-w-11 items-center gap-1.5 px-3.5 py-2 rounded-xl font-medium transition-colors cursor-pointer',
                         isActive 
                             ? 'bg-primary text-primary-foreground shadow-xs' 
                             : 'bg-muted hover:bg-primary/10 hover:text-primary text-foreground'
                     ]"
                     :title="`${t('surah.ayah_number', { number: verse.verse_number })}`"
                 >
-                    <Volume2 v-if="isActive && isPlaying" class="h-3.5 w-3.5 animate-pulse" />
-                    <Play v-else class="h-3.5 w-3.5" />
+                    <Volume2 v-if="isActive && isPlaying" class="h-3.5 w-3.5 animate-pulse shrink-0" />
+                    <Play v-else class="h-3.5 w-3.5 shrink-0" />
                     <span>{{ isActive ? (isPlaying ? t('player.now_playing') : t('player.paused')) : t('player.play') }}</span>
                 </button>
             </div>
 
             <!-- Juz & Page Info -->
-            <div class="flex items-center gap-2 text-[11px] text-muted-foreground font-medium">
+            <div class="flex items-center gap-2 text-[11px] text-muted-foreground font-medium tabular-nums">
                 <span v-if="verse.juz_number">{{ t('surah.juz', { number: verse.juz_number }) }}</span>
                 <span v-if="verse.juz_number && verse.page_number">•</span>
                 <span v-if="verse.page_number">{{ t('surah.page', { number: verse.page_number }) }}</span>
@@ -196,8 +198,9 @@ const hasArabicWords = computed(() => {
                         v-else-if="token.type === 'footnote'"
                         @click.stop="openFootnote(token.id, token.number)"
                         type="button"
-                        class="inline-flex items-center justify-center px-1.5 py-0.5 mx-0.5 rounded-md text-[11px] font-bold bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground transition-colors cursor-pointer align-baseline select-none"
+                        class="inline-flex min-h-11 min-w-11 items-center justify-center px-2.5 py-1 mx-0.5 my-0.5 rounded-lg text-[11px] font-bold tabular-nums bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground transition-colors cursor-pointer align-middle select-none"
                         :title="`Klik untuk melihat Catatan Kaki [${token.number}]`"
+                        :aria-label="`Catatan Kaki ${token.number}`"
                     >
                         [{{ token.number }}]
                     </button>

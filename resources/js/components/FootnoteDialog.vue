@@ -117,6 +117,7 @@ onUnmounted(() => {
                     class="relative w-full max-w-lg rounded-2xl border border-border bg-card p-6 shadow-xl space-y-4 animate-scale-in"
                     role="dialog"
                     aria-modal="true"
+                    aria-labelledby="footnote-dialog-title"
                 >
                     <!-- Header -->
                     <div class="flex items-start justify-between gap-3 pb-3 border-b border-border">
@@ -125,10 +126,10 @@ onUnmounted(() => {
                                 <BookOpen class="h-4 w-4" />
                             </div>
                             <div>
-                                <h3 class="font-heading font-bold text-base text-foreground">
+                                <h2 id="footnote-dialog-title" class="font-heading font-bold text-base text-foreground">
                                     Catatan Kaki Kemenag RI
-                                </h3>
-                                <p class="text-xs text-muted-foreground">
+                                </h2>
+                                <p class="text-xs text-muted-foreground tabular-nums">
                                     Ayat {{ verseKey }} • Penjelasan No. {{ footnoteNumber }}
                                 </p>
                             </div>
@@ -137,8 +138,9 @@ onUnmounted(() => {
                         <button 
                             @click="close"
                             type="button"
-                            class="p-1 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                            class="inline-flex h-11 w-11 items-center justify-center rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
                             title="Tutup dialog"
+                            aria-label="Tutup dialog"
                         >
                             <X class="h-4 w-4" />
                         </button>
@@ -158,7 +160,7 @@ onUnmounted(() => {
                             <button 
                                 @click="fetchFootnote(footnoteId)" 
                                 type="button"
-                                class="mt-2 text-primary underline"
+                                class="mt-2 inline-flex min-h-11 items-center justify-center px-4 py-2 text-primary underline cursor-pointer"
                             >
                                 Coba lagi
                             </button>
@@ -181,7 +183,7 @@ onUnmounted(() => {
                         <button 
                             @click="close"
                             type="button"
-                            class="px-4 py-1.5 rounded-lg bg-primary text-primary-foreground font-medium hover:bg-primary/90 transition-colors shadow-2xs"
+                            class="inline-flex min-h-11 min-w-11 items-center justify-center px-4 py-2 rounded-xl bg-primary text-primary-foreground font-medium hover:bg-primary/90 transition-colors shadow-2xs cursor-pointer"
                         >
                             Tutup
                         </button>
