@@ -105,3 +105,30 @@ it('fetches reciters list and recitation timestamps', function () {
         ->and($audio['audio_url'])->toBe('https://audio.qurancdn.com/Alafasy/001.mp3')
         ->and($audio['verse_timings'])->toHaveCount(1);
 });
+
+it('does not poison cache when upstream API returns error or empty failure', function () {
+    Http::fake([
+        'api.quran.com/api/v4/chapters*' => Http::sequence()
+            ->push(['error' => 'Bad Gateway'], 502)
+            ->push(['error' => 'Service Unavailable'], 503)
+            ->push(['error' => 'Gateway Timeout'], 504)
+            ->push([
+                'chapters' => [
+                    ['id' => 1, 'name_simple' => 'Al-Fatihah', 'name_arabic' => 'الفاتحة', 'verses_count' => 7],
+                ],
+            ], 200),
+    ]);
+
+    $service = new QuranFoundationService;
+
+    // First call fails (all 3 retry attempts hit 502/503/504) -> returns fallback [] without caching
+    $failedChapters = $service->getChapters('id');
+    expect($failedChapters)->toBe([])
+        ->and(Cache::has('quran:chapters:id'))->toBeFalse();
+
+    // Subsequent call succeeds and caches the valid payload
+    $recoveredChapters = $service->getChapters('id');
+    expect($recoveredChapters)->toHaveCount(1)
+        ->and($recoveredChapters[0]['name_simple'])->toBe('Al-Fatihah')
+        ->and(Cache::has('quran:chapters:id'))->toBeTrue();
+});

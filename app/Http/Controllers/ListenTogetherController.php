@@ -107,10 +107,7 @@ class ListenTogetherController extends Controller
 
         return response()->json([
             'success' => true,
-            'room' => array_merge($room, [
-                'listenerCount' => $listenerCount,
-                'serverTime' => (int) (microtime(true) * 1000),
-            ]),
+            'room' => $this->toPublicRoom($room, $listenerCount),
         ]);
     }
 
@@ -120,14 +117,6 @@ class ListenTogetherController extends Controller
     public function sync(string $code, Request $request): JsonResponse
     {
         $normalizedCode = strtoupper(trim($code));
-        $room = Cache::get("room_{$normalizedCode}");
-
-        if (! $room) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Sesi room tidak ditemukan atau telah berakhir.',
-            ], 404);
-        }
 
         $validated = $request->validate([
             'surahId' => ['nullable', 'integer', 'between:1,114'],
@@ -141,40 +130,71 @@ class ListenTogetherController extends Controller
             'hostDeviceId' => ['nullable', 'string', 'max:100'],
         ]);
 
-        foreach ($validated as $key => $val) {
-            if ($val !== null) {
-                $room[$key] = $val;
+        $result = Cache::lock("room_{$normalizedCode}:lock", 5)->block(2, function () use ($normalizedCode, $request, $validated) {
+            $room = Cache::get("room_{$normalizedCode}");
+
+            if (! $room) {
+                return ['status' => 404];
             }
+
+            if (! $this->isAuthorizedHost($room, $request)) {
+                return ['status' => 403];
+            }
+
+            $updates = $validated;
+            unset($updates['hostDeviceId']);
+
+            foreach ($updates as $key => $val) {
+                if ($val !== null) {
+                    $room[$key] = $val;
+                }
+            }
+
+            if (array_key_exists('isKhusyuMode', $updates) && $updates['isKhusyuMode'] !== null) {
+                $room['isKhusyuMode'] = (bool) $updates['isKhusyuMode'];
+                if (! isset($updates['readingMode'])) {
+                    $room['readingMode'] = $room['isKhusyuMode'] ? 'khusyu' : ($room['readingMode'] === 'khusyu' ? 'ayah' : ($room['readingMode'] ?? 'ayah'));
+                }
+            } elseif (array_key_exists('readingMode', $updates) && $updates['readingMode'] !== null) {
+                $room['isKhusyuMode'] = ($updates['readingMode'] === 'khusyu');
+            }
+
+            $room['updatedAt'] = (int) (microtime(true) * 1000);
+
+            Cache::put("room_{$normalizedCode}", $room, self::ROOM_TTL_SECONDS);
+
+            return [
+                'status' => 200,
+                'room' => $room,
+            ];
+        });
+
+        if ($result['status'] === 404) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Sesi room tidak ditemukan atau telah berakhir.',
+            ], 404);
         }
 
-        if (array_key_exists('isKhusyuMode', $validated) && $validated['isKhusyuMode'] !== null) {
-            $room['isKhusyuMode'] = (bool) $validated['isKhusyuMode'];
-            if (! isset($validated['readingMode'])) {
-                $room['readingMode'] = $room['isKhusyuMode'] ? 'khusyu' : ($room['readingMode'] === 'khusyu' ? 'ayah' : ($room['readingMode'] ?? 'ayah'));
-            }
-        } elseif (array_key_exists('readingMode', $validated) && $validated['readingMode'] !== null) {
-            $room['isKhusyuMode'] = ($validated['readingMode'] === 'khusyu');
+        if ($result['status'] === 403) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Hanya Host yang memiliki izin untuk menyinkronkan sesi room ini.',
+            ], 403);
         }
-
-        $room['updatedAt'] = (int) (microtime(true) * 1000);
-
-        Cache::put("room_{$normalizedCode}", $room, self::ROOM_TTL_SECONDS);
 
         $listenerCount = $this->getCleanedListenerCount($normalizedCode);
-        $fullRoom = array_merge($room, [
-            'listenerCount' => $listenerCount,
-            'serverTime' => (int) (microtime(true) * 1000),
-        ]);
+        $publicRoom = $this->toPublicRoom($result['room'], $listenerCount);
 
         try {
-            broadcast(new RoomSyncEvent($normalizedCode, $fullRoom))->toOthers();
+            broadcast(new RoomSyncEvent($normalizedCode, $publicRoom))->toOthers();
         } catch (\Throwable $e) {
             report($e);
         }
 
         return response()->json([
             'success' => true,
-            'room' => $fullRoom,
+            'room' => $publicRoom,
         ]);
     }
 
@@ -184,29 +204,43 @@ class ListenTogetherController extends Controller
     public function heartbeat(string $code, Request $request): JsonResponse
     {
         $normalizedCode = strtoupper(trim($code));
-        $room = Cache::get("room_{$normalizedCode}");
 
-        if (! $room) {
+        $validated = $request->validate([
+            'deviceId' => ['nullable', 'string', 'max:100'],
+        ]);
+
+        $deviceId = $validated['deviceId'] ?? (string) Str::uuid();
+
+        $listenerCount = Cache::lock("room_{$normalizedCode}:lock", 5)->block(2, function () use ($normalizedCode, $deviceId) {
+            $room = Cache::get("room_{$normalizedCode}");
+
+            if (! $room) {
+                return null;
+            }
+
+            $listeners = Cache::get("room_{$normalizedCode}_listeners", []);
+            $listeners[$deviceId] = now()->timestamp;
+
+            // Prune stale listeners older than threshold
+            $cutoff = now()->timestamp - self::PRESENCE_THRESHOLD_SECONDS;
+            $activeListeners = array_filter($listeners, fn ($timestamp) => $timestamp >= $cutoff);
+
+            Cache::put("room_{$normalizedCode}_listeners", $activeListeners, self::ROOM_TTL_SECONDS);
+            Cache::put("room_{$normalizedCode}", $room, self::ROOM_TTL_SECONDS);
+
+            return max(1, count($activeListeners));
+        });
+
+        if ($listenerCount === null) {
             return response()->json([
                 'success' => false,
                 'message' => 'Sesi room tidak ditemukan atau telah berakhir.',
             ], 404);
         }
 
-        $deviceId = $request->input('deviceId') ?: (string) Str::uuid();
-        $listeners = Cache::get("room_{$normalizedCode}_listeners", []);
-        $listeners[$deviceId] = now()->timestamp;
-
-        // Prune stale listeners older than threshold
-        $cutoff = now()->timestamp - self::PRESENCE_THRESHOLD_SECONDS;
-        $activeListeners = array_filter($listeners, fn ($timestamp) => $timestamp >= $cutoff);
-
-        Cache::put("room_{$normalizedCode}_listeners", $activeListeners, self::ROOM_TTL_SECONDS);
-        Cache::put("room_{$normalizedCode}", $room, self::ROOM_TTL_SECONDS);
-
         return response()->json([
             'success' => true,
-            'listenerCount' => max(1, count($activeListeners)),
+            'listenerCount' => $listenerCount,
             'serverTime' => (int) (microtime(true) * 1000),
         ]);
     }
@@ -214,12 +248,40 @@ class ListenTogetherController extends Controller
     /**
      * Close and delete a room session.
      */
-    public function destroy(string $code): JsonResponse
+    public function destroy(string $code, Request $request): JsonResponse
     {
         $normalizedCode = strtoupper(trim($code));
 
-        Cache::forget("room_{$normalizedCode}");
-        Cache::forget("room_{$normalizedCode}_listeners");
+        $status = Cache::lock("room_{$normalizedCode}:lock", 5)->block(2, function () use ($normalizedCode, $request) {
+            $room = Cache::get("room_{$normalizedCode}");
+
+            if (! $room) {
+                return 404;
+            }
+
+            if (! $this->isAuthorizedHost($room, $request)) {
+                return 403;
+            }
+
+            Cache::forget("room_{$normalizedCode}");
+            Cache::forget("room_{$normalizedCode}_listeners");
+
+            return 200;
+        });
+
+        if ($status === 404) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Sesi room tidak ditemukan atau telah berakhir.',
+            ], 404);
+        }
+
+        if ($status === 403) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Hanya Host yang memiliki izin untuk menutup sesi room ini.',
+            ], 403);
+        }
 
         try {
             broadcast(new RoomClosedEvent($normalizedCode))->toOthers();
@@ -267,15 +329,45 @@ class ListenTogetherController extends Controller
         $listenerCount = $this->getCleanedListenerCount($normalizedCode);
 
         return Inertia::render('Listen/Room', [
-            'room' => array_merge($room, [
-                'listenerCount' => $listenerCount,
-                'serverTime' => (int) (microtime(true) * 1000),
-            ]),
+            'room' => $this->toPublicRoom($room, $listenerCount),
             'roomCode' => $normalizedCode,
             'error' => null,
             'chapter' => $chapter,
             'verses' => $versesData['verses'] ?? [],
             'recitation' => $recitation,
+        ]);
+    }
+
+    /**
+     * Verify whether the incoming request originates from the room host.
+     *
+     * @param  array<string, mixed>  $room
+     */
+    protected function isAuthorizedHost(array $room, Request $request): bool
+    {
+        $expectedHostId = (string) ($room['hostDeviceId'] ?? '');
+        $providedHostId = (string) ($request->input('hostDeviceId') ?? $request->header('X-Host-Device-Id', ''));
+
+        if ($expectedHostId === '' || $providedHostId === '') {
+            return false;
+        }
+
+        return hash_equals($expectedHostId, $providedHostId);
+    }
+
+    /**
+     * Serialize room state for public listeners without exposing host credentials.
+     *
+     * @param  array<string, mixed>  $room
+     * @return array<string, mixed>
+     */
+    protected function toPublicRoom(array $room, int $listenerCount): array
+    {
+        unset($room['hostDeviceId']);
+
+        return array_merge($room, [
+            'listenerCount' => $listenerCount,
+            'serverTime' => (int) (microtime(true) * 1000),
         ]);
     }
 

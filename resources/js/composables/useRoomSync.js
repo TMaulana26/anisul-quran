@@ -266,7 +266,14 @@ export function useRoomSync() {
         try {
             await fetch(`/api/rooms/${code}`, {
                 method: 'DELETE',
-                headers: { 'Accept': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-Host-Device-Id': deviceId,
+                },
+                body: JSON.stringify({
+                    hostDeviceId: deviceId,
+                }),
             });
         } catch (e) {
             // Ignore delete failure

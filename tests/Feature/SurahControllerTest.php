@@ -40,7 +40,7 @@ beforeEach(function () {
                 ['id' => 7, 'reciter_name' => 'Mishari Rashid al-`Afasy'],
             ],
         ], 200),
-        'api.quran.com/api/v4/recitations/7/by_chapter/1*' => Http::response([
+        'api.quran.com/api/v4/chapter_recitations/7/1*' => Http::response([
             'audio_file' => [
                 'audio_url' => 'https://audio.qurancdn.com/Alafasy/001.mp3',
                 'verse_timings' => [
@@ -114,7 +114,7 @@ it('returns footnote json for interactive footnote popover', function () {
 
 it('honors the anisul_selected_reciter cookie when rendering surah show page', function () {
     Http::fake([
-        'api.quran.com/api/v4/recitations/4/by_chapter/1*' => Http::response([
+        'api.quran.com/api/v4/chapter_recitations/4/1*' => Http::response([
             'audio_file' => [
                 'audio_url' => 'https://audio.qurancdn.com/Husary/001.mp3',
                 'verse_timings' => [

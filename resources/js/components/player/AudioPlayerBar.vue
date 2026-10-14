@@ -99,31 +99,6 @@ const handlePlayClick = () => {
     }
 };
 
-// Host synchronization watchers
-watch(isPlaying, (newVal) => {
-    if (roomSync.isHost.value) {
-        roomSync.broadcastState({
-            surahId: currentSurahId.value,
-            ayahNumber: currentAyahNumber.value,
-            currentTime: currentTime.value,
-            isPlaying: newVal,
-            statusChange: true,
-        });
-    }
-});
-
-watch(currentAyahNumber, (newVal) => {
-    if (roomSync.isHost.value) {
-        roomSync.broadcastState({
-            surahId: currentSurahId.value,
-            ayahNumber: newVal,
-            currentTime: currentTime.value,
-            isPlaying: isPlaying.value,
-            force: true,
-        });
-    }
-});
-
 // Outside click auto-close for speed menu and volume popup
 const handleDocumentClick = (e) => {
     if (showSpeedMenu.value && speedMenuRef.value && !speedMenuRef.value.contains(e.target)) {
@@ -134,30 +109,12 @@ const handleDocumentClick = (e) => {
     }
 };
 
-let hostSyncTimer = null;
-
 onMounted(() => {
     document.addEventListener('click', handleDocumentClick);
-
-    // Periodic sync broadcast while Host is playing
-    hostSyncTimer = setInterval(() => {
-        if (roomSync.isHost.value && isPlaying.value) {
-            roomSync.broadcastState({
-                surahId: currentSurahId.value,
-                ayahNumber: currentAyahNumber.value,
-                currentTime: currentTime.value,
-                isPlaying: true,
-            });
-        }
-    }, 2000);
 });
 
 onUnmounted(() => {
     document.removeEventListener('click', handleDocumentClick);
-    if (hostSyncTimer) {
-        clearInterval(hostSyncTimer);
-        hostSyncTimer = null;
-    }
 });
 </script>
 

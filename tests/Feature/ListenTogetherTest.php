@@ -32,7 +32,12 @@ beforeEach(function () {
                 ],
             ],
         ], 200),
-        'api.quran.com/api/v4/recitations/7/by_chapter/1*' => Http::response([
+        'api.quran.com/api/v4/resources/recitations*' => Http::response([
+            'recitations' => [
+                ['id' => 7, 'reciter_name' => 'Mishari Rashid al-`Afasy'],
+            ],
+        ], 200),
+        'api.quran.com/api/v4/chapter_recitations/7/1*' => Http::response([
             'audio_file' => [
                 'audio_url' => 'https://audio.qurancdn.com/Alafasy/001.mp3',
                 'verse_timings' => [
@@ -84,10 +89,11 @@ it('returns 404 for nonexistent room code', function () {
         ]);
 });
 
-it('can retrieve current room state', function () {
+it('can retrieve current room state without leaking hostDeviceId', function () {
     $create = $this->postJson('/api/rooms', [
         'surahId' => 1,
         'ayahNumber' => 1,
+        'hostDeviceId' => 'secret-host-id',
     ]);
 
     $code = $create->json('room.code');
@@ -103,19 +109,22 @@ it('can retrieve current room state', function () {
                 'ayahNumber' => 1,
                 'listenerCount' => 1,
             ],
-        ]);
+        ])
+        ->assertJsonMissingPath('room.hostDeviceId');
 });
 
-it('can sync playback state from host', function () {
+it('can sync playback state from authorized host', function () {
     $create = $this->postJson('/api/rooms', [
         'surahId' => 1,
         'ayahNumber' => 1,
         'status' => 'paused',
+        'hostDeviceId' => 'host-device-abc',
     ]);
 
     $code = $create->json('room.code');
 
     $syncResponse = $this->postJson("/api/rooms/{$code}/sync", [
+        'hostDeviceId' => 'host-device-abc',
         'surahId' => 1,
         'ayahNumber' => 3,
         'timestampMs' => 12500,
@@ -132,15 +141,53 @@ it('can sync playback state from host', function () {
                 'timestampMs' => 12500,
                 'status' => 'playing',
             ],
-        ]);
+        ])
+        ->assertJsonMissingPath('room.hostDeviceId');
 });
 
-it('tracks active listeners via heartbeat', function () {
+it('rejects room sync and destruction from unauthorized non-host callers', function () {
     $create = $this->postJson('/api/rooms', [
-        'hostDeviceId' => 'host-device',
+        'surahId' => 1,
+        'ayahNumber' => 1,
+        'hostDeviceId' => 'real-host-device',
     ]);
 
     $code = $create->json('room.code');
+
+    // Attempt sync without hostDeviceId or with wrong hostDeviceId
+    $this->postJson("/api/rooms/{$code}/sync", [
+        'hostDeviceId' => 'attacker-device',
+        'surahId' => 114,
+        'ayahNumber' => 6,
+    ])->assertStatus(403);
+
+    // Attempt destroy without hostDeviceId or with wrong hostDeviceId
+    $this->deleteJson("/api/rooms/{$code}", [
+        'hostDeviceId' => 'attacker-device',
+    ])->assertStatus(403);
+
+    // Verify room was not modified or deleted
+    $this->getJson("/api/rooms/{$code}")
+        ->assertStatus(200)
+        ->assertJsonPath('room.surahId', 1);
+});
+
+it('tracks active listeners via heartbeat without reverting synced state', function () {
+    $create = $this->postJson('/api/rooms', [
+        'hostDeviceId' => 'host-device',
+        'surahId' => 1,
+        'ayahNumber' => 1,
+    ]);
+
+    $code = $create->json('room.code');
+
+    // Host updates ayah to 5
+    $this->postJson("/api/rooms/{$code}/sync", [
+        'hostDeviceId' => 'host-device',
+        'ayahNumber' => 5,
+        'timestampMs' => 18000,
+        'status' => 'playing',
+    ])->assertStatus(200);
 
     // Add listener 1
     $this->postJson("/api/rooms/{$code}/heartbeat", [
@@ -153,13 +200,23 @@ it('tracks active listeners via heartbeat', function () {
         'deviceId' => 'listener-2',
     ])->assertStatus(200)
         ->assertJson(['success' => true, 'listenerCount' => 3]);
+
+    // Ensure room state was not reverted by heartbeats
+    $this->getJson("/api/rooms/{$code}")
+        ->assertStatus(200)
+        ->assertJsonPath('room.ayahNumber', 5)
+        ->assertJsonPath('room.timestampMs', 18000);
 });
 
-it('can close and destroy a room session', function () {
-    $create = $this->postJson('/api/rooms');
+it('can close and destroy a room session when authorized as host', function () {
+    $create = $this->postJson('/api/rooms', [
+        'hostDeviceId' => 'host-device-xyz',
+    ]);
     $code = $create->json('room.code');
 
-    $deleteResponse = $this->deleteJson("/api/rooms/{$code}");
+    $deleteResponse = $this->deleteJson("/api/rooms/{$code}", [
+        'hostDeviceId' => 'host-device-xyz',
+    ]);
     $deleteResponse->assertStatus(200)
         ->assertJson([
             'success' => true,
@@ -201,7 +258,7 @@ it('renders Inertia page with error when room code is invalid or expired', funct
         );
 });
 
-it('broadcasts RoomSyncEvent when host syncs playback', function () {
+it('broadcasts RoomSyncEvent when host syncs playback without leaking hostDeviceId', function () {
     Event::fake([
         RoomSyncEvent::class,
     ]);
@@ -209,10 +266,12 @@ it('broadcasts RoomSyncEvent when host syncs playback', function () {
     $create = $this->postJson('/api/rooms', [
         'surahId' => 1,
         'ayahNumber' => 1,
+        'hostDeviceId' => 'host-device-secret',
     ]);
     $code = $create->json('room.code');
 
     $this->postJson("/api/rooms/{$code}/sync", [
+        'hostDeviceId' => 'host-device-secret',
         'surahId' => 1,
         'ayahNumber' => 5,
         'timestampMs' => 20000,
@@ -221,10 +280,12 @@ it('broadcasts RoomSyncEvent when host syncs playback', function () {
 
     Event::assertDispatched(RoomSyncEvent::class, function ($event) use ($code) {
         $channels = $event->broadcastOn();
+        $payload = $event->broadcastWith();
 
         return $event->roomCode === $code
             && $event->room['ayahNumber'] === 5
             && $event->room['status'] === 'playing'
+            && ! array_key_exists('hostDeviceId', $payload['room'])
             && $channels[0]->name === "room.{$code}"
             && $event->broadcastAs() === 'RoomSyncEvent';
     });
@@ -235,10 +296,14 @@ it('broadcasts RoomClosedEvent when host closes room', function () {
         RoomClosedEvent::class,
     ]);
 
-    $create = $this->postJson('/api/rooms');
+    $create = $this->postJson('/api/rooms', [
+        'hostDeviceId' => 'host-device-close',
+    ]);
     $code = $create->json('room.code');
 
-    $this->deleteJson("/api/rooms/{$code}")->assertStatus(200);
+    $this->deleteJson("/api/rooms/{$code}", [
+        'hostDeviceId' => 'host-device-close',
+    ])->assertStatus(200);
 
     Event::assertDispatched(RoomClosedEvent::class, function ($event) use ($code) {
         $channels = $event->broadcastOn();
@@ -259,6 +324,7 @@ it('persists and broadcasts readingMode and isKhusyuMode state', function () {
         'ayahNumber' => 1,
         'readingMode' => 'khusyu',
         'isKhusyuMode' => true,
+        'hostDeviceId' => 'host-device-mode',
     ]);
 
     $create->assertStatus(201)
@@ -273,6 +339,7 @@ it('persists and broadcasts readingMode and isKhusyuMode state', function () {
     $code = $create->json('room.code');
 
     $syncResponse = $this->postJson("/api/rooms/{$code}/sync", [
+        'hostDeviceId' => 'host-device-mode',
         'surahId' => 1,
         'ayahNumber' => 2,
         'readingMode' => 'mushaf',

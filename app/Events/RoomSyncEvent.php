@@ -52,8 +52,11 @@ class RoomSyncEvent implements ShouldBroadcastNow
      */
     public function broadcastWith(): array
     {
+        $publicRoom = $this->room;
+        unset($publicRoom['hostDeviceId']);
+
         return [
-            'room' => $this->room,
+            'room' => $publicRoom,
             'eventType' => $this->eventType,
         ];
     }

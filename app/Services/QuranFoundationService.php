@@ -44,6 +44,32 @@ class QuranFoundationService
     }
 
     /**
+     * Retrieve an item from cache, or execute the closure and store the result
+     * only when the upstream response is non-null (preventing cache poisoning on transient outages).
+     */
+    protected function rememberWithoutPoisoning(
+        string $cacheKey,
+        \DateTimeInterface|\DateInterval|int $ttl,
+        callable $callback,
+        mixed $fallback = null
+    ): mixed {
+        $cached = Cache::get($cacheKey);
+        if ($cached !== null) {
+            return $cached;
+        }
+
+        $value = $callback();
+
+        if ($value !== null) {
+            Cache::put($cacheKey, $value, $ttl);
+
+            return $value;
+        }
+
+        return $fallback;
+    }
+
+    /**
      * Retrieve all 114 chapters (Surahs) of the Quran.
      *
      * @return array<int, array<string, mixed>>
@@ -52,29 +78,31 @@ class QuranFoundationService
     {
         $cacheKey = "quran:chapters:{$language}";
 
-        return Cache::remember($cacheKey, now()->addDays(7), function () use ($language) {
+        return $this->rememberWithoutPoisoning($cacheKey, now()->addDays(7), function () use ($language) {
             try {
                 $response = $this->client()->get('/chapters', [
                     'language' => $language,
                 ]);
 
                 if ($response->successful()) {
-                    return $response->json('chapters', []);
+                    $chapters = $response->json('chapters', []);
+
+                    return ! empty($chapters) ? $chapters : null;
                 }
 
                 Log::warning('Failed to fetch chapters from Quran Foundation API', [
                     'status' => $response->status(),
                 ]);
 
-                return [];
+                return null;
             } catch (Throwable $e) {
                 Log::error('Exception fetching chapters from Quran Foundation API', [
                     'message' => $e->getMessage(),
                 ]);
 
-                return [];
+                return null;
             }
-        });
+        }, []);
     }
 
     /**
@@ -86,7 +114,7 @@ class QuranFoundationService
     {
         $cacheKey = "quran:chapter:{$id}:{$language}";
 
-        return Cache::remember($cacheKey, now()->addDays(7), function () use ($id, $language) {
+        return $this->rememberWithoutPoisoning($cacheKey, now()->addDays(7), function () use ($id, $language) {
             try {
                 $response = $this->client()->get("/chapters/{$id}", [
                     'language' => $language,
@@ -104,7 +132,7 @@ class QuranFoundationService
 
                 return null;
             }
-        });
+        }, null);
     }
 
     /**
@@ -116,7 +144,7 @@ class QuranFoundationService
     {
         $cacheKey = "quran:chapter_info:{$id}:{$language}";
 
-        return Cache::remember($cacheKey, now()->addDays(7), function () use ($id, $language) {
+        return $this->rememberWithoutPoisoning($cacheKey, now()->addDays(7), function () use ($id, $language) {
             try {
                 $response = $this->client()->get("/chapters/{$id}/info", [
                     'language' => $language,
@@ -134,7 +162,7 @@ class QuranFoundationService
 
                 return null;
             }
-        });
+        }, null);
     }
 
     /**
@@ -167,13 +195,17 @@ class QuranFoundationService
         $queryParams = array_merge($defaultParams, $params);
         $cacheKey = "quran:verses:{$chapterId}:".md5(json_encode($queryParams));
 
-        return Cache::remember($cacheKey, now()->addDays(3), function () use ($chapterId, $queryParams, $defaultTranslationId) {
+        return $this->rememberWithoutPoisoning($cacheKey, now()->addDays(3), function () use ($chapterId, $queryParams, $defaultTranslationId) {
             try {
                 $response = $this->client()->get("/verses/by_chapter/{$chapterId}", $queryParams);
 
                 if ($response->successful()) {
                     $data = $response->json();
                     $verses = $data['verses'] ?? [];
+
+                    if (empty($verses)) {
+                        return null;
+                    }
 
                     $cleanVerses = array_map(function (array $verse) use ($defaultTranslationId): array {
                         $cleanWords = [];
@@ -227,15 +259,15 @@ class QuranFoundationService
                     'status' => $response->status(),
                 ]);
 
-                return ['verses' => []];
+                return null;
             } catch (Throwable $e) {
                 Log::error("Exception fetching verses for chapter {$chapterId}", [
                     'message' => $e->getMessage(),
                 ]);
 
-                return ['verses' => []];
+                return null;
             }
-        });
+        }, ['verses' => []]);
     }
 
     /**
@@ -247,7 +279,7 @@ class QuranFoundationService
     {
         $cacheKey = "quran:recitations:{$language}";
 
-        return Cache::remember($cacheKey, now()->addDays(7), function () use ($language) {
+        return $this->rememberWithoutPoisoning($cacheKey, now()->addDays(7), function () use ($language) {
             try {
                 $response = $this->client()->get('/resources/recitations', [
                     'language' => $language,
@@ -255,6 +287,10 @@ class QuranFoundationService
 
                 if ($response->successful()) {
                     $recitations = $response->json('recitations', []);
+
+                    if (empty($recitations)) {
+                        return null;
+                    }
 
                     return array_map(function (array $r): array {
                         $name = $r['reciter_name'] ?? $r['translated_name']['name'] ?? ($r['name'] ?? 'Qari');
@@ -269,15 +305,15 @@ class QuranFoundationService
                     }, $recitations);
                 }
 
-                return [];
+                return null;
             } catch (Throwable $e) {
                 Log::error('Exception fetching reciters from Quran Foundation API', [
                     'message' => $e->getMessage(),
                 ]);
 
-                return [];
+                return null;
             }
-        });
+        }, []);
     }
 
     /**
@@ -289,7 +325,7 @@ class QuranFoundationService
     {
         $cacheKey = "quran:audio:{$reciterId}:{$chapterId}";
 
-        return Cache::remember($cacheKey, now()->addDays(3), function () use ($reciterId, $chapterId) {
+        return $this->rememberWithoutPoisoning($cacheKey, now()->addDays(3), function () use ($reciterId, $chapterId) {
             try {
                 // Endpoint returns audio_file with audio_url and timestamps / segments
                 $response = $this->client()->get("/chapter_recitations/{$reciterId}/{$chapterId}", [
@@ -314,7 +350,7 @@ class QuranFoundationService
 
                 return null;
             }
-        });
+        }, null);
     }
 
     /**
@@ -356,7 +392,7 @@ class QuranFoundationService
     {
         $cacheKey = "quran:footnote:{$id}";
 
-        return Cache::remember($cacheKey, now()->addDays(7), function () use ($id) {
+        return $this->rememberWithoutPoisoning($cacheKey, now()->addDays(7), function () use ($id) {
             try {
                 $response = $this->client()->get("/foot_notes/{$id}");
 
@@ -372,23 +408,27 @@ class QuranFoundationService
                     }
                 }
 
-                return [
-                    'id' => $id,
-                    'text' => 'Penjelasan catatan kaki ini digabungkan pada catatan sebelumnya atau belum tersedia dari sumber data Kemenag.',
-                    'language_name' => 'indonesian',
-                ];
+                if ($response->status() === 404) {
+                    return [
+                        'id' => $id,
+                        'text' => 'Penjelasan catatan kaki ini digabungkan pada catatan sebelumnya atau belum tersedia dari sumber data Kemenag.',
+                        'language_name' => 'indonesian',
+                    ];
+                }
+
+                return null;
             } catch (Throwable $e) {
                 Log::error("Exception fetching footnote {$id} from Quran Foundation API", [
                     'message' => $e->getMessage(),
                 ]);
 
-                return [
-                    'id' => $id,
-                    'text' => 'Penjelasan catatan kaki tidak dapat dimuat saat ini. Silakan coba sesaat lagi.',
-                    'language_name' => 'indonesian',
-                ];
+                return null;
             }
-        });
+        }, [
+            'id' => $id,
+            'text' => 'Penjelasan catatan kaki tidak dapat dimuat saat ini. Silakan coba sesaat lagi.',
+            'language_name' => 'indonesian',
+        ]);
     }
 
     /**
