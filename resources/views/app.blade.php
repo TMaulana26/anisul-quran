@@ -11,10 +11,10 @@
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <!-- Runtime Reverb Configuration for real-time WebSocket sync -->
         @php
-            $reverbKey = config('reverb.apps.apps.0.key') ?: env('VITE_REVERB_APP_KEY') ?: env('REVERB_APP_KEY');
-            $reverbHost = config('reverb.apps.apps.0.options.host') ?: env('VITE_REVERB_HOST') ?: env('REVERB_HOST');
-            $reverbPort = config('reverb.apps.apps.0.options.port') ?: env('VITE_REVERB_PORT') ?: env('REVERB_PORT');
-            $reverbScheme = config('reverb.apps.apps.0.options.scheme') ?: env('VITE_REVERB_SCHEME') ?: env('REVERB_SCHEME', 'https');
+            $reverbKey = config('reverb.apps.apps.0.key');
+            $reverbHost = config('reverb.apps.apps.0.options.host');
+            $reverbPort = config('reverb.apps.apps.0.options.port');
+            $reverbScheme = config('reverb.apps.apps.0.options.scheme', 'https');
         @endphp
         <script>
             window.__REVERB_CONFIG__ = {

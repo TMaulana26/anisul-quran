@@ -38,7 +38,7 @@ class SetAppLocale
 
         // If explicitly set via query param, sync the cookie
         if ($request->query('lang') && in_array($request->query('lang'), $this->supportedLocales, true)) {
-            $response->headers->setCookie(cookie('anisul_locale', $locale, 525600, null, null, false, false, false, 'lax'));
+            $response->headers->setCookie(cookie('anisul_locale', $locale, 525600, null, null, $request->isSecure(), false, false, 'lax'));
         }
 
         return $response;

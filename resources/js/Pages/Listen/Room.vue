@@ -512,6 +512,7 @@ onMounted(async () => {
 });
 
 onUnmounted(() => {
+    audioPlayer.pause();
     roomSync.leaveRoom();
 });
 </script>

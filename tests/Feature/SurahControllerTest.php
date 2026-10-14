@@ -38,6 +38,7 @@ beforeEach(function () {
         'api.quran.com/api/v4/resources/recitations*' => Http::response([
             'recitations' => [
                 ['id' => 7, 'reciter_name' => 'Mishari Rashid al-`Afasy'],
+                ['id' => 4, 'reciter_name' => 'Abu Bakr al-Shatri'],
             ],
         ], 200),
         'api.quran.com/api/v4/chapter_recitations/7/1*' => Http::response([
@@ -98,6 +99,13 @@ it('returns recitation json for dynamic qari switching', function () {
             'reciter_id',
             'chapter_id',
         ]);
+});
+
+it('falls back to default reciter 7 when an unknown or out-of-bounds reciter id is requested', function () {
+    $response = $this->getJson('/api/surah/1/recitation?reciter=999999');
+
+    $response->assertStatus(200)
+        ->assertJsonPath('reciter_id', 7);
 });
 
 it('returns footnote json for interactive footnote popover', function () {

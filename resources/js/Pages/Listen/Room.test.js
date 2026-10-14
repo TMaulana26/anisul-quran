@@ -160,5 +160,34 @@ describe('Room.vue', () => {
         expect(khusyuStub.attributes('data-open')).toBe('true');
         expect(khusyuStub.attributes('data-listener')).toBe('true');
     });
+
+    it('pauses audio playback when Room component unmounts', async () => {
+        const player = useQuranAudioPlayer();
+
+        const wrapper = mount(Room, {
+            props: {
+                room: mockRoom,
+                roomCode: 'X2FXJ8',
+                chapter: mockChapter,
+                verses: [],
+                recitation: mockRecitation,
+            },
+            global: {
+                stubs: {
+                    AppLayout: { template: '<div><slot /></div>' },
+                    AyahItem: true,
+                    FollowerBanner: {
+                        props: ['roomCode', 'isConnected', 'listenerCount', 'status', 'ayahNumber'],
+                        template: '<div class="follower-banner-stub" />',
+                    },
+                },
+            },
+        });
+
+        player.isPlaying.value = true;
+        wrapper.unmount();
+
+        expect(player.isPlaying.value).toBe(false);
+    });
 });
 

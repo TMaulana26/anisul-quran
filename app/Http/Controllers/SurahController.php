@@ -53,14 +53,6 @@ class SurahController extends Controller
             abort(404, 'Surah tidak ditemukan.');
         }
 
-        $cookieReciter = $request->cookie('anisul_selected_reciter');
-        $defaultReciterId = ($cookieReciter && is_numeric($cookieReciter) && (int) $cookieReciter > 0)
-            ? (int) $cookieReciter
-            : 7;
-        $reciterId = (int) $request->query('reciter', $defaultReciterId);
-        if ($reciterId <= 0) {
-            $reciterId = 7;
-        }
         $versesData = $this->quran->getVersesByChapter($id, [
             'language' => $language,
             'words' => true,
@@ -68,6 +60,7 @@ class SurahController extends Controller
 
         $chapterInfo = $this->quran->getChapterInfo($id, $language);
         $reciters = $this->quran->getReciters($language);
+        $reciterId = $this->resolveReciterId($request, $reciters);
         $recitation = $this->quran->getChapterRecitation($reciterId, $id);
 
         $prevChapter = $id > 1 ? $this->quran->getChapter($id - 1, $language) : null;
@@ -99,14 +92,14 @@ class SurahController extends Controller
      */
     public function recitation(int $id, Request $request): JsonResponse
     {
-        $cookieReciter = $request->cookie('anisul_selected_reciter');
-        $defaultReciterId = ($cookieReciter && is_numeric($cookieReciter) && (int) $cookieReciter > 0)
-            ? (int) $cookieReciter
-            : 7;
-        $reciterId = (int) $request->query('reciter', $defaultReciterId);
-        if ($reciterId <= 0) {
-            $reciterId = 7;
+        if ($id < 1 || $id > 114) {
+            return response()->json([
+                'message' => 'Surah tidak ditemukan.',
+            ], 404);
         }
+
+        $reciters = $this->quran->getReciters();
+        $reciterId = $this->resolveReciterId($request, $reciters);
         $recitation = $this->quran->getChapterRecitation($reciterId, $id);
 
         if (! $recitation) {
@@ -120,6 +113,33 @@ class SurahController extends Controller
             'reciter_id' => $reciterId,
             'chapter_id' => $id,
         ]);
+    }
+
+    /**
+     * Resolve and validate the requested reciter ID against known reciters.
+     *
+     * @param  array<int, array<string, mixed>>  $reciters
+     */
+    protected function resolveReciterId(Request $request, array $reciters = []): int
+    {
+        $cookieReciter = $request->cookie('anisul_selected_reciter');
+        $defaultReciterId = ($cookieReciter && is_numeric($cookieReciter) && (int) $cookieReciter > 0 && (int) $cookieReciter <= 500)
+            ? (int) $cookieReciter
+            : 7;
+
+        $reciterId = (int) $request->query('reciter', $defaultReciterId);
+        if ($reciterId <= 0 || $reciterId > 500) {
+            return 7;
+        }
+
+        if ($reciters !== []) {
+            $validIds = array_map('intval', array_column($reciters, 'id'));
+            if (! in_array($reciterId, $validIds, true)) {
+                return 7;
+            }
+        }
+
+        return $reciterId;
     }
 
     /**

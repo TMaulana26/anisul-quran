@@ -23,13 +23,13 @@
                             ]"
                         />
                     </span>
-                    <span>{{ isConnected ? 'Tersinkronisasi' : 'Menyambungkan...' }}</span>
+                    <span>{{ isConnected ? t('sync.status_synced') : t('sync.status_connecting') }}</span>
                 </div>
 
                 <span class="hidden sm:inline text-muted-foreground">•</span>
 
                 <span class="hidden sm:inline text-muted-foreground">
-                    Mode Pendengar (Playback otomatis mengikuti Host)
+                    {{ t('sync.follower_banner_mode') }}
                 </span>
             </div>
 
@@ -37,17 +37,17 @@
             <div class="flex items-center gap-2">
                 <div class="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-background/60 border border-border/80 font-mono text-[11px] text-muted-foreground">
                     <Users class="h-3.5 w-3.5 text-primary" />
-                    <span>{{ listenerCount }} Pendengar</span>
+                    <span>{{ t('sync.listener_count', { count: listenerCount }) }}</span>
                 </div>
 
                 <button
                     type="button"
                     @click="$emit('leave')"
                     class="px-2.5 py-1 rounded-lg bg-muted/80 hover:bg-muted hover:text-foreground text-muted-foreground font-medium transition-colors flex items-center gap-1 cursor-pointer"
-                    title="Keluar dari Sesi Dengar Bersama"
+                    :title="t('sync.leave_session_title')"
                 >
                     <LogOut class="h-3.5 w-3.5" />
-                    <span>Keluar</span>
+                    <span>{{ t('sync.leave_btn') }}</span>
                 </button>
             </div>
         </div>
@@ -56,6 +56,9 @@
 
 <script setup>
 import { Radio, Users, LogOut } from 'lucide-vue-next';
+import { useI18n } from '@/composables/useI18n';
+
+const { t } = useI18n();
 
 defineProps({
     roomCode: {
