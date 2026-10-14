@@ -5,7 +5,7 @@
 @import "tw-animate-css";
 
 @font-face {
-  font-family: 'Fraunces';
+  font-family: 'Anisul Serif';
   src: url('../fonts/Fraunces.woff2') format('woff2');
   font-weight: 100 900;
   font-style: normal;
@@ -13,7 +13,7 @@
 }
 
 @font-face {
-  font-family: 'Fraunces';
+  font-family: 'Anisul Serif';
   src: url('../fonts/Fraunces-Italic.woff2') format('woff2');
   font-weight: 100 900;
   font-style: italic;
@@ -171,7 +171,7 @@
 
 @theme inline {
   --font-sans: 'Nunito Sans', ui-sans-serif, system-ui, sans-serif;
-  --font-heading: 'Fraunces', 'Nunito Sans', ui-serif, Georgia, serif;
+  --font-heading: 'Anisul Serif', 'Nunito Sans', ui-serif, Georgia, serif;
   --font-arabic: 'Amiri', 'Noto Naskh Arabic', 'Scheherazade New', serif;
   --font-indopak: 'Scheherazade New', 'Gulzar', 'Noto Naskh Arabic', 'Amiri', serif;
   --color-background: var(--background);
@@ -208,7 +208,7 @@
   }
 }
 
-/* Fraunces Variable Typography Variations (Optical Size 144, Softness 0, Wonky 0.5) */
+/* Editorial Display Variable Typography Variations (Optical Size 144, Softness 0, Wonky 0.5) */
 .font-heading {
   font-family: var(--font-heading);
   font-variation-settings: 'opsz' 144, 'wght' 700, 'SOFT' 0, 'WONK' 0.5;
@@ -228,6 +228,12 @@
 
 .font-heading.font-black {
   font-variation-settings: 'opsz' 144, 'wght' 900, 'SOFT' 0, 'WONK' 0.5;
+}
+
+/* Off-screen rendering optimization for 114 Surah cards */
+.surah-card-item {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 97px;
 }
 
 @keyframes fadeIn {
@@ -274,15 +280,14 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  *, ::before, ::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
+  html {
     scroll-behavior: auto !important;
   }
 
-  /* Retain gentle opacity fades and non-displacing transitions for cognitive accessibility */
-  * {
-    transition-duration: 120ms !important;
+  .animate-fade-in,
+  .animate-scale-in,
+  .animate-pulse-glow {
+    animation: none !important;
     transform: none !important;
   }
 }

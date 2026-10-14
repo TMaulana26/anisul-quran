@@ -20,12 +20,12 @@ const formatRevelation = (place) => {
 <template>
     <Link 
         :href="`/surah/${chapter.id}`"
-        class="group relative flex items-center justify-between p-4 rounded-xl border border-border bg-card hover:bg-muted/40 hover:border-primary/50 hover:shadow-sm hover:scale-[1.01] active:scale-[0.99] transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary/40"
+        class="surah-card-item group relative flex items-center justify-between p-4 rounded-xl border border-border bg-card hover:bg-muted/40 hover:border-primary/50 hover:shadow-sm hover:scale-[1.01] active:scale-[0.99] transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary/40"
     >
         <!-- Left Section: Number & Latin Details -->
         <div class="flex items-center gap-3.5 min-w-0">
             <!-- Surah Number Box -->
-            <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground group-hover:bg-primary group-hover:text-primary-foreground font-semibold text-sm transition-colors duration-200">
+            <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground group-hover:bg-primary group-hover:text-primary-foreground font-semibold text-sm tabular-nums transition-colors duration-200">
                 <span>{{ chapter.id }}</span>
             </div>
 
@@ -41,7 +41,7 @@ const formatRevelation = (place) => {
                     <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-muted text-muted-foreground">
                         {{ formatRevelation(chapter.revelation_place) }}
                     </span>
-                    <span class="text-[11px] text-muted-foreground">
+                    <span class="text-[11px] text-muted-foreground tabular-nums">
                         {{ t('surah_card.verses_count', { count: chapter.verses_count }) }}
                     </span>
                 </div>

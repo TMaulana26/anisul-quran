@@ -15,7 +15,7 @@ defineProps({
         aria-label="Ornamen Seni Kaligrafi Bulan Sabit Islami"
     >
         <!-- Outer Layer: Looping Celestial Float (Continuous & Uninterrupted) -->
-        <div class="decorative-moon-float w-full h-full inline-flex items-center justify-center will-change-transform">
+        <div class="decorative-moon-float w-full h-full inline-flex items-center justify-center">
             <!-- Inner Layer: Interactive Micro-Interactions (Smooth Scale & Hover Interpolation) -->
             <div class="decorative-moon-interactive group relative w-full h-full inline-flex items-center justify-center cursor-pointer">
                 <svg 

@@ -83,7 +83,7 @@ const numericSize = computed(() => {
     <div 
         class="app-logo-container group inline-flex select-none transition-all duration-300"
         :class="[
-            isHorizontal ? 'flex-row items-center gap-3' : '',
+            isHorizontal ? 'flex-row items-center gap-2 sm:gap-3' : '',
             isStacked ? 'flex-col items-center text-center gap-2' : '',
             isIconOnly ? 'items-center justify-center' : '',
             className
@@ -94,7 +94,10 @@ const numericSize = computed(() => {
         <!-- SVG Icon Mark (Vectorized M1-V1 Swiss Geometric Equalizer Book) -->
         <div 
             class="app-logo-icon relative shrink-0 flex items-center justify-center transition-transform duration-500 ease-out"
-            :class="{ 'group-hover:scale-105 group-active:scale-98': animate }"
+            :class="[
+                { 'group-hover:scale-105 group-active:scale-98': animate },
+                isHorizontal ? 'max-sm:!w-8 max-sm:!h-8' : ''
+            ]"
             :style="{ width: `${numericSize}px`, height: `${numericSize}px` }"
         >
             <svg 
@@ -137,16 +140,16 @@ const numericSize = computed(() => {
             </svg>
         </div>
 
-        <!-- Brand Typography Block (Fraunces Serif + Primary Qur'an) -->
+        <!-- Brand Typography Block (Editorial Serif + Primary Qur'an) -->
         <div 
             v-if="!isIconOnly" 
-            class="flex flex-col"
+            class="flex flex-col min-w-0"
             :class="isStacked ? 'items-center' : 'items-start'"
         >
             <div 
-                class="font-heading font-bold tracking-tight text-foreground transition-colors duration-300"
+                class="font-heading font-bold tracking-tight text-foreground transition-colors duration-300 whitespace-nowrap"
                 :class="[
-                    isStacked ? 'text-xl sm:text-2xl leading-tight' : 'text-lg sm:text-xl leading-snug'
+                    isStacked ? 'text-xl sm:text-2xl leading-tight' : 'text-sm sm:text-xl leading-snug'
                 ]"
             >
                 <span>Anisul </span>
@@ -156,8 +159,8 @@ const numericSize = computed(() => {
             <!-- Subtitle with i18n support -->
             <slot name="subtitle">
                 <span 
-                    class="text-[11px] sm:text-xs text-muted-foreground font-medium transition-colors duration-300"
-                    :class="isStacked ? 'mt-0.5' : '-mt-0.5'"
+                    class="text-[11px] sm:text-xs text-muted-foreground font-medium transition-colors duration-300 whitespace-nowrap"
+                    :class="isStacked ? 'mt-0.5' : 'hidden sm:inline -mt-0.5'"
                     :data-i18n-key="subtitleKey"
                 >
                     {{ subtitle }}
