@@ -51,6 +51,6 @@ describe('useI18n composable', () => {
         expect(supportedLocales[0].code).toBe('id');
         expect(supportedLocales[0].translationResourceId).toBe(33);
         expect(supportedLocales[1].code).toBe('en');
-        expect(supportedLocales[1].translationResourceId).toBe(131);
+        expect(supportedLocales[1].translationResourceId).toBe(20);
     });
 });

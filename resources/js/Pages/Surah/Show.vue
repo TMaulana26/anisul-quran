@@ -293,6 +293,10 @@ const decreaseFontSize = () => userPreferences.setArabicFontSize(arabicFontSize.
 
 // Play or toggle individual verse directly from Ayah Card -> Enter Mode Khusyu (if autoKhusyuOnPlay enabled)
 const handlePlayVerse = (verse) => {
+    if (audioPlayer.currentAyahNumber.value === verse.verse_number && audioPlayer.isPlaying.value) {
+        audioPlayer.pause();
+        return;
+    }
     audioPlayer.seekToAyah(verse.verse_number, true);
     if (autoKhusyuOnPlay.value) {
         isKhusyuMode.value = true;
@@ -511,8 +515,9 @@ const handleCloseCompletionModal = () => {
             @open-reciter-modal="showReciterModal = true"
             @open-settings="userPreferences.openDrawer()"
             @open-listen-together="handleListenTogether"
-            @open-khusyu-mode="autoKhusyuOnPlay ? (isKhusyuMode = true) : null"
-            @open-zen-mode="autoKhusyuOnPlay ? (isKhusyuMode = true) : null"
+            @open-khusyu-mode="isKhusyuMode = true"
+            @open-zen-mode="isKhusyuMode = true"
+            @play-triggered="autoKhusyuOnPlay ? (isKhusyuMode = true) : null"
             @open-tadabbur-mode="isTadabburMode = true"
         />
 

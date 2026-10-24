@@ -30,18 +30,40 @@
             (function() {
                 try {
                     const theme = localStorage.getItem('anisul_theme');
+                    const vibe = localStorage.getItem('anisul_app_vibe') || localStorage.getItem('anisul_khusyu_theme') || 'noor';
                     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-                    if (theme === 'dark' || (!theme && prefersDark)) {
+                    if (theme === 'dark' || (!theme && (prefersDark || vibe === 'midnight'))) {
                         document.documentElement.classList.add('dark');
                     } else {
                         document.documentElement.classList.remove('dark');
                     }
-                    const vibe = localStorage.getItem('anisul_app_vibe') || localStorage.getItem('anisul_khusyu_theme') || 'noor';
                     document.documentElement.setAttribute('data-vibe', vibe);
                 } catch (e) {}
             })();
         </script>
         <x-inertia::head />
+        <style>
+            #app:empty {
+                min-height: 100vh;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                gap: 0.75rem;
+            }
+            #app:empty::before {
+                content: "Anisul Qur'an • أنِيسُ القُرْآن";
+                font-weight: 700;
+                font-size: 1.125rem;
+                letter-spacing: -0.01em;
+                opacity: 0.85;
+            }
+            #app:empty::after {
+                content: "Memuat halaman tilawah...";
+                font-size: 0.8125rem;
+                opacity: 0.6;
+            }
+        </style>
     </head>
     <body class="min-h-screen bg-background text-foreground font-sans antialiased selection:bg-primary/20 selection:text-primary">
         <x-inertia::app />

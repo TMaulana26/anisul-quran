@@ -1,7 +1,7 @@
 {
     "common": {
         "app_name": "Anisul Qur'an",
-        "tagline": "A Serene Companion for the Divine Words",
+        "tagline": "Interactive Recitation Companion",
         "search": "Search",
         "loading": "Loading...",
         "close": "Close",
@@ -20,18 +20,20 @@
     "nav": {
         "surah_list": "Surah List",
         "settings": "Settings",
-        "theme_toggle": "Toggle Theme",
+        "theme_toggle": "Toggle Light / Dark Mode",
+        "theme_light": "Switch to Light Mode",
+        "theme_dark": "Switch to Dark Mode",
         "listen_together": "Listen Together",
-        "vibe_noor": "Noor (Emerald)",
-        "vibe_midnight": "Midnight (Sapphire)",
-        "vibe_warqah": "Warqah (Classic)",
+        "vibe_noor": "Noor (Emerald Light)",
+        "vibe_midnight": "Midnight (Golden Dark)",
+        "vibe_warqah": "Warqah (Classic Parchment)",
         "switch_lang": "Switch Language"
     },
     "index": {
         "hero_badge": "Digital Holy Qur'an & Real-time Listen Together",
         "hero_title": "Immerse in the Holy Qur'an with Khusyu' & Serenity",
         "hero_subtitle": "Read divine verses with elegant calligraphy, listen to world-renowned reciters, and share real-time synchronized listening sessions.",
-        "search_placeholder": "Search surah by name, number, or translation (e.g. Al-Kahf, Yasin, 18)...",
+        "search_placeholder": "Search surah, number, or meaning (e.g. Al-Kahf, Yasin, 18)...",
         "filter_all": "All ({count})",
         "filter_makkah": "Meccan ({count})",
         "filter_madinah": "Medinan ({count})",
@@ -247,5 +249,12 @@
         "on": "On",
         "off": "Off",
         "shortcuts_hint": "Space · Play   ←→ · Ayah   M · Mute"
+    },
+    "footer": {
+        "credits_prefix": "Official Quranic data & audio powered by",
+        "credits_suffix": "& Saheeh International Translation.",
+        "privacy_notice": "Ad-free & zero personal data tracking (Privacy-First).",
+        "feedback_label": "Report Bug / Feedback",
+        "made_with_love": "Crafted with love for the Ummah"
     }
 }

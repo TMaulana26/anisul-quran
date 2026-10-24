@@ -7,8 +7,8 @@ const DEFAULT_PREFERENCES = {
     showTranslation: true,
     showTransliteration: true,
     autoScrollEnabled: true,
-    autoKhusyuOnPlay: true,
-    autoZenOnPlay: true, // Alias for autoKhusyuOnPlay
+    autoKhusyuOnPlay: false,
+    autoZenOnPlay: false, // Alias for autoKhusyuOnPlay
     selectedReciterId: 7, // Mishary Rashid Alafasy default
     appVibe: 'noor', // 'noor' | 'midnight' | 'warqah'
     appLocale: 'id', // 'id' | 'en'
@@ -140,10 +140,19 @@ export function useUserPreferences() {
             }
         }
 
-        // Initialize App Locale
-        const savedLocale = safeGetItem('anisul_locale', null) || safeGetCookie('anisul_locale');
+        // Initialize App Locale (prioritize explicit ?lang= query param if present)
+        const urlLang =
+            typeof window !== 'undefined' && window.location?.search
+                ? new URLSearchParams(window.location.search).get('lang')
+                : null;
+        const savedLocale =
+            urlLang && ['id', 'en'].includes(urlLang)
+                ? urlLang
+                : safeGetItem('anisul_locale', null) || safeGetCookie('anisul_locale');
         if (savedLocale && ['id', 'en'].includes(savedLocale)) {
             preferences.appLocale = savedLocale;
+            safeSetItem('anisul_locale', savedLocale);
+            safeSetCookie('anisul_locale', savedLocale);
         }
         if (typeof document !== 'undefined') {
             document.documentElement.setAttribute('lang', preferences.appLocale || 'id');
@@ -284,12 +293,27 @@ export function useUserPreferences() {
 
     const setAppVibe = (vibe) => {
         withThemeTransition(() => {
+            const prevVibe = preferences.appVibe;
             const valid = ['noor', 'midnight', 'warqah'].includes(vibe) ? vibe : 'noor';
             preferences.appVibe = valid;
             safeSetItem('anisul_app_vibe', valid);
             safeSetItem('anisul_khusyu_theme', valid);
             if (typeof document !== 'undefined') {
                 document.documentElement.setAttribute('data-vibe', valid);
+            }
+
+            if (valid === 'midnight' && !isDark.value) {
+                isDark.value = true;
+                safeSetItem('anisul_theme', 'dark');
+                if (typeof document !== 'undefined') {
+                    document.documentElement.classList.add('dark');
+                }
+            } else if (prevVibe === 'midnight' && valid !== 'midnight' && isDark.value) {
+                isDark.value = false;
+                safeSetItem('anisul_theme', 'light');
+                if (typeof document !== 'undefined') {
+                    document.documentElement.classList.remove('dark');
+                }
             }
         });
     };

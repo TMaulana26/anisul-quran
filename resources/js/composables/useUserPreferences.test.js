@@ -12,7 +12,8 @@ describe('useUserPreferences.js Composable', () => {
         expect(preferences.showTranslation).toBe(true);
         expect(preferences.showTransliteration).toBe(true);
         expect(preferences.autoScrollEnabled).toBe(true);
-        expect(preferences.autoZenOnPlay).toBe(true);
+        expect(preferences.autoZenOnPlay).toBe(false);
+        expect(preferences.autoKhusyuOnPlay).toBe(false);
         expect(preferences.selectedReciterId).toBe(7);
     });
 
@@ -68,12 +69,14 @@ describe('useUserPreferences.js Composable', () => {
         setSelectedReciterId(1);
         expect(preferences.selectedReciterId).toBe(1);
 
-        const { setAppVibe } = useUserPreferences();
+        const { setAppVibe, isDark } = useUserPreferences();
         setAppVibe('midnight');
         expect(preferences.appVibe).toBe('midnight');
+        expect(isDark.value).toBe(true);
 
         setAppVibe('warqah');
         expect(preferences.appVibe).toBe('warqah');
+        expect(isDark.value).toBe(false);
 
         setAppVibe('invalid_theme');
         expect(preferences.appVibe).toBe('noor');
@@ -90,7 +93,8 @@ describe('useUserPreferences.js Composable', () => {
         expect(preferences.showTranslation).toBe(true);
         expect(preferences.showTransliteration).toBe(true);
         expect(preferences.autoScrollEnabled).toBe(true);
-        expect(preferences.autoZenOnPlay).toBe(true);
+        expect(preferences.autoZenOnPlay).toBe(false);
+        expect(preferences.autoKhusyuOnPlay).toBe(false);
         expect(preferences.selectedReciterId).toBe(7);
         expect(preferences.appVibe).toBe('noor');
     });

@@ -107,10 +107,10 @@ const hasArabicWords = computed(() => {
                     @click="emit('play', verse)"
                     type="button"
                     :aria-pressed="isActive && isPlaying"
-                    :aria-label="`${t('player.play')} ${t('surah.ayah_number', { number: verse.verse_number })}`"
+                    :aria-label="`${isActive && isPlaying ? t('player.pause') : t('player.play')} ${t('surah.ayah_number', { number: verse.verse_number })}`"
                     :class="[
                         'inline-flex min-h-11 min-w-11 items-center gap-1.5 px-3.5 py-2 rounded-xl font-medium transition-colors cursor-pointer',
-                        isActive 
+                        isActive && isPlaying 
                             ? 'bg-primary text-primary-foreground shadow-xs' 
                             : 'bg-muted hover:bg-primary/10 hover:text-primary text-foreground'
                     ]"
@@ -118,7 +118,7 @@ const hasArabicWords = computed(() => {
                 >
                     <Volume2 v-if="isActive && isPlaying" class="h-3.5 w-3.5 animate-pulse shrink-0" />
                     <Play v-else class="h-3.5 w-3.5 shrink-0" />
-                    <span>{{ isActive ? (isPlaying ? t('player.now_playing') : t('player.paused')) : t('player.play') }}</span>
+                    <span>{{ isActive && isPlaying ? t('player.now_playing') : t('player.play') }}</span>
                 </button>
             </div>
 

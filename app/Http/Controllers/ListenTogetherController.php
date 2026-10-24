@@ -314,7 +314,8 @@ class ListenTogetherController extends Controller
             ]);
         }
 
-        $language = $request->query('lang', 'id');
+        $language = $request->query('lang') ?? $request->cookie('anisul_locale') ?? app()->getLocale();
+        $language = in_array($language, ['id', 'en'], true) ? $language : 'id';
         $surahId = (int) ($room['surahId'] ?? 1);
         $reciterId = (int) ($room['reciterId'] ?? 7);
 
@@ -322,7 +323,6 @@ class ListenTogetherController extends Controller
         $versesData = $this->quran->getVersesByChapter($surahId, [
             'language' => $language,
             'words' => true,
-            'translations' => '33', // Kemenag RI
         ]);
         $recitation = $this->quran->getChapterRecitation($reciterId, $surahId);
 

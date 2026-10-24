@@ -11,6 +11,7 @@ abstract class TestCase extends BaseTestCase
     {
         parent::setUp();
 
+        config(['inertia.ssr.enabled' => false]);
         Http::preventStrayRequests();
     }
 }

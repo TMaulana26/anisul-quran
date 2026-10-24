@@ -104,8 +104,9 @@ const onSelectLocale = (newLocale) => {
     if (currentLocale.value === newLocale) return;
     setLocale(newLocale);
     router.reload({
+        data: { lang: newLocale },
         preserveScroll: true,
-        preserveState: true,
+        preserveState: false,
     });
 };
 
@@ -306,8 +307,8 @@ const resetDefaults = () => {
     emit('update:showTranslation', true);
     emit('update:showTransliteration', true);
     emit('update:autoScrollEnabled', true);
-    emit('update:autoKhusyuOnPlay', true);
-    emit('update:autoZenOnPlay', true);
+    emit('update:autoKhusyuOnPlay', false);
+    emit('update:autoZenOnPlay', false);
     emit('reset-defaults');
 };
 </script>

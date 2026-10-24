@@ -22,8 +22,8 @@ export const SUPPORTED_LOCALES = [
         name: 'English',
         shortName: 'EN',
         flag: '🇬🇧',
-        translationLabel: 'The Clear Quran',
-        translationResourceId: 131,
+        translationLabel: 'Saheeh International',
+        translationResourceId: 20,
     },
 ];
 

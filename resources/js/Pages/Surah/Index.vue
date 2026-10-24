@@ -21,6 +21,34 @@ const { t } = useI18n();
 const searchQuery = ref('');
 const activeFilter = ref('all'); // 'all', 'makkah', 'madinah'
 
+// Common Indonesian & transliteration aliases for Surah search (e.g. "Yasin" -> 36)
+const SURAH_SEARCH_ALIASES = {
+    1: ['alfatihah', 'fatihah', 'ummulkitab', 'pembukaan'],
+    2: ['albaqarah', 'baqarah', 'ayatkursi'],
+    3: ['aliimran', 'alimran', 'imran'],
+    18: ['alkahfi', 'kahfi', 'alkahf', 'kahf'],
+    32: ['assajdah', 'sajdah'],
+    36: ['yasin', 'yaasiin', 'yaseen', 'yasiin'],
+    55: ['arrahman', 'rahman', 'arrohman'],
+    56: ['alwaqiah', 'waqiah', 'alwaqia'],
+    67: ['almulk', 'mulk', 'tabarak'],
+    78: ['annaba', 'naba', 'amma'],
+    87: ['alala', 'sabbihisma'],
+    93: ['adduha', 'dhuha', 'duha'],
+    94: ['alinsyirah', 'insyirah', 'alamnasyrah', 'asyarh'],
+    109: ['alkafirun', 'kafirun'],
+    112: ['alikhlas', 'ikhlas', 'qulhu'],
+    113: ['alfalaq', 'falaq'],
+    114: ['annas', 'nas'],
+};
+
+const normalizeSearchText = (value = '') =>
+    String(value)
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9]/g, '');
+
 // Filter chapters dynamically
 const filteredChapters = computed(() => {
     let list = props.chapters;
@@ -32,17 +60,33 @@ const filteredChapters = computed(() => {
         list = list.filter(c => c.revelation_place === 'madinah');
     }
 
-    // Filter by search query (name, number, translation, arabic)
+    // Filter by search query (name, normalized name, aliases, number, translation, arabic)
     const query = searchQuery.value.trim().toLowerCase();
     if (!query) return list;
 
+    const normalizedQuery = normalizeSearchText(query);
+
     return list.filter(chapter => {
         const idMatch = chapter.id.toString() === query;
-        const nameSimpleMatch = chapter.name_simple.toLowerCase().includes(query);
-        const nameArabicMatch = chapter.name_arabic.includes(query);
-        const translatedMatch = chapter.translated_name?.name?.toLowerCase().includes(query);
+        const nameSimpleRawMatch = chapter.name_simple?.toLowerCase().includes(query);
+        const nameSimpleNormMatch = normalizedQuery.length > 0 && normalizeSearchText(chapter.name_simple).includes(normalizedQuery);
+        const nameComplexNormMatch = normalizedQuery.length > 0 && normalizeSearchText(chapter.name_complex).includes(normalizedQuery);
+        const nameArabicMatch = chapter.name_arabic?.includes(query);
+        const translatedRawMatch = chapter.translated_name?.name?.toLowerCase().includes(query);
+        const translatedNormMatch = normalizedQuery.length > 0 && normalizeSearchText(chapter.translated_name?.name).includes(normalizedQuery);
+        const aliasList = SURAH_SEARCH_ALIASES[chapter.id] || [];
+        const aliasMatch = normalizedQuery.length > 0 && aliasList.some(alias => alias.includes(normalizedQuery) || normalizedQuery.includes(alias));
 
-        return idMatch || nameSimpleMatch || nameArabicMatch || translatedMatch;
+        return (
+            idMatch ||
+            nameSimpleRawMatch ||
+            nameSimpleNormMatch ||
+            nameComplexNormMatch ||
+            nameArabicMatch ||
+            translatedRawMatch ||
+            translatedNormMatch ||
+            aliasMatch
+        );
     });
 });
 
@@ -97,7 +141,7 @@ const clearSearch = () => {
                 class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4"
             >
                 <!-- Search Input Box -->
-                <div class="relative flex-1 max-w-md">
+                <div class="relative flex-1 max-w-xl">
                     <label for="surah-search-input" class="sr-only">
                         {{ t('index.search_placeholder') }}
                     </label>

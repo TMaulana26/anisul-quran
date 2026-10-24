@@ -31,10 +31,16 @@ const formatRevelation = (place) => {
 
             <!-- Latin Title, Translation & Metadata -->
             <div class="flex flex-col truncate">
-                <span class="font-heading font-bold text-base text-foreground group-hover:text-primary transition-colors truncate">
+                <span
+                    class="font-heading font-bold text-base text-foreground group-hover:text-primary transition-colors truncate"
+                    :title="chapter.name_simple"
+                >
                     {{ chapter.name_simple }}
                 </span>
-                <span class="text-xs text-muted-foreground truncate">
+                <span
+                    class="text-xs text-muted-foreground truncate"
+                    :title="chapter.translated_name?.name || chapter.name_complex"
+                >
                     {{ chapter.translated_name?.name || chapter.name_complex }}
                 </span>
                 <div class="flex items-center gap-2 mt-1">

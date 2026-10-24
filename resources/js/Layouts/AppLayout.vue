@@ -4,6 +4,7 @@ import { Link, Head, usePage, router } from '@inertiajs/vue3';
 import AppLogo from '@/components/AppLogo.vue';
 import SettingsDrawer from '@/components/player/SettingsDrawer.vue';
 import { useUserPreferences } from '@/composables/useUserPreferences';
+import { useQuranAudioPlayer } from '@/composables/useQuranAudioPlayer';
 import { useI18n } from '@/composables/useI18n';
 import { 
     BookOpen, 
@@ -32,6 +33,7 @@ const emit = defineEmits(['select-reciter']);
 const page = usePage();
 const userPreferences = useUserPreferences();
 const { isDrawerOpen, openDrawer, isDark, toggleTheme } = userPreferences;
+const { currentSurahName } = useQuranAudioPlayer();
 const { t, currentLocale, setLocale } = useI18n();
 const reciters = computed(() => page.props.reciters || []);
 
@@ -39,8 +41,9 @@ const switchLocale = (newLocale) => {
     if (currentLocale.value === newLocale) return;
     setLocale(newLocale);
     router.reload({
+        data: { lang: newLocale },
         preserveScroll: true,
-        preserveState: true,
+        preserveState: false,
     });
 };
 </script>
@@ -54,7 +57,7 @@ const switchLocale = (newLocale) => {
             <div class="container mx-auto flex h-16 max-w-7xl items-center justify-between px-3 sm:px-6 lg:px-8 gap-2">
                 <!-- Logo & Brand -->
                 <Link href="/" class="inline-flex min-h-11 items-center group shrink-0">
-                    <AppLogo size="38" show-text />
+                    <AppLogo size="38" show-text :subtitle="t('common.tagline')" />
                 </Link>
 
                 <!-- Navigation Links & Action Controls -->
@@ -79,7 +82,7 @@ const switchLocale = (newLocale) => {
                             :aria-pressed="currentLocale === 'id'"
                             :class="currentLocale === 'id' ? 'bg-primary text-primary-foreground shadow-xs' : 'text-muted-foreground hover:text-foreground'"
                             class="inline-flex min-h-11 min-w-11 items-center justify-center px-2.5 py-1.5 rounded-lg transition-all cursor-pointer"
-                            title="Bahasa Indonesia (Kemenag RI)"
+                            :title="`${t('settings.lang_id_title')} (${t('settings.lang_id_source')})`"
                             aria-label="Bahasa Indonesia"
                         >
                             ID
@@ -90,7 +93,7 @@ const switchLocale = (newLocale) => {
                             :aria-pressed="currentLocale === 'en'"
                             :class="currentLocale === 'en' ? 'bg-primary text-primary-foreground shadow-xs' : 'text-muted-foreground hover:text-foreground'"
                             class="inline-flex min-h-11 min-w-11 items-center justify-center px-2.5 py-1.5 rounded-lg transition-all cursor-pointer"
-                            title="English (The Clear Quran)"
+                            :title="`${t('settings.lang_en_title')} (${t('settings.lang_en_source')})`"
                             aria-label="English"
                         >
                             EN
@@ -165,8 +168,8 @@ const switchLocale = (newLocale) => {
                         @click="toggleTheme" 
                         type="button" 
                         class="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-border bg-card text-foreground hover:bg-muted hover:text-primary transition-colors focus:outline-none focus:ring-2 focus:ring-primary/40 cursor-pointer"
-                        :title="t('nav.theme_toggle')"
-                        :aria-label="t('nav.theme_toggle')"
+                        :title="isDark ? t('nav.theme_light') : t('nav.theme_dark')"
+                        :aria-label="isDark ? t('nav.theme_light') : t('nav.theme_dark')"
                     >
                         <Sun v-if="isDark" class="h-4 w-4 transition-transform rotate-0 scale-100" />
                         <Moon v-else class="h-4 w-4 transition-transform rotate-0 scale-100" />
@@ -181,21 +184,35 @@ const switchLocale = (newLocale) => {
         </main>
 
         <!-- Footer -->
-        <footer class="border-t border-border bg-card/50 text-muted-foreground text-xs py-8">
+        <footer
+            class="border-t border-border bg-card/50 text-muted-foreground text-xs transition-all"
+            :class="currentSurahName ? 'pt-8 pb-44 sm:pb-36' : 'py-8'"
+        >
             <div class="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
                 <div class="flex flex-col gap-1">
                     <p class="font-medium text-foreground">
                         Anisul Qur'an • أنِيسُ القُرْآن
                     </p>
                     <p>
-                        Data resmi & audio tilawah didukung oleh 
+                        {{ t('footer.credits_prefix') }}
                         <a href="https://quran.foundation" target="_blank" rel="noopener noreferrer" class="underline hover:text-primary transition-colors">
                             Quran Foundation
-                        </a> & Terjemahan Kemenag RI.
+                        </a>
+                        {{ t('footer.credits_suffix') }}
+                    </p>
+                    <p class="text-[11px] text-muted-foreground/85">
+                        {{ t('footer.privacy_notice') }}
+                        •
+                        <a
+                            href="mailto:salam@anisulquran.com?subject=Masukan%20%2F%20Lapor%20Bug%20Anisul%20Qur'an"
+                            class="underline hover:text-primary transition-colors"
+                        >
+                            {{ t('footer.feedback_label') }}
+                        </a>
                     </p>
                 </div>
                 <div class="flex items-center gap-1 text-muted-foreground">
-                    <span>Dirancang dengan penuh cinta untuk umat</span>
+                    <span>{{ t('footer.made_with_love') }}</span>
                     <Heart class="h-3.5 w-3.5 text-destructive fill-destructive inline" />
                 </div>
             </div>

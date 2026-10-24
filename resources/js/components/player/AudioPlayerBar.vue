@@ -24,7 +24,7 @@ import {
     Film
 } from '@lucide/vue';
 
-const emit = defineEmits(['open-reciter-modal', 'open-settings', 'open-listen-together', 'open-khusyu-mode', 'open-zen-mode', 'open-tadabbur-mode']);
+const emit = defineEmits(['open-reciter-modal', 'open-settings', 'open-listen-together', 'open-khusyu-mode', 'open-zen-mode', 'open-tadabbur-mode', 'play-triggered']);
 
 const roomSync = useRoomSync();
 const { t } = useI18n();
@@ -92,10 +92,10 @@ const onVolumeInput = (event) => {
 };
 
 const handlePlayClick = () => {
+    const wasPlaying = isPlaying.value;
     togglePlay();
-    if (!isPlaying.value) {
-        emit('open-khusyu-mode');
-        emit('open-zen-mode');
+    if (!wasPlaying) {
+        emit('play-triggered');
     }
 };
 

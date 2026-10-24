@@ -1,7 +1,7 @@
 {
     "common": {
         "app_name": "Anisul Qur'an",
-        "tagline": "Teman Perjalanan Menyelami Kalam Ilahi",
+        "tagline": "Sahabat Tilawah Interaktif",
         "search": "Cari",
         "loading": "Memuat...",
         "close": "Tutup",
@@ -20,18 +20,20 @@
     "nav": {
         "surah_list": "Daftar Surah",
         "settings": "Pengaturan",
-        "theme_toggle": "Ganti Tema",
+        "theme_toggle": "Ganti Mode Terang / Gelap",
+        "theme_light": "Beralih ke Mode Terang",
+        "theme_dark": "Beralih ke Mode Gelap",
         "listen_together": "Dengar Bersama",
-        "vibe_noor": "Noor (Zamrud)",
-        "vibe_midnight": "Midnight (Nilam)",
-        "vibe_warqah": "Warqah (Klasik)",
+        "vibe_noor": "Noor (Zamrud Terang)",
+        "vibe_midnight": "Midnight (Malam Emas)",
+        "vibe_warqah": "Warqah (Perkamen Klasik)",
         "switch_lang": "Ganti Bahasa"
     },
     "index": {
         "hero_badge": "Al-Qur'an Al-Karim Digital & Dengar Bersama",
         "hero_title": "Menyelami Al-Qur'an dengan Khusyu' & Harmoni",
         "hero_subtitle": "Baca teks suci dengan rasm indah, dengarkan lantunan qari pilihan dunia, dan nikmati tilawah bersama secara real-time.",
-        "search_placeholder": "Cari surah berdasarkan nama, nomor, atau terjemahan (misal: Al-Kahf, Yasin, 18)...",
+        "search_placeholder": "Cari surah, nomor, atau arti (misal: Al-Kahf, Yasin, 18)...",
         "filter_all": "Semua ({count})",
         "filter_makkah": "Makkiyah ({count})",
         "filter_madinah": "Madaniyah ({count})",
@@ -247,5 +249,12 @@
         "on": "Aktif",
         "off": "Mati",
         "shortcuts_hint": "Spasi · Putar   ←→ · Ayat   M · Bisu"
+    },
+    "footer": {
+        "credits_prefix": "Data resmi & audio tilawah didukung oleh",
+        "credits_suffix": "& Terjemahan Kemenag RI.",
+        "privacy_notice": "Bebas iklan & tanpa pelacakan data pribadi (Privacy-First).",
+        "feedback_label": "Lapor Bug / Masukan",
+        "made_with_love": "Dirancang dengan penuh cinta untuk umat"
     }
 }

@@ -78,4 +78,17 @@ describe('AyahItem Component', () => {
         expect(wrapper.text()).toContain('Sedang Diputar');
         expect(wrapper.classes()).toContain('bg-primary/10');
     });
+
+    it('displays Putar Audio (Play) instead of Jeda when verse is active but audio is not playing', () => {
+        const wrapper = mount(AyahItem, {
+            props: {
+                verse: mockVerse,
+                isActive: true,
+                isPlaying: false,
+            },
+        });
+
+        expect(wrapper.text()).toContain('Putar Audio');
+        expect(wrapper.text()).not.toContain('Jeda');
+    });
 });

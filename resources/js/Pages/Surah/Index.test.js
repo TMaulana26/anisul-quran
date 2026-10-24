@@ -40,6 +40,22 @@ describe('Surah/Index.vue', () => {
             verses_count: 286,
             translated_name: { name: 'Sapi Betina' },
         },
+        {
+            id: 18,
+            name_simple: 'Al-Kahf',
+            name_arabic: 'الكهف',
+            revelation_place: 'makkah',
+            verses_count: 110,
+            translated_name: { name: 'Penghuni-penghuni Gua' },
+        },
+        {
+            id: 36,
+            name_simple: 'Ya-Sin',
+            name_arabic: 'يس',
+            revelation_place: 'makkah',
+            verses_count: 83,
+            translated_name: { name: 'Yas Sin' },
+        },
     ];
 
     const mountIndex = (chapters = mockChapters) =>
@@ -63,7 +79,7 @@ describe('Surah/Index.vue', () => {
     it('renders all surah cards by default', () => {
         const wrapper = mountIndex();
         const cards = wrapper.findAll('.surah-card-stub');
-        expect(cards).toHaveLength(2);
+        expect(cards).toHaveLength(4);
         expect(wrapper.text()).toContain('Al-Fatihah');
         expect(wrapper.text()).toContain('Al-Baqarah');
     });
@@ -76,6 +92,21 @@ describe('Surah/Index.vue', () => {
         const cards = wrapper.findAll('.surah-card-stub');
         expect(cards).toHaveLength(1);
         expect(cards[0].text()).toBe('Al-Baqarah');
+    });
+
+    it('matches normalized queries without hyphens and common Indonesian aliases (e.g. Yasin, Al-Kahfi)', async () => {
+        const wrapper = mountIndex();
+        const searchInput = wrapper.find('input[type="text"]');
+
+        await searchInput.setValue('Yasin');
+        let cards = wrapper.findAll('.surah-card-stub');
+        expect(cards).toHaveLength(1);
+        expect(cards[0].text()).toBe('Ya-Sin');
+
+        await searchInput.setValue('Al-Kahfi');
+        cards = wrapper.findAll('.surah-card-stub');
+        expect(cards).toHaveLength(1);
+        expect(cards[0].text()).toBe('Al-Kahf');
     });
 
     it('filters chapters by revelation place (Makkiyah vs Madaniyah)', async () => {
@@ -102,6 +133,6 @@ describe('Surah/Index.vue', () => {
         const clearBtn = resetButtons[resetButtons.length - 1];
         await clearBtn.trigger('click');
 
-        expect(wrapper.findAll('.surah-card-stub')).toHaveLength(2);
+        expect(wrapper.findAll('.surah-card-stub')).toHaveLength(4);
     });
 });

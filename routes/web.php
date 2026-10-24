@@ -22,4 +22,7 @@ Route::middleware('throttle:60,1')->group(function () {
 });
 
 // Join Room Page (Listener / Follower View)
-Route::get('/listen/{code}', [ListenTogetherController::class, 'join'])->whereAlphaNumeric('code')->name('rooms.join');
+Route::get('/listen/{code}', [ListenTogetherController::class, 'join'])
+    ->whereAlphaNumeric('code')
+    ->middleware('throttle:30,1')
+    ->name('rooms.join');
