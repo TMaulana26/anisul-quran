@@ -51,6 +51,10 @@ fi
 
 # 4. Check if .env exists, auto-generate APP_KEY and REVERB keys if missing
 echo -e "${BLUE}[4/5] ⚙️  Memeriksa konfigurasi environment (.env)...${NC}"
+if [ -f "$SCRIPT_DIR/.env" ]; then
+    sudo chown "$(id -u):33" "$SCRIPT_DIR/.env" 2>/dev/null || sudo chown "$(id -u):$(id -g)" "$SCRIPT_DIR/.env" 2>/dev/null || true
+    sudo chmod 664 "$SCRIPT_DIR/.env" 2>/dev/null || chmod 664 "$SCRIPT_DIR/.env" 2>/dev/null || true
+fi
 if [ ! -f "$SCRIPT_DIR/.env" ]; then
     echo -e "${YELLOW}⚠️  File .env tidak ditemukan! Menyalin dari .env.example...${NC}"
     cp "$SCRIPT_DIR/.env.example" "$SCRIPT_DIR/.env"
