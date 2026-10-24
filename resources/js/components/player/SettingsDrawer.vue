@@ -223,7 +223,7 @@ const selectedChapterReciterLabel = computed(() => {
     if (found) {
         return `${getReciterName(found)} (${found.style || 'Murattal'})`;
     }
-    return 'Pilih Qari...';
+    return t('settings.select_reciter_placeholder');
 });
 
 const selectedGlobalReciterLabel = computed(() => {
@@ -231,7 +231,7 @@ const selectedGlobalReciterLabel = computed(() => {
     if (found) {
         return `${getReciterName(found)} (${found.style || 'Murattal'})`;
     }
-    return 'Pilih Qari...';
+    return t('settings.select_reciter_placeholder');
 });
 
 // Backward compatibility alias
@@ -388,12 +388,12 @@ const resetDefaults = () => {
                                             Surah {{ activeChapter.name_simple }} ({{ activeChapter.name_arabic }})
                                         </p>
                                         <p class="text-[11px] text-muted-foreground truncate">
-                                            {{ activeChapter.verses_count }} Ayat • Surah ke-{{ activeChapter.id }}
+                                            {{ t('settings.surah_meta', { verses: activeChapter.verses_count, id: activeChapter.id }) }}
                                         </p>
                                     </div>
                                 </div>
                                 <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-primary/20 text-primary border border-primary/30 shrink-0">
-                                    Surah Aktif
+                                    {{ t('settings.active_surah_badge') }}
                                 </span>
                             </div>
 
@@ -407,15 +407,15 @@ const resetDefaults = () => {
                                     </div>
                                     <div class="min-w-0">
                                         <p class="font-bold text-foreground">
-                                            Mode Global Aplikasi
+                                            {{ t('settings.global_mode_title') }}
                                         </p>
                                         <p class="text-[11px] text-muted-foreground">
-                                            Berlaku otomatis untuk semua surah
+                                            {{ t('settings.global_mode_desc') }}
                                         </p>
                                     </div>
                                 </div>
                                 <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-muted text-muted-foreground border border-border shrink-0">
-                                    Global
+                                    {{ t('settings.global_badge') }}
                                 </span>
                             </div>
 
@@ -460,7 +460,7 @@ const resetDefaults = () => {
                             <template v-if="activeTab === 'surah' && activeChapter">
                                 <div class="p-3 rounded-xl bg-muted/30 border border-border/50 text-xs text-muted-foreground leading-relaxed">
                                     <p>
-                                        💡 Pengaturan di tab ini langsung mengubah tampilan kaligrafi, audio, dan terjemahan pada <span class="font-bold text-foreground">Surah {{ activeChapter.name_simple }}</span> dan tersimpan konsisten untuk surah berikutnya.
+                                        💡 {{ t('settings.surah_tab_hint_prefix') }} <span class="font-bold text-foreground">Surah {{ activeChapter.name_simple }}</span> {{ t('settings.surah_tab_hint_suffix') }}
                                     </p>
                                 </div>
 
@@ -469,19 +469,19 @@ const resetDefaults = () => {
                                     <div class="flex items-center justify-between">
                                         <label class="block font-heading font-bold text-xs uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
                                             <User class="h-3.5 w-3.5 text-primary" />
-                                            <span>Qari Surah {{ activeChapter.name_simple }}</span>
+                                            <span>{{ t('settings.surah_reciter_label', { name: activeChapter.name_simple }) }}</span>
                                         </label>
                                         <span 
                                             v-if="isChapterOverridden"
                                             class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30 flex items-center gap-1"
                                         >
-                                            <span>🏷️ Qari Khusus</span>
+                                            <span>🏷️ {{ t('settings.custom_reciter_badge') }}</span>
                                         </span>
                                         <span 
                                             v-else
                                             class="text-[10px] font-medium px-2 py-0.5 rounded-full bg-muted text-muted-foreground border border-border flex items-center gap-1"
                                         >
-                                            <span>🌐 Default Global</span>
+                                            <span>🌐 {{ t('settings.default_badge') }}</span>
                                         </span>
                                     </div>
 
@@ -498,7 +498,7 @@ const resetDefaults = () => {
                                         <SelectContent class="z-[60] max-h-72 rounded-2xl border-border bg-card shadow-xl custom-scrollbar">
                                             <SelectGroup>
                                                 <SelectLabel class="text-[11px] text-muted-foreground uppercase font-bold tracking-wider px-3 py-2">
-                                                    Daftar Qari Murottal & Mujawwad
+                                                    {{ t('settings.reciter_list_label') }}
                                                 </SelectLabel>
                                                 <SelectItem
                                                     v-for="reciter in effectiveReciters"
@@ -524,18 +524,18 @@ const resetDefaults = () => {
 
                                     <!-- Reset Override Action for this Surah -->
                                     <div v-if="isChapterOverridden" class="flex items-center justify-between px-1 text-xs">
-                                        <span class="text-[11px] text-muted-foreground">Qari khusus tersimpan untuk surah ini</span>
+                                        <span class="text-[11px] text-muted-foreground">{{ t('settings.custom_reciter_saved') }}</span>
                                         <button
                                             type="button"
                                             @click="revertChapterToGlobalDefault"
                                             class="text-[11px] font-semibold text-primary hover:underline flex items-center gap-1 cursor-pointer transition-colors"
                                         >
                                             <RotateCcw class="h-3 w-3" />
-                                            <span>Gunakan Default Global</span>
+                                            <span>{{ t('settings.use_global_default') }}</span>
                                         </button>
                                     </div>
                                     <p v-else class="text-[11px] text-muted-foreground px-1">
-                                        💡 Memilih Qari di sini akan menyimpannya khusus untuk Surah {{ activeChapter.name_simple }}.
+                                        💡 {{ t('settings.surah_reciter_hint', { name: activeChapter.name_simple }) }}
                                     </p>
                                 </div>
 
@@ -544,10 +544,10 @@ const resetDefaults = () => {
                                     <div class="flex items-center justify-between">
                                         <label class="block font-heading font-bold text-xs uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
                                             <Sparkles class="h-3.5 w-3.5 text-primary" />
-                                            <span>Gaya Kaligrafi Surah Ini</span>
+                                            <span>{{ t('settings.surah_rasm_label') }}</span>
                                         </label>
                                         <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
-                                            Surah Ini
+                                            {{ t('settings.tab_surah') }}
                                         </span>
                                     </div>
 
@@ -561,8 +561,8 @@ const resetDefaults = () => {
                                                 : 'bg-card border-border/70 hover:bg-muted/50 text-foreground'"
                                         >
                                             <span class="font-arabic text-lg">عثماني</span>
-                                            <span>Utsmani</span>
-                                            <span class="text-[10px] text-muted-foreground font-normal">Standar Madinah</span>
+                                            <span>{{ t('settings.uthmani_title') }}</span>
+                                            <span class="text-[10px] text-muted-foreground font-normal">{{ t('settings.uthmani_desc') }}</span>
                                         </button>
 
                                         <button
@@ -574,8 +574,8 @@ const resetDefaults = () => {
                                                 : 'bg-card border-border/70 hover:bg-muted/50 text-foreground'"
                                         >
                                             <span class="font-indopak text-lg">هندوباك</span>
-                                            <span>IndoPak</span>
-                                            <span class="text-[10px] text-muted-foreground font-normal">Standar Kemenag / Asia</span>
+                                            <span>{{ t('settings.indopak_title') }}</span>
+                                            <span class="text-[10px] text-muted-foreground font-normal">{{ t('settings.indopak_desc') }}</span>
                                         </button>
                                     </div>
                                 </div>
@@ -584,7 +584,7 @@ const resetDefaults = () => {
                                 <div class="space-y-3">
                                     <div class="flex items-center justify-between">
                                         <label class="block font-heading font-bold text-xs uppercase tracking-wider text-muted-foreground">
-                                            Ukuran Huruf Surah Ini
+                                            {{ t('settings.surah_font_size_label') }}
                                         </label>
                                         <span class="px-2.5 py-0.5 rounded-lg bg-primary/15 text-primary text-xs font-mono font-bold">
                                             {{ currentFontSize }}px
@@ -599,7 +599,7 @@ const resetDefaults = () => {
                                         :value="currentFontSize"
                                         @input="onFontSizeChange"
                                         class="w-full h-2 rounded-lg bg-muted appearance-none cursor-pointer accent-primary focus:outline-none"
-                                        aria-label="Ukuran Huruf Kaligrafi Arab"
+                                        :aria-label="t('settings.arabic_font_size_aria')"
                                     />
 
                                     <!-- Live Preview Box -->
@@ -607,7 +607,7 @@ const resetDefaults = () => {
                                         class="p-4 rounded-2xl border border-border/80 bg-muted/20 text-center transition-all overflow-hidden"
                                     >
                                         <p class="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">
-                                            Pratinjau Surah {{ activeChapter.name_simple }}
+                                            {{ t('settings.surah_preview_label', { name: activeChapter.name_simple }) }}
                                         </p>
                                         <p 
                                             dir="rtl" 
@@ -625,18 +625,22 @@ const resetDefaults = () => {
                                     <div class="flex items-center justify-between">
                                         <label class="block font-heading font-bold text-xs uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
                                             <Eye class="h-3.5 w-3.5 text-primary" />
-                                            <span>Teks Tambahan Surah Ini</span>
+                                            <span>{{ t('settings.surah_extra_text_label') }}</span>
                                         </label>
                                         <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
-                                            Surah Ini
+                                            {{ t('settings.tab_surah') }}
                                         </span>
                                     </div>
 
                                     <div class="space-y-2">
                                         <div class="flex items-center justify-between p-3 rounded-2xl bg-card border border-border/60">
                                             <div>
-                                                <p class="font-semibold text-xs text-foreground">Terjemahan Bahasa Indonesia</p>
-                                                <p class="text-[11px] text-muted-foreground">Kemenag RI</p>
+                                                <p class="font-semibold text-xs text-foreground">
+                                                    {{ currentLocale === 'en' ? t('settings.translation_toggle_en_title') : t('settings.translation_toggle_id_title') }}
+                                                </p>
+                                                <p class="text-[11px] text-muted-foreground">
+                                                    {{ currentLocale === 'en' ? t('settings.translation_toggle_en_source') : t('settings.translation_toggle_id_source') }}
+                                                </p>
                                             </div>
                                             <button
                                                 type="button"
@@ -655,8 +659,8 @@ const resetDefaults = () => {
 
                                         <div class="flex items-center justify-between p-3 rounded-2xl bg-card border border-border/60">
                                             <div>
-                                                <p class="font-semibold text-xs text-foreground">Transliterasi Huruf Latin</p>
-                                                <p class="text-[11px] text-muted-foreground">Panduan pelafalan</p>
+                                                <p class="font-semibold text-xs text-foreground">{{ t('settings.transliteration_toggle_title') }}</p>
+                                                <p class="text-[11px] text-muted-foreground">{{ t('settings.transliteration_toggle_desc') }}</p>
                                             </div>
                                             <button
                                                 type="button"
@@ -744,10 +748,10 @@ const resetDefaults = () => {
                                     <div class="flex items-center justify-between">
                                         <label class="block font-heading font-bold text-xs uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
                                             <User class="h-3.5 w-3.5 text-primary" />
-                                            <span>Qari Default Aplikasi</span>
+                                            <span>{{ t('settings.global_reciter') }}</span>
                                         </label>
                                         <span class="text-[10px] font-medium px-2 py-0.5 rounded-full bg-muted text-muted-foreground border border-border">
-                                            🌐 Default Global
+                                            🌐 {{ t('settings.default_badge') }}
                                         </span>
                                     </div>
 
@@ -764,7 +768,7 @@ const resetDefaults = () => {
                                         <SelectContent class="z-[60] max-h-72 rounded-2xl border-border bg-card shadow-xl custom-scrollbar">
                                             <SelectGroup>
                                                 <SelectLabel class="text-[11px] text-muted-foreground uppercase font-bold tracking-wider px-3 py-2">
-                                                    Daftar Qari Murottal & Mujawwad
+                                                    {{ t('settings.reciter_list_label') }}
                                                 </SelectLabel>
                                                 <SelectItem
                                                     v-for="reciter in effectiveReciters"
@@ -790,17 +794,17 @@ const resetDefaults = () => {
 
                                     <!-- Override notice if currently viewed surah has custom override -->
                                     <p v-if="isChapterOverridden" class="text-[11px] text-amber-600 dark:text-amber-400 bg-amber-500/10 border border-amber-500/20 rounded-xl p-2.5 leading-relaxed">
-                                        ℹ️ Surah {{ activeChapter?.name_simple }} saat ini menggunakan Qari khusus tersimpan. Qari default ini akan digunakan untuk surah lainnya.
+                                        ℹ️ {{ t('settings.surah_override_notice', { name: activeChapter?.name_simple }) }}
                                     </p>
 
                                     <!-- Active Overrides Counter Banner -->
                                     <div v-if="totalOverridesCount > 0" class="p-3 rounded-2xl bg-muted/40 border border-border/70 flex items-center justify-between gap-3 text-xs mt-2">
                                         <div class="space-y-0.5 min-w-0">
                                             <p class="font-semibold text-foreground flex items-center gap-1.5 truncate">
-                                                <span>🏷️ {{ totalOverridesCount }} Surah dengan Qari Khusus</span>
+                                                <span>🏷️ {{ t('settings.surah_overrides_count', { count: totalOverridesCount }) }}</span>
                                             </p>
                                             <p class="text-[11px] text-muted-foreground truncate">
-                                                Override tersimpan di browser
+                                                {{ t('settings.surah_overrides_desc') }}
                                             </p>
                                         </div>
                                         <button
@@ -808,7 +812,7 @@ const resetDefaults = () => {
                                             @click="clearAllOverrides"
                                             class="px-2.5 py-1 rounded-lg bg-card hover:bg-destructive/10 text-muted-foreground hover:text-destructive border border-border text-[11px] font-semibold transition-colors cursor-pointer shrink-0"
                                         >
-                                            Reset Semua
+                                            {{ t('settings.reset_all') }}
                                         </button>
                                     </div>
                                 </div>
@@ -818,10 +822,10 @@ const resetDefaults = () => {
                                     <div class="flex items-center justify-between">
                                         <label class="block font-heading font-bold text-xs uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
                                             <Type class="h-3.5 w-3.5 text-primary" />
-                                            <span>Mode Baca Default</span>
+                                            <span>{{ t('settings.default_reading_mode_label') }}</span>
                                         </label>
                                         <span class="text-[10px] font-medium px-2 py-0.5 rounded-full bg-muted text-muted-foreground border border-border">
-                                            🌐 Default Global
+                                            🌐 {{ t('settings.default_badge') }}
                                         </span>
                                     </div>
 
@@ -835,8 +839,8 @@ const resetDefaults = () => {
                                                 : 'bg-card border-border/70 hover:bg-muted/50 text-foreground'"
                                         >
                                             <Type class="h-5 w-5" />
-                                            <span>Per Ayat</span>
-                                            <span class="text-[10px] text-muted-foreground font-normal">Sinkronisasi kata</span>
+                                            <span>{{ t('settings.reading_mode_ayah') }}</span>
+                                            <span class="text-[10px] text-muted-foreground font-normal">{{ t('settings.mode_ayah_desc') }}</span>
                                         </button>
 
                                         <button
@@ -848,8 +852,8 @@ const resetDefaults = () => {
                                                 : 'bg-card border-border/70 hover:bg-muted/50 text-foreground'"
                                         >
                                             <BookOpen class="h-5 w-5" />
-                                            <span>Mushaf Fisik</span>
-                                            <span class="text-[10px] text-muted-foreground font-normal">Format per lembar</span>
+                                            <span>{{ t('settings.reading_mode_mushaf') }}</span>
+                                            <span class="text-[10px] text-muted-foreground font-normal">{{ t('settings.mode_mushaf_desc') }}</span>
                                         </button>
                                     </div>
                                 </div>
@@ -860,14 +864,14 @@ const resetDefaults = () => {
                                         <div class="flex items-center gap-2">
                                             <p class="font-heading font-bold text-sm text-foreground flex items-center gap-1.5">
                                                 <Maximize2 class="h-4 w-4 text-primary" />
-                                                <span>Mode Khusyu' (خُشُوع) Saat Putar</span>
+                                                <span>{{ t('settings.auto_khusyu_title') }}</span>
                                             </p>
                                             <span class="text-[10px] font-medium px-2 py-0.5 rounded-full bg-muted text-muted-foreground border border-border">
-                                                🌐 Global
+                                                🌐 {{ t('settings.global_badge') }}
                                             </span>
                                         </div>
                                         <p class="text-xs text-muted-foreground leading-relaxed">
-                                            Langsung fokus ke layar penuh Mode Khusyu' (خُشُوع) saat tombol putar ditekan
+                                            {{ t('settings.auto_khusyu_desc') }}
                                         </p>
                                     </div>
 
@@ -891,10 +895,10 @@ const resetDefaults = () => {
                                     <div class="flex items-center justify-between">
                                         <label class="block font-heading font-bold text-xs uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
                                             <Sparkles class="h-3.5 w-3.5 text-primary" />
-                                            <span>Suasana & Vibe Aplikasi</span>
+                                            <span>{{ t('settings.app_vibe_label') }}</span>
                                         </label>
                                         <span class="text-[10px] font-medium px-2 py-0.5 rounded-full bg-muted text-muted-foreground border border-border">
-                                            🌐 Tema Global
+                                            🌐 {{ t('settings.vibe_theme_badge') }}
                                         </span>
                                     </div>
 
@@ -912,7 +916,7 @@ const resetDefaults = () => {
                                                 <Sparkles class="h-3.5 w-3.5" />
                                             </div>
                                             <span class="font-bold">Noor</span>
-                                            <span class="text-[10px] text-muted-foreground font-normal leading-tight">Zamrud Sejuk</span>
+                                            <span class="text-[10px] text-muted-foreground font-normal leading-tight">{{ t('settings.vibe_noor_desc') }}</span>
                                         </button>
 
                                         <!-- Midnight -->
@@ -928,7 +932,7 @@ const resetDefaults = () => {
                                                 <Moon class="h-3.5 w-3.5" />
                                             </div>
                                             <span class="font-bold">Midnight</span>
-                                            <span class="text-[10px] text-muted-foreground font-normal leading-tight">Emas Tahajjud</span>
+                                            <span class="text-[10px] text-muted-foreground font-normal leading-tight">{{ t('settings.vibe_midnight_desc') }}</span>
                                         </button>
 
                                         <!-- Warqah -->
@@ -944,7 +948,7 @@ const resetDefaults = () => {
                                                 <ScrollText class="h-3.5 w-3.5" />
                                             </div>
                                             <span class="font-bold">Warqah</span>
-                                            <span class="text-[10px] text-muted-foreground font-normal leading-tight">Perkamen Klasik</span>
+                                            <span class="text-[10px] text-muted-foreground font-normal leading-tight">{{ t('settings.vibe_warqah_desc') }}</span>
                                         </button>
                                     </div>
                                 </div>
@@ -954,10 +958,10 @@ const resetDefaults = () => {
                                     <div class="flex items-center justify-between">
                                         <label class="block font-heading font-bold text-xs uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
                                             <Sparkles class="h-3.5 w-3.5 text-primary" />
-                                            <span>Gaya Rasm Bawaan</span>
+                                            <span>{{ t('settings.default_rasm_label') }}</span>
                                         </label>
                                         <span class="text-[10px] font-medium px-2 py-0.5 rounded-full bg-muted text-muted-foreground border border-border">
-                                            🌐 Default Global
+                                            🌐 {{ t('settings.default_badge') }}
                                         </span>
                                     </div>
 
@@ -971,8 +975,8 @@ const resetDefaults = () => {
                                                 : 'bg-card border-border/70 hover:bg-muted/50 text-foreground'"
                                         >
                                             <span class="font-arabic text-lg">عثماني</span>
-                                            <span>Utsmani</span>
-                                            <span class="text-[10px] text-muted-foreground font-normal">Standar Madinah</span>
+                                            <span>{{ t('settings.uthmani_title') }}</span>
+                                            <span class="text-[10px] text-muted-foreground font-normal">{{ t('settings.uthmani_desc') }}</span>
                                         </button>
 
                                         <button
@@ -984,8 +988,8 @@ const resetDefaults = () => {
                                                 : 'bg-card border-border/70 hover:bg-muted/50 text-foreground'"
                                         >
                                             <span class="font-indopak text-lg">هندوباك</span>
-                                            <span>IndoPak</span>
-                                            <span class="text-[10px] text-muted-foreground font-normal">Standar Kemenag / Asia</span>
+                                            <span>{{ t('settings.indopak_title') }}</span>
+                                            <span class="text-[10px] text-muted-foreground font-normal">{{ t('settings.indopak_desc') }}</span>
                                         </button>
                                     </div>
                                 </div>
@@ -995,10 +999,10 @@ const resetDefaults = () => {
                                     <div class="flex items-center justify-between">
                                         <div class="flex items-center gap-2">
                                             <label class="block font-heading font-bold text-xs uppercase tracking-wider text-muted-foreground">
-                                                Ukuran Kaligrafi Bawaan
+                                                {{ t('settings.default_font_size_label') }}
                                             </label>
                                             <span class="text-[10px] font-medium px-2 py-0.5 rounded-full bg-muted text-muted-foreground border border-border">
-                                                🌐 Global
+                                                🌐 {{ t('settings.global_badge') }}
                                             </span>
                                         </div>
                                         <span class="px-2.5 py-0.5 rounded-lg bg-primary/15 text-primary text-xs font-mono font-bold">
@@ -1014,7 +1018,7 @@ const resetDefaults = () => {
                                         :value="currentFontSize"
                                         @input="onFontSizeChange"
                                         class="w-full h-2 rounded-lg bg-muted appearance-none cursor-pointer accent-primary focus:outline-none"
-                                        aria-label="Ukuran Huruf Kaligrafi Arab"
+                                        :aria-label="t('settings.arabic_font_size_aria')"
                                     />
 
                                     <!-- Live Preview Box -->
@@ -1022,7 +1026,7 @@ const resetDefaults = () => {
                                         class="p-4 rounded-2xl border border-border/80 bg-muted/20 text-center transition-all overflow-hidden"
                                     >
                                         <p class="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">
-                                            Pratinjau Huruf Default
+                                            {{ t('settings.default_preview_label') }}
                                         </p>
                                         <p 
                                             dir="rtl" 
@@ -1045,7 +1049,7 @@ const resetDefaults = () => {
                                 class="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
                             >
                                 <RotateCcw class="h-3.5 w-3.5" />
-                                <span>Reset Default</span>
+                                <span>{{ t('settings.reset_default_btn') }}</span>
                             </button>
 
                             <button
@@ -1053,7 +1057,7 @@ const resetDefaults = () => {
                                 @click="close"
                                 class="px-5 py-2 rounded-xl bg-primary text-primary-foreground text-xs font-bold shadow-sm hover:bg-primary/90 transition-all cursor-pointer"
                             >
-                                Selesai
+                                {{ t('settings.done_btn') }}
                             </button>
                         </div>
                     </div>

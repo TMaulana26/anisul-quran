@@ -2,6 +2,7 @@ import { computed } from 'vue';
 import { useUserPreferences } from '@/composables/useUserPreferences';
 import idLocale from '@/locales/id.json';
 import enLocale from '@/locales/en.json';
+import surahMeanings from '@/locales/surah-meanings.json';
 
 const dictionaries = {
     id: idLocale,
@@ -83,12 +84,27 @@ export function useI18n() {
         userPreferences.setAppLocale(newLocale);
     };
 
+    /**
+     * Get the localized Surah meaning synchronously in 0ms based on active locale,
+     * falling back to the server-provided translated_name if not found.
+     *
+     * @param {Object} chapter
+     * @returns {string}
+     */
+    const getSurahMeaning = (chapter) => {
+        if (!chapter) return '';
+        const idKey = String(chapter.id || '');
+        const localeMap = surahMeanings[currentLocale.value] || surahMeanings.id;
+        return localeMap?.[idKey] || chapter.translated_name?.name || chapter.name_complex || '';
+    };
+
     return {
         currentLocale,
         isEnglish,
         isIndonesian,
         t,
         setLocale,
+        getSurahMeaning,
         supportedLocales: SUPPORTED_LOCALES,
     };
 }

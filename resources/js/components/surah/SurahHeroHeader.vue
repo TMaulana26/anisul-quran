@@ -8,7 +8,7 @@ defineProps({
     },
 });
 
-const { t } = useI18n();
+const { t, getSurahMeaning } = useI18n();
 </script>
 
 <template>
@@ -27,11 +27,11 @@ const { t } = useI18n();
             </h1>
 
             <p class="text-sm text-muted-foreground font-medium tabular-nums">
-                {{ chapter.translated_name?.name }} • {{ t('surah_card.verses_count', { count: chapter.verses_count }) }}
+                {{ getSurahMeaning(chapter) }} • {{ t('surah_card.verses_count', { count: chapter.verses_count }) }}
             </p>
 
             <div class="inline-flex items-center justify-center px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold tabular-nums">
-                <span>Surah Ke-{{ chapter.id }} • {{ chapter.revelation_place === 'makkah' ? t('common.revelation_makkah') : t('common.revelation_madinah') }}</span>
+                <span>{{ t('surah.surah_order', { number: chapter.id }) }} • {{ chapter.revelation_place === 'makkah' ? t('common.revelation_makkah') : t('common.revelation_madinah') }}</span>
             </div>
         </div>
 

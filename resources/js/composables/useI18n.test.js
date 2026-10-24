@@ -53,4 +53,17 @@ describe('useI18n composable', () => {
         expect(supportedLocales[1].code).toBe('en');
         expect(supportedLocales[1].translationResourceId).toBe(20);
     });
+
+    it('resolves Surah meanings synchronously in 0ms when switching between ID and EN', () => {
+        const { getSurahMeaning, setLocale } = useI18n();
+        const surah1 = { id: 1, name_simple: 'Al-Fatihah', translated_name: { name: 'Pembukaan' } };
+        const surah5 = { id: 5, name_simple: "Al-Ma'idah", translated_name: { name: 'Jamuan (Hidangan Makanan)' } };
+
+        expect(getSurahMeaning(surah1)).toBe('Pembukaan');
+        expect(getSurahMeaning(surah5)).toBe('Jamuan (Hidangan Makanan)');
+
+        setLocale('en');
+        expect(getSurahMeaning(surah1)).toBe('The Opener');
+        expect(getSurahMeaning(surah5)).toBe('The Table Spread');
+    });
 });

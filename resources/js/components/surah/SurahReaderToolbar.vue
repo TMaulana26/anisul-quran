@@ -38,13 +38,13 @@ const { t } = useI18n();
 
 <template>
     <section
-        aria-label="Kontrol tampilan dan mode baca Surah"
+        :aria-label="t('surah.toolbar_label')"
         class="sm:sticky sm:top-18 z-30 flex flex-wrap items-center justify-between gap-2.5 p-2.5 sm:p-3 rounded-2xl border border-border bg-background/90 backdrop-blur-md shadow-xs transition-all"
     >
         <!-- Reading Mode Switcher: Per Ayat vs Mushaf Fisik -->
         <div
             role="group"
-            aria-label="Mode Tampilan Bacaan"
+            :aria-label="t('surah.reading_mode_group')"
             class="flex items-center gap-1 bg-muted/70 p-1 rounded-xl text-xs"
         >
             <button
@@ -84,7 +84,7 @@ const { t } = useI18n();
             <!-- Rasm Mushaf Switcher -->
             <div
                 role="group"
-                aria-label="Gaya Rasm Kaligrafi"
+                :aria-label="t('surah.rasm_group')"
                 class="flex items-center gap-1 bg-muted/70 p-1 rounded-xl text-xs"
             >
                 <button
@@ -114,15 +114,15 @@ const { t } = useI18n();
             <!-- Font Size Buttons -->
             <div
                 role="group"
-                aria-label="Ukuran Huruf Arab"
+                :aria-label="t('surah.font_size_group')"
                 class="flex items-center gap-1 bg-muted/70 p-1 rounded-xl text-xs"
             >
                 <button
                     @click="emit('decrease-font')"
                     type="button"
                     class="inline-flex min-h-11 min-w-11 items-center justify-center px-2.5 py-2 rounded-lg font-bold text-muted-foreground hover:text-foreground hover:bg-card transition-colors cursor-pointer"
-                    title="Perkecil Ukuran Huruf Arab (A-)"
-                    aria-label="Perkecil Ukuran Huruf Arab"
+                    :title="t('surah.font_decrease')"
+                    :aria-label="t('surah.font_decrease')"
                 >
                     A-
                 </button>
@@ -131,8 +131,8 @@ const { t } = useI18n();
                     @click="emit('increase-font')"
                     type="button"
                     class="inline-flex min-h-11 min-w-11 items-center justify-center px-2.5 py-2 rounded-lg font-bold text-muted-foreground hover:text-foreground hover:bg-card transition-colors cursor-pointer"
-                    title="Perbesar Ukuran Huruf Arab (A+)"
-                    aria-label="Perbesar Ukuran Huruf Arab"
+                    :title="t('surah.font_increase')"
+                    :aria-label="t('surah.font_increase')"
                 >
                     A+
                 </button>
@@ -165,8 +165,8 @@ const { t } = useI18n();
                 type="button"
                 @click="emit('open-settings')"
                 class="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-border bg-card hover:bg-muted text-foreground transition-colors cursor-pointer"
-                title="Buka Pengaturan Tampilan Lengkap"
-                aria-label="Buka Pengaturan Tampilan Lengkap"
+                :title="t('surah.open_full_settings')"
+                :aria-label="t('surah.open_full_settings')"
             >
                 <SlidersHorizontal class="h-4 w-4 text-primary" />
             </button>

@@ -9,7 +9,7 @@ const props = defineProps({
     },
 });
 
-const { t } = useI18n();
+const { t, getSurahMeaning } = useI18n();
 
 // Format revelation place
 const formatRevelation = (place) => {
@@ -30,7 +30,7 @@ const formatRevelation = (place) => {
             </div>
 
             <!-- Latin Title, Translation & Metadata -->
-            <div class="flex flex-col truncate">
+            <div class="flex flex-col min-w-0">
                 <span
                     class="font-heading font-bold text-base text-foreground group-hover:text-primary transition-colors truncate"
                     :title="chapter.name_simple"
@@ -38,10 +38,10 @@ const formatRevelation = (place) => {
                     {{ chapter.name_simple }}
                 </span>
                 <span
-                    class="text-xs text-muted-foreground truncate"
-                    :title="chapter.translated_name?.name || chapter.name_complex"
+                    class="text-xs text-muted-foreground leading-snug"
+                    :title="getSurahMeaning(chapter)"
                 >
-                    {{ chapter.translated_name?.name || chapter.name_complex }}
+                    {{ getSurahMeaning(chapter) }}
                 </span>
                 <div class="flex items-center gap-2 mt-1">
                     <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-muted text-muted-foreground">

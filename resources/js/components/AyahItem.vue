@@ -199,8 +199,8 @@ const hasArabicWords = computed(() => {
                         @click.stop="openFootnote(token.id, token.number)"
                         type="button"
                         class="inline-flex min-h-11 min-w-11 items-center justify-center px-2.5 py-1 mx-0.5 my-0.5 rounded-lg text-[11px] font-bold tabular-nums bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground transition-colors cursor-pointer align-middle select-none"
-                        :title="`Klik untuk melihat Catatan Kaki [${token.number}]`"
-                        :aria-label="`Catatan Kaki ${token.number}`"
+                        :title="t('surah.footnote_click_title', { number: token.number })"
+                        :aria-label="t('surah.footnote_label', { number: token.number })"
                     >
                         [{{ token.number }}]
                     </button>

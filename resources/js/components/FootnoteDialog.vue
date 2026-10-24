@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { X, BookOpen, Loader2, Info } from '@lucide/vue';
+import { useI18n } from '@/composables/useI18n';
 
 const props = defineProps({
     modelValue: {
@@ -26,6 +27,7 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['update:modelValue', 'update:open']);
+const { t } = useI18n();
 
 const isVisible = computed(() => {
     return props.open !== undefined ? props.open : props.modelValue;
@@ -54,12 +56,12 @@ const fetchFootnote = async (id) => {
         const response = await fetch(`/api/footnote/${id}`);
         const data = await response.json();
         
-        const rawText = data.footnote?.text || 'Penjelasan tidak tersedia.';
+        const rawText = data.footnote?.text || t('surah.footnote_unavailable');
         const text = rawText.replace(/<[^>]*>/g, '').trim();
         cache.set(id, text);
         footnoteText.value = text;
     } catch (e) {
-        error.value = e.message || 'Terjadi kesalahan jaringan.';
+        error.value = e.message || t('common.error');
     } finally {
         loading.value = false;
     }
@@ -127,10 +129,10 @@ onUnmounted(() => {
                             </div>
                             <div>
                                 <h2 id="footnote-dialog-title" class="font-heading font-bold text-base text-foreground">
-                                    Catatan Kaki Kemenag RI
+                                    {{ t('surah.footnote_dialog_title') }}
                                 </h2>
                                 <p class="text-xs text-muted-foreground tabular-nums">
-                                    Ayat {{ verseKey }} • Penjelasan No. {{ footnoteNumber }}
+                                    {{ t('surah.footnote_dialog_subtitle', { verseKey: verseKey, number: footnoteNumber }) }}
                                 </p>
                             </div>
                         </div>
@@ -139,8 +141,8 @@ onUnmounted(() => {
                             @click="close"
                             type="button"
                             class="inline-flex h-11 w-11 items-center justify-center rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
-                            title="Tutup dialog"
-                            aria-label="Tutup dialog"
+                            :title="t('common.close_dialog')"
+                            :aria-label="t('common.close_dialog')"
                         >
                             <X class="h-4 w-4" />
                         </button>
@@ -151,7 +153,7 @@ onUnmounted(() => {
                         <!-- Loading State -->
                         <div v-if="loading" class="w-full flex flex-col items-center justify-center gap-2 py-4 text-muted-foreground text-xs">
                             <Loader2 class="h-5 w-5 animate-spin text-primary" />
-                            <span>Memuat penjelasan dari Kemenag RI...</span>
+                            <span>{{ t('surah.footnote_loading') }}</span>
                         </div>
 
                         <!-- Error State -->
@@ -162,7 +164,7 @@ onUnmounted(() => {
                                 type="button"
                                 class="mt-2 inline-flex min-h-11 items-center justify-center px-4 py-2 text-primary underline cursor-pointer"
                             >
-                                Coba lagi
+                                {{ t('surah.footnote_retry') }}
                             </button>
                         </div>
 
@@ -178,14 +180,14 @@ onUnmounted(() => {
                     <div class="flex items-center justify-between pt-3 border-t border-border text-xs text-muted-foreground">
                         <div class="flex items-center gap-1">
                             <Info class="h-3.5 w-3.5 text-primary" />
-                            <span>Kementerian Agama Republik Indonesia</span>
+                            <span>{{ t('surah.footnote_source') }}</span>
                         </div>
                         <button 
                             @click="close"
                             type="button"
                             class="inline-flex min-h-11 min-w-11 items-center justify-center px-4 py-2 rounded-xl bg-primary text-primary-foreground font-medium hover:bg-primary/90 transition-colors shadow-2xs cursor-pointer"
                         >
-                            Tutup
+                            {{ t('common.close') }}
                         </button>
                     </div>
                 </div>

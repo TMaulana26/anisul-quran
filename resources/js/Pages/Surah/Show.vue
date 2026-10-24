@@ -391,9 +391,9 @@ const handleCloseCompletionModal = () => {
         :title="`Surah ${chapter.name_simple} (${chapter.name_arabic})`"
         @select-reciter="handleSelectReciter"
     >
-        <div class="container mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-6 space-y-8 animate-fade-in pb-28">
+        <div class="container mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-6 space-y-8 animate-fade-in pb-10">
             <!-- Top Breadcrumb & Navigation -->
-            <nav aria-label="Navigasi antar Surah" class="flex items-center justify-between gap-4">
+            <nav :aria-label="t('surah.nav_breadcrumb_label')" class="flex items-center justify-between gap-4">
                 <Link
                     href="/"
                     class="inline-flex min-h-11 items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
@@ -450,7 +450,7 @@ const handleCloseCompletionModal = () => {
                 <!-- 1. Mode Baca Per Ayat -->
                 <section
                     v-if="readingMode === 'ayah'"
-                    aria-label="Daftar ayat Al-Qur'an"
+                    :aria-label="t('surah.verses_section_label')"
                     class="space-y-4"
                 >
                     <AyahItem 
@@ -471,7 +471,7 @@ const handleCloseCompletionModal = () => {
                 <!-- 2. Mode Baca Per Lembar (Mushaf Fisik) -->
                 <section
                     v-else
-                    aria-label="Tampilan lembaran Mushaf Al-Qur'an"
+                    :aria-label="t('surah.mushaf_section_label')"
                     class="space-y-6"
                 >
                     <MushafPageView 
@@ -488,7 +488,7 @@ const handleCloseCompletionModal = () => {
             </div>
 
             <!-- Bottom Prev / Next Navigation Footer -->
-            <nav aria-label="Navigasi Surah sebelumnya dan selanjutnya" class="flex flex-wrap items-center justify-between gap-4 pt-8 border-t border-border">
+            <nav :aria-label="t('surah.nav_prev_next_label')" class="flex flex-wrap items-center justify-between gap-4 pt-8 border-t border-border">
                 <Link 
                     v-if="prevChapter"
                     :href="`/surah/${prevChapter.id}?reciter=${userPreferences.getReciterIdForSurah(prevChapter.id)}`"

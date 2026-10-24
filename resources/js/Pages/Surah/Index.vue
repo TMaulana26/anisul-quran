@@ -17,7 +17,7 @@ const props = defineProps({
     },
 });
 
-const { t } = useI18n();
+const { t, getSurahMeaning } = useI18n();
 const searchQuery = ref('');
 const activeFilter = ref('all'); // 'all', 'makkah', 'madinah'
 
@@ -72,8 +72,14 @@ const filteredChapters = computed(() => {
         const nameSimpleNormMatch = normalizedQuery.length > 0 && normalizeSearchText(chapter.name_simple).includes(normalizedQuery);
         const nameComplexNormMatch = normalizedQuery.length > 0 && normalizeSearchText(chapter.name_complex).includes(normalizedQuery);
         const nameArabicMatch = chapter.name_arabic?.includes(query);
-        const translatedRawMatch = chapter.translated_name?.name?.toLowerCase().includes(query);
-        const translatedNormMatch = normalizedQuery.length > 0 && normalizeSearchText(chapter.translated_name?.name).includes(normalizedQuery);
+        const localizedMeaning = getSurahMeaning(chapter);
+        const translatedRawMatch =
+            chapter.translated_name?.name?.toLowerCase().includes(query) ||
+            localizedMeaning?.toLowerCase().includes(query);
+        const translatedNormMatch =
+            normalizedQuery.length > 0 &&
+            (normalizeSearchText(chapter.translated_name?.name).includes(normalizedQuery) ||
+                normalizeSearchText(localizedMeaning).includes(normalizedQuery));
         const aliasList = SURAH_SEARCH_ALIASES[chapter.id] || [];
         const aliasMatch = normalizedQuery.length > 0 && aliasList.some(alias => alias.includes(normalizedQuery) || normalizedQuery.includes(alias));
 
@@ -137,7 +143,7 @@ const clearSearch = () => {
 
             <!-- Search Bar & Filters -->
             <section
-                aria-label="Pencarian dan filter Surah"
+                :aria-label="t('index.search_section_label')"
                 class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4"
             >
                 <!-- Search Input Box -->
@@ -170,7 +176,7 @@ const clearSearch = () => {
                 <!-- Filter Tabs: Semua, Makkiyah, Madaniyah -->
                 <div
                     role="group"
-                    aria-label="Filter kategori tempat turunnya Surah"
+                    :aria-label="t('index.filter_group_label')"
                     class="flex items-center gap-1.5 p-1 rounded-xl border border-border bg-card self-start sm:self-auto shadow-sm"
                 >
                     <button 
@@ -221,7 +227,7 @@ const clearSearch = () => {
                 aria-labelledby="surah-list-heading"
             >
                 <h2 id="surah-list-heading" class="sr-only">
-                    Daftar Surah Al-Qur'an
+                    {{ t('index.surah_list_heading') }}
                 </h2>
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                     <SurahCard 

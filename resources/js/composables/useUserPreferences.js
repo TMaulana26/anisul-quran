@@ -91,7 +91,7 @@ export function useUserPreferences() {
         const savedAutoScroll = safeGetItem('anisul_auto_scroll', null);
         if (savedAutoScroll !== null) preferences.autoScrollEnabled = savedAutoScroll === 'true';
 
-        const savedAutoKhusyu = safeGetItem('anisul_auto_khusyu', null) ?? safeGetItem('anisul_auto_zen', null);
+        const savedAutoKhusyu = safeGetItem('anisul_auto_khusyu_v2', null);
         if (savedAutoKhusyu !== null) {
             const boolVal = savedAutoKhusyu === 'true';
             preferences.autoKhusyuOnPlay = boolVal;
@@ -222,6 +222,7 @@ export function useUserPreferences() {
         const boolVal = Boolean(val);
         preferences.autoKhusyuOnPlay = boolVal;
         preferences.autoZenOnPlay = boolVal;
+        safeSetItem('anisul_auto_khusyu_v2', boolVal);
         safeSetItem('anisul_auto_khusyu', boolVal);
         safeSetItem('anisul_auto_zen', boolVal);
     };
@@ -365,6 +366,7 @@ export function useUserPreferences() {
         safeSetItem('anisul_show_translation', DEFAULT_PREFERENCES.showTranslation);
         safeSetItem('anisul_show_transliteration', DEFAULT_PREFERENCES.showTransliteration);
         safeSetItem('anisul_auto_scroll', DEFAULT_PREFERENCES.autoScrollEnabled);
+        safeSetItem('anisul_auto_khusyu_v2', DEFAULT_PREFERENCES.autoKhusyuOnPlay);
         safeSetItem('anisul_auto_khusyu', DEFAULT_PREFERENCES.autoKhusyuOnPlay);
         safeSetItem('anisul_auto_zen', DEFAULT_PREFERENCES.autoZenOnPlay);
         safeSetItem('anisul_selected_reciter', DEFAULT_PREFERENCES.selectedReciterId);

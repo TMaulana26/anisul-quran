@@ -123,7 +123,7 @@ onUnmounted(() => {
         v-if="currentSurahName"
         class="fixed bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 w-[95%] max-w-4xl z-40 transition-all duration-300 ease-out"
         :class="isCollapsed ? 'translate-y-[calc(100%-4.25rem)]' : 'translate-y-0'"
-        aria-label="Pemutar Audio Al-Qur'an"
+        :aria-label="t('player.aria_label')"
     >
         <!-- Collapse/Expand floating tab toggle on top right -->
         <div class="flex justify-end pr-4 mb-1">
@@ -131,11 +131,11 @@ onUnmounted(() => {
                 type="button"
                 @click="isCollapsed = !isCollapsed"
                 class="relative inline-flex min-h-11 min-w-11 items-center justify-center gap-1.5 px-3.5 py-2 text-xs font-semibold rounded-t-xl bg-card/95 backdrop-blur-md border-t border-x border-border/80 text-foreground/80 hover:text-primary shadow-sm hover:bg-card transition-all cursor-pointer"
-                :title="isCollapsed ? 'Tampilkan Player Bar' : 'Sembunyikan Player Bar'"
-                :aria-label="isCollapsed ? 'Tampilkan Player Bar' : 'Sembunyikan Player Bar'"
+                :title="isCollapsed ? t('player.expand_player') : t('player.collapse_player')"
+                :aria-label="isCollapsed ? t('player.expand_player') : t('player.collapse_player')"
             >
                 <component :is="isCollapsed ? ChevronUp : ChevronDown" class="h-3.5 w-3.5 text-primary shrink-0" />
-                <span>{{ isCollapsed ? 'Buka Player' : 'Kecilkan' }}</span>
+                <span>{{ isCollapsed ? t('player.expand_label') : t('player.collapse_label') }}</span>
             </button>
         </div>
 
@@ -327,8 +327,8 @@ onUnmounted(() => {
                                 type="button"
                                 @click="showSpeedMenu = !showSpeedMenu"
                                 class="inline-flex min-h-11 min-w-11 items-center justify-center px-2.5 py-1.5 rounded-xl text-xs font-semibold font-mono tabular-nums text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors gap-1 cursor-pointer"
-                                :title="`Kecepatan Pemutaran ${playbackRate}x`"
-                                :aria-label="`Kecepatan Pemutaran ${playbackRate}x`"
+                                :title="t('player.speed_with_rate', { rate: playbackRate })"
+                                :aria-label="t('player.speed_with_rate', { rate: playbackRate })"
                             >
                                 <span>{{ playbackRate }}x</span>
                             </button>
@@ -359,8 +359,8 @@ onUnmounted(() => {
                                 @click="showVolumeSlider = !showVolumeSlider"
                                 @mouseenter="showVolumeSlider = true"
                                 class="inline-flex h-11 w-11 items-center justify-center rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors cursor-pointer"
-                                :title="isMuted ? 'Nyalakan Suara' : 'Pengaturan Volume'"
-                                :aria-label="isMuted ? 'Nyalakan Suara' : 'Pengaturan Volume'"
+                                :title="isMuted ? t('player.volume_unmute') : t('player.volume')"
+                                :aria-label="isMuted ? t('player.volume_unmute') : t('player.volume')"
                             >
                                 <VolumeX v-if="isMuted || volume === 0" class="h-4 w-4 text-destructive" />
                                 <Volume2 v-else class="h-4 w-4" />
@@ -375,8 +375,8 @@ onUnmounted(() => {
                                     type="button"
                                     @click="toggleMute"
                                     class="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-                                    :title="isMuted ? 'Nyalakan Suara' : 'Bisukan Suara'"
-                                    :aria-label="isMuted ? 'Nyalakan Suara' : 'Bisukan Suara'"
+                                    :title="isMuted ? t('player.volume_unmute') : t('player.volume_mute')"
+                                    :aria-label="isMuted ? t('player.volume_unmute') : t('player.volume_mute')"
                                 >
                                     <VolumeX v-if="isMuted || volume === 0" class="h-3.5 w-3.5 text-destructive" />
                                     <Volume2 v-else class="h-3.5 w-3.5" />
